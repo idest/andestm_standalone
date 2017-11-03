@@ -1,0 +1,54 @@
+#Modelo Termal para el margen Andino 
+#Basado en los datos Tassara et al. 
+#Lat 18 S hasta 45 S
+#Enero 2015
+#------------------------------------------------------------------------------
+# Parametros Generales                                                        
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+         0  graf     Graficar geometrias? 1: En png ; 2: En svg; 0 : No
+#------------------------------------------------------------------------------
+# Opciones para el modelo Termal                                              
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+      '01'  temcaso  Numero de referencia para guardar el Modelo Termal
+#·········  ·······  ··························································
+     -10.0  tmi      Latitud inicial
+     -44.8  tmx      Latitud maxima
+       0.2  tdelta   Perfiles cada 0.2 grados, debe ser multiplo de 0.2 (Modificar solo al momento de generar nuevos datos numericos)
+#·········  ·······  ··························································
+         0  xt1      Generar datos numericos? 1: Si, 0: No
+#·········  ·······  ··························································	 
+         0  xt2      Graficar perfiles? 1: En png, 2: En svg a2, 0: No
+#·········  ·······  ··························································
+         0  xt3      Graficar mapa? 1=T, 2=Q, 3=Todos, 0=No
+         3  xt4      Mapa de superficie? 0=No, 1=Relieve, 2=ICD, 3=MOHO, 4=LAB
+         0  xt5      Profundidad determinada del mapa en km.
+#------------------------------------------------------------------------------
+# Opciones para el modelo Mecanico                                            
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+      '01'  meccaso  Numero de referencia para guardar el Modelo Mecanico
+#                    (Construido sobre la base del modelo termal "temcaso")
+#·········  ·······  ··························································	
+     -10.0  mmi      Latitud inicial
+     -44.8  mmx      Latitud maxima
+       0.2  mdelta   Perfiles cada 0.2 grados, debe ser multiplo de 0.2 (Modificar solo al momento de generar nuevos datos numericos)
+#·········  ·······  ··························································
+         0  xm1      Generar datos numericos? 1: Si, 0: No
+#·········  ·······  ··························································	 
+         0  xm2      Graficar perfiles? 1: En png, 2: En svg, 0: No
+#·········  ·······  ··························································	 
+         0  xm3      Graficar mapa? 1=YS; 2=YSi; 3=EET; 4=Todos; 0=No
+         0  xm4      Mapa de superficie? 0=No; 1=Relieve; 2=ICD; 3=MOHO; 4=LAB (Limite superior para YSi y EET)
+         2  xm5      Limite inferior (para YSi y EET) 0=ICD; 1=MOHO; 2=LAB
+        65  xm6      Profundidad determinada del mapa en km.
+#·········  ·······  ··························································	 
+         1  xm7      Graficar Yield Strenght Envelope? Si am5 = 1, No am5 = 0  (tdelta y mdelta deben ser iguales a 0.2)
+     -36.0  minlat   Latitud inicial
+     -39.0  maxlat   Latitud final
+     -65.0  minlon   Longitud inicial
+     -70.0  maxlon   Longitud final

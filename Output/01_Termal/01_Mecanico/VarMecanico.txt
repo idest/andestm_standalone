@@ -1,0 +1,17 @@
+#Modelo Mecanico para el margen Andino
+#Basado en los datos Tassara et al.
+#Lat 18 S hasta 45 S
+#Enero 2015
+#------------------------------------------------------------------------------
+# Parametros para generar el Modelo Mecanico
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  ------   -----------
+     20.e3  Bs_t     Constante de tension de Byerlee (MPa)
+    -55.e3  Bs_c     Constante de compresion de Byerlee (MPa)
+     1e-15  e        Strain rate (s-1)
+      8.31  R        Constante universal de gases (J mol-1 K-1)
+         9  Cs       Modelo reologico de la corteza superior
+        12  Ci       Modelo reologico de la corteza inferior
+        22  Ml       Modelo reologico del manto litosférico
+       200  mx_s     Maximo Stress Disponible

@@ -1,4 +1,4 @@
-Id-Rh	Name	     H[Jmol-1]	n	A[N-n m2n s-1]	Ref
+#Id-Rh	Name	     H[Jmol-1]	n	A[N-n m2n s-1]	Ref
 1	Quartzite	190000	3	5.00e-12	B&D95
 2	Yule_Marble	260000	8	1.26e-52	C&T87
 3	Carrara_M	418000	7.6	3.16e-43	C&T87
@@ -26,5 +26,5 @@ Id-Rh	Name	     H[Jmol-1]	n	A[N-n m2n s-1]	Ref
 25	AB_Dunite_W	444000	3.35	7.94e-17	C&T87
 26	Mt.Burney_D-W	392000	5.1	7.94e-34	C&T87
 27	Dunite  	444000	3.35	7.94e-17	Porth00
-28      Diorite_W       212000  2.4     1.26e-16        Tesa07
-29      Olivine_D       510000  3       7.00e-14        Tesa07
+28  Diorite_W   212000  2.4     1.26e-16    Tesa07
+29  Olivine_D   510000  3       7.00e-14    Tesa07

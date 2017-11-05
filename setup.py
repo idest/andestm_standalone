@@ -1,5 +1,5 @@
-# Lee de variables y da instrucciones:  
-# El formato del archivo no se debe cambiar y no debe contener lines vacias 
+# Lee de variables y da instrucciones:
+# El formato del archivo no se debe cambiar y no debe contener lines vacias
 # al final.
 
 import numpy as np
@@ -8,12 +8,12 @@ import shutil
 
 #Leer archivo de instrucciones
 def readVars(name):
-    
+
     # Abrir archivo
     f = open(name)
 
     dic = {}
-    
+
 
     # Loop para leer las variables
     line = f.readline()
@@ -21,36 +21,34 @@ def readVars(name):
 
         # ignorar las lineas que empiezan con #
         if line[0] != '#':
-            
-            # Leer el valor de una variable
-            Vval = line[0:10]
 
-            # Leer el nombre de la variable y asignarle un valor.
-            # Opcion no utilizada, pero esta lista en caso que se requiera
-            Vname = line[12:20]
+            words = line.split()
+            Vval = words[0]
+            Vname = words[1]
             #dic[str.strip(Vname)] = Vnum
             #Vstr = str(Vname.strip())
-            #dic[Vstr] = Vval 
-            print('{} = {}'.format('dic[Vname.strip()]', Vval.strip()))
-            exec('{} = {}'.format('dic[Vname.strip()]', Vval.strip()))
+            #dic[Vstr] = Vval
+            print(Vname)
+            print('{} = {}'.format('dic[Vname]', Vval))
+            exec('{} = {}'.format('dic[Vname]', Vval))
         # Leer siguiente linea
         line = f.readline()
 
     f.close()
-    
+
     # Retorna la matriz con todas las variables
 
     return dic
 
 def makeDirs(temcaso, meccaso):
-    
-    # Crea carpeta para los outputs con el nombre del caso (temcaso). El cual se 
+
+    # Crea carpeta para los outputs con el nombre del caso (temcaso). El cual se
     # usara para inicializar el Modelo Mecanico.
 
     if not os.path.exists('Output'):
         os.makedirs('Output')
 
-    direTer = 'Output/%s_Termal' %(temcaso) 
+    direTer = 'Output/%s_Termal' %(temcaso)
     if not os.path.exists(direTer):
         os.makedirs(direTer)
 
@@ -59,9 +57,9 @@ def makeDirs(temcaso, meccaso):
 
     # Generar nuevo output para el modelo Mecanico, basado un termal existente
     # El numero del caso termal (temcaso) debe ser un modelo termal ya generado
-        
+
     direTerMec = 'Output/%s_Termal/%s_Mecanico' %(temcaso,meccaso)
-    
+
     if not os.path.exists(direTerMec):
         os.makedirs(direTerMec)
 
@@ -72,29 +70,29 @@ def makeDirs(temcaso, meccaso):
     return direTer, direTerMec
 
 def read_rheo(name):
-    
+
     # Abrir archivo
     f = open(name)
 
     dic = {}
-    
+
     # Loop para leer las variables
     line = f.readline()
     while line:
 
         # ignorar las lineas que empiezan con #
         if line[0] != '#':
-            
+
             print(line.split())
             id_rh, name, h, n, a, ref = line.split()
 
-            dic[id_rh] = [name, float(h), float(n), float(a), ref] 
+            dic[id_rh] = [name, float(h), float(n), float(a), ref]
 
         # Leer siguiente linea
         line = f.readline()
 
     f.close()
-    
+
     # Retorna la matriz con todas las variables
 
     return dic

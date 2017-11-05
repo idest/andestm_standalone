@@ -7,8 +7,8 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  ------   -----------
-      True  k_z      a3 = 0 prom. de K. a3 = 1  valor de K dep de Z
-      True  H_z      a4 = 0 prom. de H. a4 = 1  valor de H dep de Z
+     False  k_z      a3 = 0 prom. de K. a3 = 1  valor de K dep de Z
+     False  H_z      a4 = 0 prom. de H. a4 = 1  valor de H dep de Z
       True  delta_icd
       True  t_lat    a5 = 0 usar edad de la fosa. a5 = edad (ej. a5=50 Myr)
 #·········  ·······  ··························································
@@ -25,5 +25,4 @@
        1.0  b        Parametro adimensional
       20.0  dip      Angulo de subduccion
        3.0  D        Constante de proporcionalidad adimensional
-         0  delta_icdDecaimiento radiogenico [km] (Si d_rad = 0 -> d_rad = ICD) 
         10  delta    Blabla

@@ -4,8 +4,8 @@
 # Cargar modulos para generar el modelo Termomecanico
 import setup
 import compute
+import plot
 import numpy as np
-#import plot
 from utils import DotDict
 import os
 import sys
@@ -17,6 +17,7 @@ Meca = DotDict(setup.readVars('VarMecanico.txt'))
 Exec = DotDict(setup.readVars('VarExec.txt'))
 direTer, direTerMec = setup.makeDirs(Exec.temcaso, Exec.meccaso)
 Rhe = DotDict(setup.read_rheo('data/Rhe_Param.dat'))
+print('rhe:', Rhe)
 # Variables
 #graf = Exec[0] #geometrias
 #tmi = Exec[2]
@@ -61,7 +62,11 @@ gm_data = np.loadtxt('data/Modelo.dat')
 ta_data = np.loadtxt('data/PuntosFosaEdad.dat')
 areas = np.loadtxt('data/areas.dat')
 
-GM, TM, MM = compute.compute(gm_data, ta_data, Rhe, areas, Temp, Meca)
+D, GM, TM, MM = compute.compute(gm_data, ta_data, Rhe, areas, Temp, Meca)
+
+fig = plot.plot(D.get_axes()[0], D.get_axes()[2], TM.get_geotherm()[:,1,:])
+fig.savefig('hola')
+
 """
 # Estimar el modelo termal
 if xt1 == 1:
@@ -130,3 +135,4 @@ elif xm7 ==1 and tdelta != 0.2 or mdelta != 0.2:
 #    if not os.listdir(direTer):
 #        print 'Error: debe generar un modelo Termal antes de usar el Mecanico'
 """
+pass

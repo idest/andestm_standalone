@@ -536,6 +536,7 @@ class ThermalModel(Model3d):
     def __set_geotherm(self):
         k = self.vars.k
         h = self.vars.h
+        print('delta:', self.vars.delta)
         if self.vars.delta.shape:
             delta = self.vars.delta[:, :, np.newaxis]
         else:
@@ -585,7 +586,7 @@ class MechanicModel(Model3d):
         super().__init__()
         self.geo_model = geo_model
         self.thermal_model = thermal_model
-        self.vars = DotDict(self.__set_variables(m_input))
+        self.vars = DotDict(self.__set_variables(m_input, rhe_data))
         self.bys_t, self.bys_c = self.__set_brittle_yield_strength()
         self.dys = self.__set_ductile_yield_strength()
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
@@ -601,16 +602,16 @@ class MechanicModel(Model3d):
         }
         return DotDict(rock_dic)
 
-    def __get_rheologic_vars(self, rock_id):
-        rock = rhe_data['rock_id']
+    def __get_rheologic_vars(self, id_rh, rhe_data):
+        rock = rhe_data[str(id_rh)]
         rock_dic = {
             'h': rock[1],
             'n': rock[2],
             'a': rock[3]
-        } 
+        }
         return DotDict(rock_dic)
 
-    def __set_variables(self, m_input):
+    def __set_variables(self, m_input, rhe_data):
         m_input = DotDict(m_input)
         m_vars = {
             'bs_t': m_input['Bs_t'],
@@ -618,9 +619,9 @@ class MechanicModel(Model3d):
             'e': m_input['e'],
             'r': m_input['R'],
             's_max': m_input['s_max'],
-            'cs': self.__get_rheologic_vars(m_input['Cs']),
-            'ci': self.__get_rheologic_vars(m_input['Ci']),
-            'ml': self.__get_rheologic_vars(m_input['Ml'])
+            'cs': self.__get_rheologic_vars(m_input['Cs'], rhe_data),
+            'ci': self.__get_rheologic_vars(m_input['Ci'], rhe_data),
+            'ml': self.__get_rheologic_vars(m_input['Ml'], rhe_data)
         }
         return m_vars
 
@@ -708,19 +709,19 @@ class MechanicModel(Model3d):
         eet = self.combine_by_areas(attached_eet, detached_eet, share_moho)
 
         return uc_tuple, lc_tuple, lm_tuple, eet
-        
+
 
     def get_yse(self):
         return self.yse_t, self.yse_c
         # ##WORk IN PROGRESS###
 
 def compute(gm_data, ta_data, rhe_data, areas, t_input, m_input):
-    D = Data(gm_data, 0.2, 1)
+    D = Data(gm_data, 0.2, 0.1)
     GM = GeometricModel(D, areas)
     TM = ThermalModel(GM, t_input, ta_data)
     # D = C.get_geotherm()[45, 35, 50]
     MM = MechanicModel(GM, TM, m_input, rhe_data)
-    return GM, TM, MM
+    return D, GM, TM, MM
 
 def get_old_output(t_input, m_input, areas):
     A = Data(gm_data, 0.2, 1)

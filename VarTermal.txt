@@ -7,22 +7,23 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  ------   -----------
-     False  k_z      a3 = 0 prom. de K. a3 = 1  valor de K dep de Z
-     False  H_z      a4 = 0 prom. de H. a4 = 1  valor de H dep de Z
-      True  delta_icd
-      True  t_lat    a5 = 0 usar edad de la fosa. a5 = edad (ej. a5=50 Myr)
+     False  k_z       k_z = False prom. de K. k_z = True  valor de K dep de Z
+     False  H_z       H_z = False prom. de H. H_z = True  valor de H dep de Z
+      True  delta_icd Si delta_icd = True delta depende de icd. Si delta_icd = False => delta_icd = delta 
+      True  t_lat     t_lat = True usar edad de la fosa. t_lat = edad (ej. a5=50 Myr)
 #·········  ·······  ··························································
        3.0  k_cs     Conductividad termica Corteza superior [W/mK]
        2.5  k_ci     Conductividad termica Corteza inferior [W/mK]
-       3.5  k_ml     Conductividad termica Manto litosferico [ W/mK]
-     3.e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
-     3.e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
-     3.e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
+       3.0  k_ml     Conductividad termica Manto litosferico [ W/mK]
+     2.e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
+    0.2e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
+   0.02e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
      1.e-6  kappa    difusividad termica [m2/s]
     1300.0  Tp       Temperatura potencial del manto [C]
-     4.e-4  G        Gradiente adiabatico [K/m]
+     3.e-4  G        Gradiente adiabatico [K/m]
      6.5e4  V        Velocidad de convergencia [m/Myr]
        1.0  b        Parametro adimensional
       20.0  dip      Angulo de subduccion
-       3.0  D        Constante de proporcionalidad adimensional
-        10  delta    Blabla
+       0.1  D        Constante de proporcionalidad adimensional
+        10  delta    Decaimiento radiogenico
+        30  t        Edad promedio de la placa oceanica en la fosa (Ma)

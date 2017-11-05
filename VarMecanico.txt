@@ -12,6 +12,6 @@
      1e-15  e        Strain rate (s-1)
       8.31  R        Constante universal de gases (J mol-1 K-1)
          9  Cs       Modelo reologico de la corteza superior
-        12  Ci       Modelo reologico de la corteza inferior
+        28  Ci       Modelo reologico de la corteza inferior
         22  Ml       Modelo reologico del manto litosférico
        200  s_max    Maximo Stress Disponible

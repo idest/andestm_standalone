@@ -28,8 +28,6 @@ def readVars(name):
             #dic[str.strip(Vname)] = Vnum
             #Vstr = str(Vname.strip())
             #dic[Vstr] = Vval
-            print(Vname)
-            print('{} = {}'.format('dic[Vname]', Vval))
             exec('{} = {}'.format('dic[Vname]', Vval))
         # Leer siguiente linea
         line = f.readline()
@@ -83,7 +81,6 @@ def read_rheo(name):
         # ignorar las lineas que empiezan con #
         if line[0] != '#':
 
-            print(line.split())
             id_rh, name, h, n, a, ref = line.split()
 
             dic[id_rh] = [name, float(h), float(n), float(a), ref]

@@ -137,8 +137,9 @@ class Data(object):
             bottom_z = -np.inf
         else:
             bottom_z = np.ceil(bottom_z)[:, :, np.newaxis]
-        a = top_z < z_3d
-        b = bottom_z > z_3d
+        with np.errstate(invalid='ignore'): 
+            a = top_z < z_3d
+            b = bottom_z > z_3d
         array_3d = np.copy(array_3d)
         array_3d[a] = np.nan
         array_3d[b] = np.nan
@@ -536,7 +537,6 @@ class ThermalModel(Model3d):
     def __set_geotherm(self):
         k = self.vars.k
         h = self.vars.h
-        print('delta:', self.vars.delta)
         if self.vars.delta.shape:
             delta = self.vars.delta[:, :, np.newaxis]
         else:
@@ -682,7 +682,8 @@ class MechanicModel(Model3d):
 
     def __set_eet(self, yse):
         elastic_z = np.copy(self.geo_model.data.get_3d_grid()[2])
-        elastic_z[yse < self.vars.s_max] = np.nan
+        with np.errstate(invalid='ignore'):
+            elastic_z[yse < self.vars.s_max] = np.nan
         uc_tuple, e_z_uc = self.__get_layer_elastic_tuple(elastic_z, 'uc')
         lc_tuple, e_z_lc = self.__get_layer_elastic_tuple(elastic_z, 'lc')
         lm_tuple, e_z_lm = self.__get_layer_elastic_tuple(elastic_z, 'lm')
@@ -716,7 +717,7 @@ class MechanicModel(Model3d):
         # ##WORk IN PROGRESS###
 
 def compute(gm_data, ta_data, rhe_data, areas, t_input, m_input):
-    D = Data(gm_data, 0.2, 0.1)
+    D = Data(gm_data, 0.2, 1)
     GM = GeometricModel(D, areas)
     TM = ThermalModel(GM, t_input, ta_data)
     # D = C.get_geotherm()[45, 35, 50]

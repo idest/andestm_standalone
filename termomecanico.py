@@ -17,7 +17,6 @@ Meca = DotDict(setup.readVars('VarMecanico.txt'))
 Exec = DotDict(setup.readVars('VarExec.txt'))
 direTer, direTerMec = setup.makeDirs(Exec.temcaso, Exec.meccaso)
 Rhe = DotDict(setup.read_rheo('data/Rhe_Param.dat'))
-print('rhe:', Rhe)
 # Variables
 #graf = Exec[0] #geometrias
 #tmi = Exec[2]

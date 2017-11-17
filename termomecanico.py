@@ -63,9 +63,22 @@ areas = np.loadtxt('data/areas.dat')
 
 D, GM, TM, MM = compute.compute(gm_data, ta_data, Rhe, areas, Temp, Meca)
 
-fig = plot.plot(D.get_axes()[0], D.get_axes()[2], TM.get_geotherm()[:,1,:])
-fig.savefig('hola')
+#plotear perfiles termales
+"""
+os.chdir(direTer)
+fig = plot.plot_thermal(D.get_axes()[0], D.get_axes()[2], D, GM, TM)
+os.chdir('../../')
 
+#plotear perfiles termomecanicos
+os.chdir(direTerMec)
+fig = plot.plot_mec(D.get_axes()[0], D.get_axes()[2], D, GM, MM)
+os.chdir('../../../')
+"""
+detachment = plot.get_detachment(D,GM,MM)
+
+
+
+    
 """
 # Estimar el modelo termal
 if xt1 == 1:

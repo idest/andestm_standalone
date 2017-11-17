@@ -556,7 +556,7 @@ class MechanicModel(Model3d):
 
     @staticmethod
     def __calc_brittle_yield_strength(bs, depth):
-        bys = bs*(depth*1.e3)*1.e-6
+        bys = bs*(-depth*1.e3)*1.e-6
         return bys
 
     @staticmethod
@@ -628,7 +628,7 @@ class MechanicModel(Model3d):
     def __set_brittle_yield_strength(self):
         bs_t = self.vars.bs_t
         bs_c = self.vars.bs_c
-        depth = self.geo_model.data.get_3d_indexes()[2]  # depth from surface
+        depth = self.geo_model.data.get_3d_grid()[2]  # depth from surface
         depth = self.geo_model.data.mask_3d_array(depth.astype(np.float64),
                                                   nan_fill=True)
         bys_t = self.__calc_brittle_yield_strength(bs_t, depth)
@@ -714,6 +714,8 @@ class MechanicModel(Model3d):
 
     def get_yse(self):
         return self.yse_t, self.yse_c
+    def get_eet(self):
+        return self.eet
         # ##WORk IN PROGRESS###
 
 def compute(gm_data, ta_data, rhe_data, areas, t_input, m_input):

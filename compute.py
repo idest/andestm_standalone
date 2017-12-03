@@ -208,7 +208,7 @@ class CoordinateSystem(object):
         return SpatialArray2D(self.relevant_area, self)
 
     def get_relevant_volume(self):
-        return SpatialArray2D(self.relevant_volume, self)
+        return SpatialArray3D(self.relevant_volume, self)
 
 
 class SpatialArray(np.ndarray):
@@ -318,7 +318,7 @@ class SpatialArray3D(SpatialArray):
         array_3D[a] = 0
         surface = np.sum(array_3D, axis=2)
         surface[surface == 0] = np.nan
-        return SpatialArray2D(surface)
+        return SpatialArray2D(surface, z_2D.cs)
 
     def crop(self, top_z='top', bottom_z='bottom'):
         z_3D = self.cs.get_3D_grid()[2]
@@ -397,7 +397,7 @@ class GeometricModel(object):
         A = self.cs.get_2D_grid()[0]
         B = self.cs.get_2D_grid()[1]
         C = A + B
-        return SpatialArray3D(C)
+        return SpatialArray3D(C, self.cs)
 
     def __set_layer_thickness(self):
         pass
@@ -453,7 +453,7 @@ class GeometricModel(object):
         r[self.geo_model_3D == 1] = cs
         r[self.geo_model_3D == 2] = ci
         r[self.geo_model_3D == 3] = ml
-        return SpatialArray3D(r, self)
+        return SpatialArray3D(r, self.cs)
 
     def get_boundaries(self):
         boundaries = [self.topo, self.icd, self.moho, self.slab_lab]
@@ -738,10 +738,10 @@ class ThermalModel(object):
         return geotherm
 
     def get_surface_heat_flow(self):
-        return SpatialArray2D(self.surface_heat_flow)
+        return SpatialArray2D(self.surface_heat_flow, self.cs)
 
     def get_geotherm(self):
-        return SpatialArray3D(self.geotherm)
+        return SpatialArray3D(self.geotherm, self.cs)
 
 
 class MechanicModel(object):
@@ -857,7 +857,7 @@ class MechanicModel(object):
         with np.errstate(invalid='ignore'):
             yse_t = np.where(bys_t < dys, bys_t, dys)
             yse_c = np.where(bys_c > dys, bys_c, dys)
-        return SpatialArray3D(yse_t), SpatialArray3D(yse_c)
+        return SpatialArray3D(yse_t, self.cs), SpatialArray3D(yse_c, self.cs)
 
     def __get_layer_elastic_tuple(self, elastic_z, layer):
         topo, icd, moho, slablab = self.geo_model.get_boundaries()
@@ -906,7 +906,7 @@ class MechanicModel(object):
         detached_eet = self.__calc_eet_detached(detached_ths)
         eet = SpatialArray.combine_arrays_by_areas(attached_eet, detached_eet, share_moho)
 
-        return SpatialArray2D(eet)
+        return SpatialArray2D(eet, self.cs)
 
     def get_yse(self):
         return self.yse_t, self.yse_c

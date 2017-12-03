@@ -8,14 +8,14 @@ from matplotlib import cm
 import os
 from meccolormap import jet_white_r
 
-def plot_thermal(y, z, D, GM, TM):
+def plot_thermal(y, z, D, CS, GM, TM):
     c = -1
-    for i in range(len(D.get_axes()[1])-1):
+    for i in range(len(CS.get_axes()[1])-1):
         c = c+1
-        lat = D.get_axes()[1][c]
+        lat = CS.get_axes()[1][c]
         temp = TM.get_geotherm()[:,i,:]
-        start = D.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
-        finish = D.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
+        start = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
+        finish = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -23,10 +23,10 @@ def plot_thermal(y, z, D, GM, TM):
         plt.yticks(np.arange(10,-150-1,-10))
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
         plt.tight_layout()
         A1, A2 = np.meshgrid(y,z)
         temp_mask = ma.masked_invalid(temp)
@@ -52,14 +52,14 @@ def plot_thermal(y, z, D, GM, TM):
         plt.close()
     return
 
-def plot_mec(y, z, D, GM, MM):
+def plot_mec(y, z, D, CS, GM, MM):
     c = -1
-    for i in range(len(D.get_axes()[1])):
+    for i in range(len(CS.get_axes()[1])):
         c = c+1
-        lat = D.get_axes()[1][c]
+        lat = CS.get_axes()[1][c]
         meca = MM.get_yse()[0][:,i,:]
-        start = D.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
-        finish = D.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
+        start = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
+        finish = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -67,10 +67,10 @@ def plot_mec(y, z, D, GM, MM):
         plt.yticks(np.arange(10,-150-1,-10))
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
-        plt.plot(D.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
+        plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
         plt.tight_layout()
         A1, A2 = np.meshgrid(y,z)
         meca_mask = ma.masked_invalid(meca)
@@ -92,12 +92,12 @@ def plot_mec(y, z, D, GM, MM):
 
 def get_detachment(D,GM,MM):
     c = -1
-    for i in range(len(D.get_axes()[1])):
+    for i in range(len(CS.get_axes()[1])):
         c = c+1
         mecanico = MM.get_yse()[0][:,i,:]
         d_points = np.where(mecanico==200)
         print(d_points)
-        #plt.plot(D.get_axes()[0], d_points[0])
+        #plt.plot(CS.get_axes()[0], d_points[0])
         #fig.savefig('hola.png')
         #plt.close()
     return

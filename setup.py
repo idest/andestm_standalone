@@ -5,6 +5,7 @@
 import numpy as np
 import os
 import shutil
+from utils import DotDict
 
 #Leer archivo de instrucciones
 def readVars(name):
@@ -36,7 +37,7 @@ def readVars(name):
 
     # Retorna la matriz con todas las variables
 
-    return dic
+    return DotDict(dic)
 
 def makeDirs(temcaso, meccaso):
 
@@ -83,7 +84,7 @@ def read_rheo(name):
 
             id_rh, name, h, n, a, ref = line.split()
 
-            dic[id_rh] = [name, float(h), float(n), float(a), ref]
+            dic[id_rh] = DotDict({'name': name, 'H': float(h), 'n': float(n), 'A': float(a), 'ref': ref})
 
         # Leer siguiente linea
         line = f.readline()
@@ -92,6 +93,6 @@ def read_rheo(name):
 
     # Retorna la matriz con todas las variables
 
-    return dic
+    return DotDict(dic)
 
 

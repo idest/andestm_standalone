@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.ma as ma
+import setup
 import math
 import matplotlib
 matplotlib.use('Agg')
@@ -7,15 +8,16 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import os
 from meccolormap import jet_white_r
-
+from mpl_toolkits.basemap import Basemap
+"""
 def plot_thermal(y, z, D, CS, GM, TM):
     c = -1
     for i in range(len(CS.get_axes()[1])-1):
         c = c+1
         lat = CS.get_axes()[1][c]
         temp = TM.get_geotherm()[:,i,:]
-        start = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
-        finish = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
+        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][0]]
+        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][-1]]
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -23,11 +25,11 @@ def plot_thermal(y, z, D, CS, GM, TM):
         plt.yticks(np.arange(10,-150-1,-10))
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
+        plt.tight_layout()
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
-        plt.tight_layout()
         A1, A2 = np.meshgrid(y,z)
         temp_mask = ma.masked_invalid(temp)
         sub = plt.pcolormesh(A1,A2,temp_mask.T,cmap=cm.coolwarm, shading='gouraud')
@@ -51,15 +53,16 @@ def plot_thermal(y, z, D, CS, GM, TM):
         os.chdir('../')
         plt.close()
     return
-
+"""
+"""
 def plot_mec(y, z, D, CS, GM, MM):
     c = -1
     for i in range(len(CS.get_axes()[1])):
         c = c+1
         lat = CS.get_axes()[1][c]
         meca = MM.get_yse()[0][:,i,:]
-        start = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[0][:,i])==False)[0][0]]
-        finish = CS.get_axes()[0][np.where(np.isnan(GM.get_boundaries()[2][:,i])==False)[0][-1]] 
+        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][0]]
+        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][-1]] 
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -67,11 +70,11 @@ def plot_mec(y, z, D, CS, GM, MM):
         plt.yticks(np.arange(10,-150-1,-10))
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
+        plt.tight_layout()
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
         plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
-        plt.tight_layout()
         A1, A2 = np.meshgrid(y,z)
         meca_mask = ma.masked_invalid(meca)
         #plot modelo termomecanico
@@ -88,20 +91,52 @@ def plot_mec(y, z, D, CS, GM, MM):
         fig.savefig('perf%s.png' %(lat))
         os.chdir('../')
         plt.close()
+    print(finish)
+    return
+"""
+def map_q_surface(CS, MM, tmc, data_q):
+    longitud = data_q[:,0]
+    latitud = data_q[:,1]
+    q_flow = (data_q[:,2]/1000)*-1
+    map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
+    map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
+    map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
+    map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
+    #hacer grid y cargar los datos para la paleta de colores del mapa
+    mlon, mlat = map(longitud,latitud)
+    x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_axes().shape[0])
+    y = np.linspace(map.llcrnry, map.urcrnry, CS.get_axes().shape[1])
+    xx, yy = np.meshgrid(x, y)
+    q_flowm = ma.masked_invalid(q_flow)
+    datam = ma.masked_invalid(MM.get_surface_heat())
+    M = map.pcolormesh(xx, yy, datam.T, cmap='afmhot_r', shading='gouraud')
+    #Graficar datos de Q y barra de color
+    plot_q = map.scatter(mlon, mlat, c = q_flowm.T, cmap = 'afmhot_r')
+    plt.clim(0,-0.2)
+    cbar = plt.colorbar(plot_q)
+    cbar.set_label('Flujo de Calor (W/m2)', rotation=90, labelpad=-70)
+    nombre = "Mapa_Q_0%d" %(tmc)
+    if not os.path.exists('Mapas'):
+        os.makedirs('Mapas')
+    os.chdir('Mapas')
+    plt.savefig('%s' %(nombre))
+    os.chdir('../')
+    plt.close()
     return
 
-def get_detachment(D,GM,MM):
+"""
+def get_detachment(CS,GM,MM):
     c = -1
     for i in range(len(CS.get_axes()[1])):
         c = c+1
         mecanico = MM.get_yse()[0][:,i,:]
         d_points = np.where(mecanico==200)
-        print(d_points)
+    print(d_points)
         #plt.plot(CS.get_axes()[0], d_points[0])
         #fig.savefig('hola.png')
         #plt.close()
     return
-
+"""
 """
 #Modulo para graficar modelo termal y mecanico
 

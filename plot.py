@@ -94,12 +94,12 @@ def plot_mec(y, z, D, CS, GM, MM):
     print(finish)
     return
 """
-def map_q_surface(CS, MM, tmc, data_q):
+def map_q_surface(CS, TM, tmc, data_q):
     longitud = data_q[:,0]
     latitud = data_q[:,1]
     q_flow = (data_q[:,2]/1000)*-1
     map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
-    map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
+    #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
     map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
     map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
     #hacer grid y cargar los datos para la paleta de colores del mapa
@@ -108,7 +108,7 @@ def map_q_surface(CS, MM, tmc, data_q):
     y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
     xx, yy = np.meshgrid(x, y)
     q_flowm = ma.masked_invalid(q_flow)
-    datam = ma.masked_invalid(MM.get_surface_heat_flow())
+    datam = ma.masked_invalid(TM.get_surface_heat_flow())
     M = map.pcolormesh(xx, yy, datam.T, cmap='afmhot_r', shading='gouraud')
     #Graficar datos de Q y barra de color
     plot_q = map.scatter(mlon, mlat, c = q_flowm.T, cmap = 'afmhot_r')

@@ -35,7 +35,7 @@ os.chdir('../../../')
 """
 #plotear mapa q_surface
 os.chdir(direTer)
-fig = plot.map_q_surface(CS, MM, tmc, data_q)
+fig = plot.map_q_surface(CS, TM, tmc, data_q)
 os.chdir('../../')
 
 

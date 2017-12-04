@@ -109,13 +109,13 @@ def map_q_surface(CS, TM, tmc, data_q):
     xx, yy = np.meshgrid(x, y)
     q_flowm = ma.masked_invalid(q_flow)
     datam = ma.masked_invalid(TM.get_surface_heat_flow())
-    M = map.pcolormesh(xx, yy, datam.T, cmap='afmhot_r', shading='gouraud')
+    M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading='gouraud')
     #Graficar datos de Q y barra de color
     plot_q = map.scatter(mlon, mlat, c = q_flowm.T, cmap = 'afmhot_r')
     plt.clim(0,-0.2)
     cbar = plt.colorbar(plot_q)
     cbar.set_label('Flujo de Calor (W/m2)', rotation=90, labelpad=-70)
-    nombre = "Mapa_Q_0%d" %(tmc)
+    nombre = "Mapa_Q_0%s" %(tmc)
     if not os.path.exists('Mapas'):
         os.makedirs('Mapas')
     os.chdir('Mapas')
@@ -390,7 +390,7 @@ def graficar_mapa(data,map_id):
         nombre = "Mapa_T"
     elif map_id == 2:
         #print "Q"
-        M = map.pcolormesh(xx, yy, datam.T, cmap='afmhot_r', shading='gouraud')
+        M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading='gouraud')
         #Graficar barra de color
         cbar = plt.colorbar(M, aspect='20')
         cbar.set_label('Flujo de Calor (W)', rotation=90, labelpad=-80)

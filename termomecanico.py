@@ -39,5 +39,5 @@ fig = plot.map_q_surface(CS, TM, tmc, data_q)
 os.chdir('../../')
 
 
-detachment = plot.get_detachment(CS,GM,MM)
+#detachment = plot.get_detachment(CS,GM,MM)
 

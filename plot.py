@@ -104,8 +104,8 @@ def map_q_surface(CS, MM, tmc, data_q):
     map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
     #hacer grid y cargar los datos para la paleta de colores del mapa
     mlon, mlat = map(longitud,latitud)
-    x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_axes().shape[0])
-    y = np.linspace(map.llcrnry, map.urcrnry, CS.get_axes().shape[1])
+    x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape)
+    y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape)
     xx, yy = np.meshgrid(x, y)
     q_flowm = ma.masked_invalid(q_flow)
     datam = ma.masked_invalid(MM.get_surface_heat())

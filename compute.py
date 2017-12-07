@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from utils import DotDict
-
+from dotmap import DotMap
 
 class Data(object):
 
@@ -49,7 +49,7 @@ class Data(object):
             'max_z': max_z,
             'min_z': min_z
         }
-        return DotDict(coordinate_data)
+        return DotMap(coordinate_data)
 
     def __set_geometric_data(self, initial_data):
         z_slab_lab = initial_data[:, 2]
@@ -62,7 +62,7 @@ class Data(object):
             'z_icd': z_icd,
             'z_topo': z_topo
         }
-        return DotDict(geometric_data)
+        return DotMap(geometric_data)
 
     def get_cs_data(self):
         cs_data = {
@@ -70,28 +70,28 @@ class Data(object):
             'populated_points': self.populated_points,
             'z_slab_lab': self.geometric_data.z_slab_lab  # to get plates_areas
         }
-        return DotDict(cs_data)
+        return DotMap(cs_data)
 
     def get_gm_data(self):
         gm_data = {
             'geometric_data': self.geometric_data,
             'slab_lab_areas': self.slab_lab_areas
         }
-        return DotDict(gm_data)
+        return DotMap(gm_data)
 
     def get_tm_data(self):
         tm_data = {
             't_input': self.t_input,
             'trench_age': self.trench_age
         }
-        return DotDict(tm_data)
+        return DotMap(tm_data)
 
     def get_mm_data(self):
         mm_data = {
             'm_input': self.m_input,
             'rheologic_data': self.rheologic_data
         }
-        return DotDict(mm_data)
+        return DotMap(mm_data)
 
 class CoordinateSystem(object):
 
@@ -550,7 +550,7 @@ class ThermalModel(object):
     def __init__(self, tm_data, geometric_model, coordinate_system):
         self.geo_model = geometric_model
         self.cs = coordinate_system
-        self.vars = DotDict(self.__set_variables(tm_data.t_input,
+        self.vars = DotMap(self.__set_variables(tm_data.t_input,
                                                  tm_data.trench_age))
         self.slab_lab_int_temp = self.__set_slab_lab_int_temperature()
         self.slab_lab_int_sigma = self.__set_slab_lab_int_sigma()
@@ -604,7 +604,7 @@ class ThermalModel(object):
         return trench_age
 
     def __set_variables(self, t_input, trench_age):
-        t_input = DotDict(t_input)
+        t_input = DotMap(t_input)
         t_vars = {
             'k_cs': t_input['k_cs'],
             'k_ci': t_input['k_ci'],
@@ -778,7 +778,7 @@ class MechanicModel(object):
         self.geo_model = geo_model
         self.cs = coordinate_system
         self.thermal_model = thermal_model
-        self.vars = DotDict(self.__set_variables(mm_data.m_input,
+        self.vars = DotMap(self.__set_variables(mm_data.m_input,
                                                  mm_data.rheologic_data))
         self.depth_from_topo = self.__set_depth_from_topo()
         self.bys_t, self.bys_c = self.__set_brittle_yield_strength()
@@ -794,7 +794,7 @@ class MechanicModel(object):
             'a': rock.A,
             'h': rock.H,
         }
-        return DotDict(rock_dic)
+        return DotMap(rock_dic)
 
     def __get_rheologic_vars(self, id_rh, rhe_data):
         rock = rhe_data[str(id_rh)]
@@ -803,10 +803,10 @@ class MechanicModel(object):
             'n': rock.n,
             'a': rock.A
         }
-        return DotDict(rock_dic)
+        return DotMap(rock_dic)
 
     def __set_variables(self, m_input, rhe_data):
-        m_input = DotDict(m_input)
+        m_input = DotMap(m_input)
         m_vars = {
             'bs_t': m_input['Bs_t'],
             'bs_c': m_input['Bs_c'],

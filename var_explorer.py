@@ -30,12 +30,12 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 
 mem()
 
-D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
+#D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
 
-gt_ref = TM.get_geotherm()
-yse_ref = MM.get_yse()[0]
+#gt_ref = TM.get_geotherm()
+#yse_ref = MM.get_yse()[0]
 
-mem()
+#mem()
 
 input_type = t_input
 var = 'k_cs'
@@ -50,6 +50,11 @@ def comp(out_q):
     models['yse_t'] = MM.get_yse()[0]
     queue.put(models) 
 
+proc = mp.Process(target=comp, args=(queue,))
+proc.start()
+models_ref = queue.get()
+proc.join()
+
 i = 0
 gt_square_errors = {}
 yse_square_errors = {}
@@ -60,8 +65,8 @@ for value in var_range:
     proc = mp.Process(target=comp, args=(queue,))
     proc.start()
     models = queue.get()
-    gt_square_errors['gt_{}'.format(i)] = (models['gt'] - gt_ref)**2
-    yse_square_errors['yse_{}'.format(i)] = (models['yse_t'] - yse_ref)**2
+    gt_square_errors['gt_{}'.format(i)] = (models['gt'] - models_ref['gt'])**2
+    yse_square_errors['yse_{}'.format(i)] = (models['yse_t'] - models_ref['yse_t'])**2
     proc.join()
     mem()
     i += 1

@@ -231,6 +231,19 @@ class SpatialArray(np.ndarray):
         self.array = np.asarray(self).view(np.ndarray)
         #self.array = getattr(obj, 'array', None)
 
+    def __reduce__(self):
+        # Get the parent's __reduce__ tuple
+        reduce_tuple = super(SpatialArray, self).__reduce__()
+        # Create our own state to pass to __setstate__
+        new_state = reduce_tuple[2] + (self.cs,)
+        # Return a tuple that replaces the parent's __setstate__ tuple 
+        return (reduce_tuple[0], reduce_tuple[1], new_state)
+
+    def __setstate__(self, state):
+        self.cs = state[-1]
+        # Call the parent's __setstate__ with the other tuple elements
+        super(SpatialArray, self).__setstate__(state[0:-1])
+
     @staticmethod
     def divide_array_by_areas(array, areas):
         if len(array.shape) == 2:

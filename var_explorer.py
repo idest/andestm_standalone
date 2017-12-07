@@ -43,14 +43,17 @@ var_range = np.arange(3, 3.6, 0.2)
 
 queue = mp.Queue()
 
-def comp(out_q):
+def comp(out_q, eet):
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
     models = {}
     models['gt'] = TM.get_geotherm()
     models['yse_t'] = MM.get_yse()[0]
-    queue.put(models) 
-
-proc = mp.Process(target=comp, args=(queue,))
+    if eet is True:
+        models['eet'] = MM.get_eet()
+    queue.put(models)
+eet = True
+no_eet = False
+proc = mp.Process(target=comp, args=(queue,eet))
 proc.start()
 models_ref = queue.get()
 proc.join()
@@ -62,7 +65,7 @@ yse_square_errors = {}
 for value in var_range:
     input_type[var] = value
     print(t_input.k_cs)
-    proc = mp.Process(target=comp, args=(queue,))
+    proc = mp.Process(target=comp, args=(queue,no_eet))
     proc.start()
     models = queue.get()
     gt_square_errors['gt_{}'.format(i)] = (models['gt'] - models_ref['gt'])**2
@@ -84,12 +87,12 @@ map = Basemap(llcrnrlon=-79.8, llcrnrlat=-44.8, urcrnrlon=-58.0, urcrnrlat=-10.0
 map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
 map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
 map.drawcoastlines()
-x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape[0])
-y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
+x = np.linspace(map.llcrnrx, map.urcrnrx, models_ref['gt'].cs.get_x_axis().shape[0])
+y = np.linspace(map.llcrnry, map.urcrnry, models_ref['gt'].cs.get_y_axis().shape[0])
 xx, yy = np.meshgrid(x,y)
-xxx, yyy = CS.get_2D_grid()
+xxx, yyy = models_ref['gt'].cs.get_2D_grid()
 gt_rmse_map = np.ma.masked_invalid(gt_rmse_map)
-eet = np.ma.masked_invalid(MM.get_eet())
+eet = np.ma.masked_invalid(models_ref['eet'])
 M = map.pcolormesh(xx, yy[::-1], gt_rmse_map.T, cmap='coolwarm', shading='gouraud')
 #M = map.pcolormesh(xx, yy[::-1], eet.T, cmap='coolwarm', shading='gouraud')
 cbar = plt.colorbar(M)

@@ -1,5 +1,5 @@
 import setup
-import compute
+import compute_memsave
 import plot
 import numpy as np
 from utils import DotDict
@@ -25,7 +25,7 @@ trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
 rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 data_q = np.loadtxt('datos_Q/QS/ObsQs/QsObs.txt')
 
-D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
+D, CS, GM, TM, MM = compute_memsave.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
 
 print("After termomecanico M.S:")
 mem()

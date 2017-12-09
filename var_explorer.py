@@ -39,21 +39,22 @@ mem()
 
 input_type = t_input
 var = 'k_cs'
-var_range = np.arange(3, 3.6, 0.2) 
+var_range = np.arange(4, 3.6, 0.2)
 
 queue = mp.Queue()
 
-def comp(out_q, eet):
+def comp(out_q, ref):
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
     models = {}
     models['gt'] = TM.get_geotherm()
     models['yse_t'] = MM.get_yse()[0]
-    if eet is True:
+    if ref is True:
         models['eet'] = MM.get_eet()
     queue.put(models)
-eet = True
-no_eet = False
-proc = mp.Process(target=comp, args=(queue,eet))
+    return
+ref = True
+no_ref = False
+proc = mp.Process(target=comp, args=(queue,ref))
 proc.start()
 models_ref = queue.get()
 proc.join()
@@ -65,7 +66,7 @@ yse_square_errors = {}
 for value in var_range:
     input_type[var] = value
     print(t_input.k_cs)
-    proc = mp.Process(target=comp, args=(queue,no_eet))
+    proc = mp.Process(target=comp, args=(queue,no_ref))
     proc.start()
     models = queue.get()
     gt_square_errors['gt_{}'.format(i)] = (models['gt'] - models_ref['gt'])**2

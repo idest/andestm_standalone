@@ -621,21 +621,6 @@ class ThermalModel(object):
                                                  tm_data.trench_age))
         print("self.vars")
         mem()
-        self.slab_lab_int_temp = self.__set_slab_lab_int_temperature()
-        print("self.slab_lab_int_temp")
-        mem()
-        self.slab_lab_int_sigma = self.__set_slab_lab_int_sigma()
-        print("self.slab_lab_int_sigma")
-        mem()
-        self.slab_sigma = self.__set_slab_sigma()
-        print("self.slab_sigma")
-        mem()
-        self.slab_temp = self.__set_slab_temp()
-        print("self.slab_temp")
-        mem()
-        self.lab_temp = self.__set_lab_temp()
-        print("self.lab_temp")
-        mem()
         self.slab_lab_temp = self.__set_slab_lab_temp()
         print("self.slab_lab_temp")
         mem()
@@ -711,17 +696,17 @@ class ThermalModel(object):
         }
         return t_vars
 
-    def __set_slab_lab_int_temperature(self):
+    def __get_slab_lab_int_temperature(self):
         sli_depth = self.geo_model.get_slab_lab_int_depth()
         tp = self.vars.tp
         g = self.vars.g
         sli_temp = self.__calc_lab_temp(tp, g, sli_depth)
         return sli_temp
 
-    def __set_slab_lab_int_sigma(self):
+    def __get_slab_lab_int_sigma(self):
         sli_depth = self.geo_model.get_slab_lab_int_depth()
         sli_topo = self.geo_model.get_slab_lab_int_topo()
-        sli_temp = self.slab_lab_int_temp
+        sli_temp = self.__get_slab_lab_int_temperature()
         kappa = self.vars.kappa
         v = self.vars.v
         dip = self.vars.dip
@@ -740,12 +725,12 @@ class ThermalModel(object):
                                                    sli_q_zero, v)
         return sli_sigma
 
-    def __set_slab_sigma(self):
+    def __get_slab_sigma(self):
         z_sl = self.geo_model.get_slab_lab()
         z_topo = self.geo_model.get_topo()
         sli_depth = self.geo_model.get_slab_lab_int_depth()
         sli_topo = self.geo_model.get_slab_lab_int_topo()
-        sli_sigma = self.slab_lab_int_sigma
+        sli_sigma = self.__get_slab_lab_int_sigma()
         d = self.vars.d
         slab_sigma = self.__calc_slab_sigma(z_sl, z_topo, sli_depth, sli_topo,
                                             sli_sigma, d)
@@ -754,7 +739,7 @@ class ThermalModel(object):
         slab_sigma = np.ma.array(slab_sigma, mask=b).filled(np.nan)
         return slab_sigma
 
-    def __set_slab_temp(self):
+    def __get_slab_temp(self):
         z_sl = self.geo_model.get_slab_lab()
         z_topo = self.geo_model.get_topo()
         slab_k = self.vars.k.extract_surface(z_sl)
@@ -766,7 +751,7 @@ class ThermalModel(object):
         dip = self.vars.dip
         b = self.vars.b
         s = self.__calc_s(z_sl, z_topo, kappa, v, dip, b)
-        slab_sigma = self.slab_sigma
+        slab_sigma = self.__get_slab_sigma()
         slab_temp = self.__calc_slab_temp(z_sl, z_topo, q_zero, slab_sigma, v,
                                           slab_k, s)
         a = self.geo_model.get_slab_lab_int_area()
@@ -774,7 +759,7 @@ class ThermalModel(object):
         slab_temp = np.ma.array(slab_temp, mask=b).filled(np.nan)
         return slab_temp
 
-    def __set_lab_temp(self):
+    def __get_lab_temp(self):
         z_sl = self.geo_model.get_slab_lab()
         # z_lab = self.geo_model.mask_slab(z_sl)
         tp = self.vars.tp
@@ -789,8 +774,8 @@ class ThermalModel(object):
         a = self.geo_model.get_slab_lab_int_area()
         b = a == 0
         c = a == 1
-        slab_temp = self.slab_temp  # type: np.ndarray
-        lab_temp = self.lab_temp  # type: np.ndarray
+        slab_temp = self.__get_slab_temp()
+        lab_temp = self.__get_lab_temp()  # type: np.ndarray
         slab_lab_temp = np.zeros(self.cs.get_2D_shape())
         slab_lab_temp[b] = slab_temp[b]
         slab_lab_temp[c] = lab_temp[c]
@@ -878,12 +863,12 @@ class MechanicModel(object):
         self.depth_from_topo = self.__set_depth_from_topo()
         print("self.depth_from_topo")
         mem()
-        self.bys_t, self.bys_c = self.__set_brittle_yield_strength()
-        print("self.bys_t, self.bys_c")
-        mem()
-        self.dys = self.__set_ductile_yield_strength()
-        print("self.dys")
-        mem()
+        #self.bys_t, self.bys_c = self.__set_brittle_yield_strength()
+        #print("self.bys_t, self.bys_c")
+        #mem()
+        #self.dys = self.__set_ductile_yield_strength()
+        #print("self.dys")
+        #mem()
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
         print("self.yse_t, self.yse_c")
         mem()
@@ -928,7 +913,7 @@ class MechanicModel(object):
                             - self.geo_model.get_topo()[:, :, np.newaxis])
         return depth_from_topo
 
-    def __set_brittle_yield_strength(self):
+    def __get_brittle_yield_strength(self):
         bs_t = self.vars.bs_t
         bs_c = self.vars.bs_c
         #depth = self.cs.get_3D_indexes()[2]  # needs to be Z from topo
@@ -940,7 +925,7 @@ class MechanicModel(object):
         bys_c = self.__calc_brittle_yield_strength(bs_c, depth_from_topo)
         return bys_t, bys_c
 
-    def __set_ductile_yield_strength(self):
+    def __get_ductile_yield_strength(self):
         e = self.vars.e
         r = self.vars.r
         temp = self.thermal_model.get_geotherm()
@@ -955,9 +940,8 @@ class MechanicModel(object):
         return dys
 
     def __set_yield_strength_envelope(self):
-        bys_t = self.bys_t  # type: np.ndarray
-        bys_c = self.bys_c  # type: np.ndarray
-        dys = self.dys  # type: np.ndarray
+        bys_t, bys_c = self.__get_brittle_yield_strength()  # type: np.ndarray
+        dys = self.__get_ductile_yield_strength()  # type: np.ndarray
         with np.errstate(invalid='ignore'):
             yse_t = np.where(bys_t < dys, bys_t, dys)
             yse_c = np.where(bys_c > dys, bys_c, dys)

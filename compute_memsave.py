@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from utils import DotDict
 from dotmap import DotMap
 import resource
 
@@ -105,16 +104,18 @@ class CoordinateSystem(object):
         self.data = cs_data.coordinate_data
         print("self.data")
         mem()
+        self.xy_step = xy_step
+        self.z_step = z_step
         self.x_axis = self.__set_axis(self.data.max_lon, self.data.min_lon,
-                                      xy_step)
+                                      self.xy_step)
         print("self.x_axis")
         mem()
         self.y_axis = self.__set_axis(self.data.max_lat, self.data.min_lat,
-                                      xy_step, revert=True)
+                                      self.xy_step, revert=True)
         print("self.y_axis")
         mem()
-        self.z_axis = self.__set_axis(self.data.max_z, self.data.min_z, z_step,
-                                      revert=True)
+        self.z_axis = self.__set_axis(self.data.max_z, self.data.min_z,
+                                      self.z_step, revert=True)
         print("self.z_axis")
         mem()
         self.grid_2D = self.__set_grid([self.x_axis, self.y_axis])
@@ -178,6 +179,12 @@ class CoordinateSystem(object):
     def reshape_data(self, data_column):
         return data_column.T.reshape(len(self.y_axis), len(self.x_axis)).T
 
+    def get_xy_step(self):
+        return self.xy_step
+
+    def get_z_step(self):
+        return self.z_step
+
     def get_axes(self):
         return [self.x_axis, self.y_axis, self.z_axis]
 
@@ -195,6 +202,24 @@ class CoordinateSystem(object):
 
     def get_3D_shape(self):
         return len(self.x_axis), len(self.y_axis), len(self.z_axis)
+
+    """
+    def get_2D_grid(self):
+        grid_2D = self.__set_grid([self.x_axis, self.y_axis])
+        grid_2D_relevant = []
+        for n in range(len(grid_2D)):
+            grid_2D_relevant.append(SpatialArray2D(grid_2D[n],
+                                                   self).mask_irrelevant())
+        return grid_2D_relevant
+
+    def get_3D_grid(self):
+        grid_3D = self.__set_grid([self.x_axis, self.y_axis, self.z_axis])
+        grid_3D_relevant = []
+        for n in range(len(grid_3D)):
+            grid_3D_relevant.append(SpatialArray3D(grid_3D[n],
+                                                   self).mask_irrelevant())
+        return grid_3D_relevant
+    """
 
     def get_2D_grid(self):
         grid_2D = []
@@ -318,10 +343,33 @@ class SpatialArray2D(SpatialArray):
 
     def mask_irrelevant(self, nan_fill=False):
         mask = np.invert(self.cs.get_relevant_area())
-        masked_array = np.ma.array(self, mask=mask)
-        if nan_fill is True:
-            masked_array = masked_array.filled(np.nan)
+        masked_array = self.copy()
+        masked_array[mask] = np.nan
+        #masked_array = np.ma.array(self, mask=mask)
+        #if nan_fill is True:
+        #    masked_array = masked_array.filled(np.nan)
         return masked_array
+
+    def cross_section(self, latitude=None, longitude=None,
+                      lat1=None, lon1=None, lat2=None, lon2=None):
+        if self.ndim != 2:
+            dims = self.ndim
+            error = ("Array with 2 dimensions expected,",
+                     " array with {} dimensions recieved").format(dims)
+            raise ValueError(error)
+        elif latitude:
+            #index = list(self.cs.get_y_axis()).index(latitude)
+            index = np.where(self.cs.get_y_axis() == latitude)[0][0]
+            cross_section = self[:, index]
+            return cross_section
+        elif longitude:
+            #index = list(self.cs.get_x_axis()).index(longitude)
+            index = np.where(self.cs.get_x_axis() == longitude)[0][0]
+            print("index:", index)
+            cross_section = self[:, index]
+        elif lat1 and lon1 and lat2 and lon2:
+            cross_section = self
+        return cross_section
 
     def divide_by_areas(self, areas):
         array_1, array_2 = super().divide_array_by_areas(self, areas)
@@ -344,9 +392,11 @@ class SpatialArray3D(SpatialArray):
 
     def mask_irrelevant(self, nan_fill=True):
         mask = np.invert(self.cs.get_relevant_volume())
-        masked_array = np.ma.array(self, mask=mask)
-        if nan_fill is True:
-            masked_array = masked_array.filled(np.nan)
+        masked_array = self.copy()
+        masked_array[mask] = np.nan
+        #masked_array = np.ma.array(self, mask=mask)
+        #if nan_fill is True:
+        #    masked_array = masked_array.filled(np.nan)
         return masked_array
 
     def extract_surface(self, z_2D):
@@ -376,6 +426,26 @@ class SpatialArray3D(SpatialArray):
         array_3D[a] = np.nan
         array_3D[b] = np.nan
         return array_3D
+
+    def cross_section(self, latitude=None, longitude=None,
+                      lat1=None, lon1=None, lat2=None, lon2=None):
+        if self.ndim != 3:
+            dims = self.ndim
+            error = ("Array with 3 dimensions expected,",
+                     " array with {} dimensions recieved").format(dims)
+            raise ValueError(error)
+        elif latitude:
+            #index = list(self.cs.get_y_axis()).index(latitude)
+            index = np.where(self.cs.get_y_axis() == latitude)[0][0]
+            cross_section = self[:, index, :]
+            return cross_section
+        elif longitude:
+            #index = list(self.cs.get_x_axis()).index(longitude)
+            index = np.where(self.cs.get_x_axis() == longitude)[0][0]
+            cross_section = self[:, index, :]
+        elif lat1 and lon1 and lat2 and lon2:
+            cross_section = self
+        return cross_section 
 
     def divide_by_areas(self, areas):
         array_1, array_2 = super().divide_array_by_areas(self, areas)
@@ -448,7 +518,7 @@ class GeometricModel(object):
                 a = np.nan
             with np.errstate(invalid='ignore'): # error_ignore
                 geo_model_3D[z < c] = a
-        return SpatialArray3D(geo_model_3D, self.cs).mask_irrelevant()
+        return SpatialArray3D(geo_model_3D, self.cs)#.mask_irrelevant()
 
     def sencos(self):
         A = self.cs.get_2D_grid()[0]

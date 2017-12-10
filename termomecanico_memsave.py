@@ -6,6 +6,9 @@ from utils import DotDict
 import os
 import sys
 import resource
+from pympler.tracker import SummaryTracker
+
+tracker = SummaryTracker()
 
 def mem():
     print('Memory usage         : % 2.2f MB' % round(
@@ -50,3 +53,4 @@ os.chdir('../../../')
 
 #detachment = plot.get_detachment(CS,GM,MM)
 
+tracker.print_diff()

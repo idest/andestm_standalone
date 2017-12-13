@@ -8,12 +8,17 @@
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
          0  graf     Graficar geometrias? 1: En png ; 2: En svg; 0 : No
+         1  model    1 = heat_flow, 2 = yse, 3 = eet
 #------------------------------------------------------------------------------
 # Opciones para el modelo Termal                                              
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
+<<<<<<< Updated upstream
       '10'  temcaso  Numero de referencia para guardar el Modelo Termal
+=======
+      '09'  temcaso  Numero de referencia para guardar el Modelo Termal
+>>>>>>> Stashed changes
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima
@@ -31,7 +36,11 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
+<<<<<<< Updated upstream
       '10'  meccaso  Numero de referencia para guardar el Modelo Mecanico
+=======
+      '08'  meccaso  Numero de referencia para guardar el Modelo Mecanico
+>>>>>>> Stashed changes
 #                    (Construido sobre la base del modelo termal "temcaso")
 #·········  ·······  ··························································	
      -10.0  mmi      Latitud inicial

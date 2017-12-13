@@ -1,6 +1,6 @@
 import setup
 import compute
-#import plot
+import plot
 import numpy as np
 from utils import DotDict
 import os
@@ -26,10 +26,10 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 data_q = np.loadtxt('datos_Q/QS/ObsQs/QsObs.txt')
 
 D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
-
+"""
 print("After termomecanico M.S:")
 mem()
-
+"""
 #plotear perfiles termales
 """
 os.chdir(direTer)
@@ -43,9 +43,9 @@ fig = plot.plot_mec(CS.get_axes()[0], CS.get_axes()[2], D, CS, GM, MM)
 os.chdir('../../../')
 """
 #plotear mapa q_surface
-#os.chdir(direTer)
-#fig = plot.map_q_surface(CS, TM, tmc, data_q)
-#os.chdir('../../')
+os.chdir(direTer)
+fig = plot.map_q_surface(CS, TM, tmc, data_q)
+os.chdir('../../')
 
 
 #detachment = plot.get_detachment(CS,GM,MM)

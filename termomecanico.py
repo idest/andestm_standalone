@@ -1,10 +1,16 @@
 import setup
 import compute
-import plot
+#import plot
 import numpy as np
 from utils import DotDict
 import os
 import sys
+import resource
+
+def mem():
+    print('Memory usage         : % 2.2f MB' % round(
+        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024.0,1)
+    )
 
 print('Leyendo variables...')
 t_input = setup.readVars('VarTermal.txt')
@@ -20,6 +26,9 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 data_q = np.loadtxt('datos_Q/QS/ObsQs/QsObs.txt')
 
 D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
+
+print("After termomecanico M.S:")
+mem()
 
 #plotear perfiles termales
 """

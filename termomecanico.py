@@ -48,11 +48,6 @@ os.chdir('../../../')
 os.chdir(direTer)
 fig = plot.map_q_surface(CS, TM, tmc, data_q)
 os.chdir('../../')
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

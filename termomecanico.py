@@ -36,8 +36,8 @@ mem()
 os.chdir(direTer)
 fig = plot.plot_thermal(CS.get_axes()[0], CS.get_axes()[2], D, CS, GM, TM)
 os.chdir('../../')
-"""
-"""
+
+
 #plotear perfiles termomecanicos
 os.chdir(direTerMec)
 fig = plot.plot_mec(CS.get_axes()[0], CS.get_axes()[2], D, CS, GM, MM)

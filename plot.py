@@ -9,7 +9,7 @@ from matplotlib import cm
 import os
 from meccolormap import jet_white_r
 from mpl_toolkits.basemap import Basemap
-"""
+
 def plot_thermal(y, z, D, CS, GM, TM):
     c = -1
     for i in range(len(CS.get_axes()[1])-1):
@@ -53,11 +53,11 @@ def plot_thermal(y, z, D, CS, GM, TM):
         os.chdir('../')
         plt.close()
     return
-"""
-"""
+
+
 def plot_mec(y, z, D, CS, GM, MM):
     c = -1
-    for i in range(len(CS.get_axes()[1])):
+    for i in range(len(CS.get_axes()[1])-1):
         c = c+1
         lat = CS.get_axes()[1][c]
         meca = MM.get_yse()[0][:,i,:]
@@ -91,13 +91,12 @@ def plot_mec(y, z, D, CS, GM, MM):
         fig.savefig('perf%s.png' %(lat))
         os.chdir('../')
         plt.close()
-    print(finish)
     return
-"""
+
 def map_q_surface(CS, TM, tmc, data_q):
     longitud = data_q[:,0]
     latitud = data_q[:,1]
-    q_flow = (data_q[:,2]/1000)
+    q_flow = (data_q[:,2]/1000)*-1
     map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
     #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
     map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
@@ -114,7 +113,7 @@ def map_q_surface(CS, TM, tmc, data_q):
     M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading= 'gouraud')
     #Graficar datos de Q y barra de color
     plot_q = map.scatter(mlon, mlat, c = q_flowm.T, cmap = 'afmhot_r')
-    plt.clim(0,0.2)
+    plt.clim(0,-0.2)
     cbar = plt.colorbar(plot_q)
     cbar.set_label('Flujo de Calor (W/m2)', rotation=90, labelpad=-60)
     nombre = "Mapa_Q_0%s" %(tmc)

@@ -103,7 +103,7 @@ class CoordinateSystem(object):
                                       self.xy_step)
         self.y_axis = self.__set_axis(self.data.max_lat, self.data.min_lat,
                                       self.xy_step, revert=True)
-        self.z_axis = self.__set_axis(self.data.max_z, self.data.min_z, 
+        self.z_axis = self.__set_axis(self.data.max_z, self.data.min_z,
                                       self.z_step, revert=True)
         self.grid_2D = self.__set_grid([self.x_axis, self.y_axis])
         self.grid_3D = self.__set_grid([self.x_axis, self.y_axis, self.z_axis])
@@ -250,7 +250,7 @@ class SpatialArray(np.ndarray):
         reduce_tuple = super(SpatialArray, self).__reduce__()
         # Create our own state to pass to __setstate__
         new_state = reduce_tuple[2] + (self.cs,)
-        # Return a tuple that replaces the parent's __setstate__ tuple 
+        # Return a tuple that replaces the parent's __setstate__ tuple
         return (reduce_tuple[0], reduce_tuple[1], new_state)
 
     def __setstate__(self, state):
@@ -606,9 +606,9 @@ class ThermalModel(object):
     def __calc_surface_heat_flow(h, delta, k, z_topo, z_sl, temp_sl):
         z_topo = z_topo*1.e3
         z_sl = z_sl*1.e3
-        base_temp = temp_sl-((h*delta**2)/k)*(np.exp(z_topo/delta) -
-                                              np.exp(z_sl/delta))
-        heat_flow = (-h*delta-k/(z_sl-z_topo)*base_temp)
+        base_temp = temp_sl-((h*delta**2)/k)*(np.exp(z_topo/delta)
+                                              - np.exp(z_sl/delta))
+        heat_flow = (-h*delta-k/(abs(z_sl-z_topo))*base_temp)
         return heat_flow
 
     def __init__(self, tm_data, geometric_model, coordinate_system):

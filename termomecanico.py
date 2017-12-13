@@ -1,6 +1,6 @@
 import setup
 import compute
-import plot
+#import plot
 import numpy as np
 from utils import DotDict
 import os

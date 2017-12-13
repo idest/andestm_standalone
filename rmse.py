@@ -29,6 +29,8 @@ surface_heat_flow[np.isnan(surface_heat_flow)] = -9999 # nans = -9999
 shf_interpolator = RectBivariateSpline(x_axis, y_axis, surface_heat_flow)
 interpolated_shf = shf_interpolator.ev(datos_q_x, datos_q_y)
 
+print(surface_heat_flow)
+
 # Reemplazar valores interpolados negativos por nan y calcular sus indices
 interpolated_shf[interpolated_shf < 0] = np.nan
 valid_interp_shf_idxs = np.where(np.isfinite(interpolated_shf))

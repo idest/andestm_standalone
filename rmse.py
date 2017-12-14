@@ -5,6 +5,8 @@ from scipy.interpolate import RectBivariateSpline, interp2d, RegularGridInterpol
 from termomecanico import CS, TM
 from mpl_toolkits.basemap import Basemap
 import numpy.ma as ma
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import os
 
@@ -97,7 +99,6 @@ print(valid_interp_shf)
 rmse_bsi=np.sqrt(sum(((valid_interp_shf - valid_datos_q_shf)**2)*(valid_weight/sum(valid_weight))))
 print("RMSE (Bivariate Spline Interpolation):", rmse_bsi)
 
-<<<<<<< Updated upstream
 #Mapa que compara modelo con valores interpolados
 map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
 #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
@@ -129,9 +130,6 @@ plt.close()
 
 
 
-=======
-"""
->>>>>>> Stashed changes
 ###
 # Interpolar modelo en puntos de datos Q con Interp2d
 ###

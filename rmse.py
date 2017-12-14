@@ -1,7 +1,7 @@
 import numpy as np
 np.set_printoptions(threshold=np.nan)
 import scipy as sp
-from scipy.interpolate import RectBivariateSpline, interp2d
+from scipy.interpolate import RectBivariateSpline, interp2d, RegularGridInterpolator
 from termomecanico import CS, TM
 from mpl_toolkits.basemap import Basemap
 import numpy.ma as ma
@@ -28,8 +28,45 @@ weight[weight == 2] = 0.8 # Land Borehole
 weight[weight == 1] = 1.0 # ODP Borehole
 
 
+
+
+###
+#Interpolar modelo en puntos de datos Q con RegularGridInterpolator
+###
+surface_heat_flow = TM.get_surface_heat_flow()[::-1]
+surface_heat_flow[np.isnan(surface_heat_flow)] = 0
+
+interpolator = RegularGridInterpolator((x_axis, y_axis),surface_heat_flow)
+q_x = datos_q_x[:, np.newaxis]
+q_y = datos_q_y[:, np.newaxis]
+obs_pts = np.append(q_x, q_y, axis=1)
+print(obs_pts.shape)
+
+interpolated_data = interpolator(obs_pts)
+
+rmse_rgi=np.sqrt(sum(((interpolated_data - datos_q_shf)**2)*(weight/sum(weight))))
+print("RMSE (RGI Interpolation):", rmse_rgi)
+
+
+
 # Cargar modelo surface heat flow
 surface_heat_flow = TM.get_surface_heat_flow()[::-1]
+
+"""
+valid_shf_indexes = np.where(np.isfinite(surface_heat_flow))
+valid_x = x_axis[valid_shf_indexes[0]]
+valid_y = y_axis[::-1][valid_shf_indexes[1]]
+valid_shf = surface_heat_flow[valid_shf_indexes]
+shf_interpolator_i2d = interp2d(valid_x, valid_y, valid_shf)
+interpolated_shf_i2d = shf_interpolator_i2d(datos_q_x, datos_q_y)
+
+# Calcular rmse
+rmse_i2d=np.sqrt(sum(((interpolated_shf_i2d - datos_q_shf)**2)*(weight/sum(weight))))
+print("RMSE (Interp2d Interpolation):", rmse_i2d)
+"""
+
+
+
 
 ###
 # Interpolar modelo en puntos de datos Q con Bivariate Spline Interpolation #
@@ -37,8 +74,8 @@ surface_heat_flow = TM.get_surface_heat_flow()[::-1]
 surface_heat_flow[np.isnan(surface_heat_flow)] = -9999 # nans = -9999
 shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis, surface_heat_flow)
 interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
-print(np.nanmax(interpolated_shf_bsi))
-print(np.nanmin(interpolated_shf_bsi))
+#print(np.nanmax(interpolated_shf_bsi))
+#print(np.nanmin(interpolated_shf_bsi))
 
 # Reemplazar valores interpolados negativos por nan y calcular sus indices
 interpolated_shf_bsi[interpolated_shf_bsi < -1000] = np.nan
@@ -54,10 +91,13 @@ valid_weight = weight[valid_interp_shf_idxs]
 #print(valid_datos_q_shf)
 #print(valid_weight)
 
+print(valid_interp_shf)
+
 # Calcular rmse
 rmse_bsi=np.sqrt(sum(((valid_interp_shf - valid_datos_q_shf)**2)*(valid_weight/sum(valid_weight))))
 print("RMSE (Bivariate Spline Interpolation):", rmse_bsi)
 
+<<<<<<< Updated upstream
 #Mapa que compara modelo con valores interpolados
 map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
 #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
@@ -89,6 +129,9 @@ plt.close()
 
 
 
+=======
+"""
+>>>>>>> Stashed changes
 ###
 # Interpolar modelo en puntos de datos Q con Interp2d
 ###

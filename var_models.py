@@ -41,32 +41,37 @@ mem()
 queue = mp.Queue()
 
 def comp(model,value):
-	print('comp')
-	D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
-	array_model = []
-	if model==1:
-		array_model = TM.get_surface_heat_flow()
-	if model==2:
-		array_model = MM.get_yse()[0]
-	if model==3:
-		array_model = MM.get_eet()
-	queue.put(array_model)
-	model_ref = queue.get()
-	if not os.path.exists('Output/var_models_%s' %(var)):
-		os.makedirs('Output/var_models_%s' %(var))
-	os.chdir('Output/var_models_%s' %(var))
-	np.savetxt('model_%s.txt' %(value), model_ref, fmt="%11.4f",delimiter="  ")
-	os.chdir('../')
-	return
+    print('comp')
+    D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age,
+                                        rhe_data, t_input, m_input)
+    array_model = []
+    if model==1:
+        array_model = TM.get_surface_heat_flow()
+        model_str = 'shf'
+    if model==2:
+        array_model = MM.get_yse()[0]
+        model_str = 'yse_t'
+    if model==3:
+        array_model = MM.get_eet()
+        model_str = 'eet'
+    queue.put(array_model)
+    model_ref = queue.get()
+    if not os.path.exists('Output/var_models/%s' %(var)):
+        os.makedirs('Output/var_models/%s' %(var), exist_ok=True)
+    os.chdir('Output/var_models/%s' %(var))
+    np.savetxt('%s_%s_%s.txt' %(model_str, var, value), model_ref,
+               fmt="%11.4f",delimiter="  ")
+    os.chdir('../../../')
+    return
 
 def dif_models(var_range, var, model):
 	for value in var_range:
-		input_type[var] = value
-		print(input_type[var])
-		proc = mp.Process(target=comp, args=(model,value))
-		proc.start()
-		mem()
-		proc.join()
+	    input_type[var] = value
+	    print(input_type[var])
+	    proc = mp.Process(target=comp, args=(model,value))
+	    proc.start()
+	    mem()
+	    proc.join()
 	return
 
 proc = mp.Process(target=dif_models, args=(var_range,var,model))

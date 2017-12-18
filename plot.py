@@ -97,7 +97,7 @@ def map_q_surface(CS, TM, tmc, data_q):
     longitud = data_q[:,0]
     latitud = data_q[:,1]
     q_flow = (data_q[:,2]/1000)*-1
-    map = Basemap(llcrnrlon= -79.8, llcrnrlat= -44.8, urcrnrlon= -58.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
+    map = Basemap(llcrnrlon= -80, llcrnrlat= -45, urcrnrlon= -60.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
     #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
     map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
     map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])

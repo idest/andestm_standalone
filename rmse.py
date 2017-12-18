@@ -24,7 +24,7 @@ datos_q_y = datos_q[:,1]
 datos_q_shf = -datos_q[:,2] * 1.e-3# TODO: multiplicar por escala
 
 weight = datos_q[:,-1]
-weight[weight == 4] = 0.2 # Marine Geophysics
+weight[weight == 4] = 0.1 # Marine Geophysics
 weight[weight == 3] = 0.4 # Geochemical
 weight[weight == 2] = 0.8 # Land Borehole
 weight[weight == 1] = 1.0 # ODP Borehole
@@ -50,7 +50,7 @@ for cdir in next(os.walk(variable_models_directory))[1]:
             # Interpolation
             shf_min = np.nanmin(surface_heat_flow)
             shf_max = np.nanmax(surface_heat_flow)
-            surface_heat_flow[np.isnan(surface_heat_flow)] = 0 # nans = -9999
+            surface_heat_flow[np.isnan(surface_heat_flow)] = -0.07 # nans = -9999
             shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
                                                     surface_heat_flow[:,::-1])
             interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x,
@@ -68,10 +68,17 @@ for cdir in next(os.walk(variable_models_directory))[1]:
             weight = weight[valid_interp_shf_idxs]
             """
             # Calcular rmse
-            rmse=np.sqrt(sum(((interpolated_shf_bsi - datos_q_shf)**2)*weight)
-                                   /sum(weight))
+            #V1 = sum(weight)
+            #V2 = sum(weight**2)
+            #diff_matrix = interpolated_shf_bsi - datos_q_shf
+            #print(V1-(V2/V1))
+            #rmse=np.sqrt(np.mean((interpolated_shf_bsi-datos_q_shf*weight)**2))
+            rmse=np.sqrt(np.average((interpolated_shf_bsi-datos_q_shf)**2, weights=weight))
+            #                      /V1)
+            #estimator = sum(weight*diff_matrix.T*diff_matrix)/(V1-V2/V1)
             #print("RMSE (Bivariate Spline Interpolation):", rmse_bsi)
             rmses.append(rmse)
+            print(rmse)
     # Ordenar var_values de forma ascendente
     var_values, rmses = (list(n) for n in zip(*sorted(zip(var_values, rmses))))
     # Graficar resultados RMSE
@@ -86,6 +93,7 @@ for cdir in next(os.walk(variable_models_directory))[1]:
     plt.xlabel('{} value'.format(var))
     plt.tight_layout()
     plt.savefig(full_cdir + '/RMSE.png')
+    plt.close()
 
 """
 directory = os.fsencode('surface_heat_flow_dir')
@@ -138,42 +146,41 @@ rmse=np.sqrt(sum(((interpolated_shf_bsi - datos_q_shf)**2)*weight)
                        /sum(weight))
 #print("RMSE (Bivariate Spline Interpolation):", rmse_bsi)
 rmses.append(rmse)
+"""
 # Graficar valores modelados + valores interpolados en un plot de basemap
-map = Basemap(projection='merc', resolution='l', epsg=4326,
-              llcrnrlon=-80.0, llcrnrlat=-45.0,
-              urcrnrlon=-60.0, urcrnrlat=-10.0)
+map = Basemap(llcrnrlon=-80.0, llcrnrlat=-45.0, urcrnrlon=-60.0, urcrnrlat=-10.0,
+              resolution='l', epsg=4326)
 #map.etopo()
 #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000,
-                 verbose= True)
+#                 verbose= True)
 map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
 map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
 map.drawcoastlines(linewidth=0.5)
 mlon, mlat = map(datos_q_x, datos_q_y)
-x1, y1 = map(x_axis[0], y_axis[-1])
-x2, y2 = map(x_axis[-1], y_axis[0])
-x = np.linspace(x1, x2, len(x_axis))
-y = np.linspace(y1, y2, len(y_axis))
+x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape[0])
+y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
 xx, yy = np.meshgrid(x,y)
-datam = ma.masked_invalid(surface_heat_flow)
-map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading='gouraud',
-                   vmax=0, vmin=shf_min)
+interpolated_shf_bsi = ma.masked_invalid(interpolated_shf_bsi)
+surface_heat_flowm = ma.masked_invalid(surface_heat_flow)
+map.pcolormesh(xx, yy[::-1], surface_heat_flowm.T, cmap='afmhot_r', shading='gouraud',
+                   vmin=shf_min, vmax=0)
 map.scatter(mlon, mlat, c = interpolated_shf_bsi, cmap='afmhot_r',
-                     vmax=0, vmin=shf_min)
-map.plot(mlon, mlat, 'bx', ms=1)
+                     vmin=shf_min, vmax=0)
+#map.plot(mlon, mlat, 'bx', ms=1)
 cbar = plt.colorbar()
 cbar.set_label('Flujo de Calor (W/m2)', rotation=90, labelpad=-60)
-plt.show()
-#plt.savefig('interpolated_shf_map')
-#if not os.path.exists('Mapas'):
-#    os.makedirs('Mapas')
-#os.chdir('Mapas')
-#plt.savefig('Mapa_Q_interpolate')
-#os.chdir('../')
-#plt.close()
+plt.savefig('interpolated_shf_map')
+if not os.path.exists('Mapas'):
+    os.makedirs('Mapas')
+os.chdir('Mapas')
+plt.savefig('Mapa_Q_interpolate')
+os.chdir('../')
+plt.close()
 """
 ###
 # Interpolar modelo en puntos de datos Q con Interp2d
 ###
+"""
 """
 valid_shf_indexes = np.where(np.isfinite(surface_heat_flow))
 valid_x = x_axis[valid_shf_indexes[0]]

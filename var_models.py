@@ -30,7 +30,7 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
 var = 'k_cs'
-var_range = np.arange(1.5, 3.6, 0.1)
+var_range = np.arange(0, 5.2, 0.2)
 model = exec_input.model
 k_cs = t_input.k_cs
 k_ci = t_input.k_ci
@@ -41,9 +41,8 @@ mem()
 queue = mp.Queue()
 
 def comp(model,value):
-    print('comp')
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age,
-                                        rhe_data, t_input, m_input)
+                                        rhe_data, input_type, m_input)
     array_model = []
     if model==1:
         array_model = TM.get_surface_heat_flow()

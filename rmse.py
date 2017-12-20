@@ -149,7 +149,7 @@ for cdir in next(os.walk(variable_models_directory))[1]:
     plt.plot(index, rmses, '-r', linewidth=1.)
     plt.bar(index, rmses, alpha=.4)
     diff = max(rmses) - min(rmses)
-    plt.xlim(min(var_values), max(var_values))
+    #plt.xlim(min(var_values), max(var_values))
     plt.ylim(min(rmses)-0.2*diff, max(rmses)+0.2*diff)
     plt.xticks(index, var_values)
     plt.title('Modeled Surface Heat Flow RMSE')

@@ -21,6 +21,8 @@ print('Leyendo variables...')
 t_input = setup.readVars('VarTermal.txt')
 m_input = setup.readVars('VarMecanico.txt')
 exec_input = setup.readVars('VarExec.txt')
+tmc = exec_input.temcaso
+mmc = exec_input.meccaso
 direTer, direTerMec = setup.makeDirs(exec_input.temcaso, exec_input.meccaso)
 #
 gm_data = np.loadtxt('data/Modelo.dat')
@@ -30,17 +32,17 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
 var = 'k_cs'
-var_range = np.arange(0, 5.2, 0.2)
+var_range = np.arange(0,16.2,2.)
 model = exec_input.model
 k_cs = t_input.k_cs
 k_ci = t_input.k_ci
 k_ml = t_input.k_ml
-var_mean = (k_cs+k_ci+k_ml)/3
+var_mean = 'prom_k'
 
 mem()
 queue = mp.Queue()
 
-def comp(model,value):
+def comp(model,value,input_type):
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age,
                                         rhe_data, input_type, m_input)
     array_model = []
@@ -55,9 +57,9 @@ def comp(model,value):
         model_str = 'eet'
     queue.put(array_model)
     model_ref = queue.get()
-    if not os.path.exists('Output/var_models/%s' %(var)):
-        os.makedirs('Output/var_models/%s' %(var), exist_ok=True)
-    os.chdir('Output/var_models/%s' %(var))
+    if not os.path.exists('Output/var_models/%s_%s' %(var,tmc)):
+        os.makedirs('Output/var_models/%s_%s' %(var,tmc), exist_ok=True)
+    os.chdir('Output/var_models/%s_%s' %(var,tmc))
     np.savetxt('%s_%s_%s.txt' %(model_str, var, value), model_ref,
                fmt="%11.4f",delimiter="  ")
     os.chdir('../../../')
@@ -67,7 +69,7 @@ def dif_models(var_range, var, model):
 	for value in var_range:
 	    input_type[var] = value
 	    print(input_type[var])
-	    proc = mp.Process(target=comp, args=(model,value))
+	    proc = mp.Process(target=comp, args=(model,value,input_type))
 	    proc.start()
 	    mem()
 	    proc.join()

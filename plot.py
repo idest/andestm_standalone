@@ -94,33 +94,61 @@ def plot_mec(y, z, D, CS, GM, MM):
     return
 
 def map_q_surface(CS, TM, tmc, data_q):
-    longitud = data_q[:,0]
-    latitud = data_q[:,1]
-    q_flow = (data_q[:,2]/1000)*-1
+    longitud1 = data_q[:,0][np.where(data_q[:,-1]==1)]
+    latitud1 = data_q[:,1][np.where(data_q[:,-1]==1)]
+    longitud2 = data_q[:,0][np.where(data_q[:,-1]==2)]
+    latitud2 = data_q[:,1][np.where(data_q[:,-1]==2)]
+    longitud3 = data_q[:,0][np.where(data_q[:,-1]==3)]
+    latitud3 = data_q[:,1][np.where(data_q[:,-1]==3)]
+    longitud4 = data_q[:,0][np.where(data_q[:,-1]==4)]
+    latitud4 = data_q[:,1][np.where(data_q[:,-1]==4)]
+    shf_max = np.nanmax(TM.get_surface_heat_flow())
+    shf_min = np.nanmin(TM.get_surface_heat_flow())
+    q_flow_1 = -data_q[:,2][np.where(data_q[:,-1]==1)]*1.e-3
+    q_flow_2 = -data_q[:,2][np.where(data_q[:,-1]==2)]*1.e-3
+    q_flow_3 = -data_q[:,2][np.where(data_q[:,-1]==3)]*1.e-3
+    q_flow_4 = -data_q[:,2][np.where(data_q[:,-1]==4)]*1.e-3
     map = Basemap(llcrnrlon= -80, llcrnrlat= -45, urcrnrlon= -60.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
     #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
-    map.drawparallels(np.arange(-90,90,3), labels=[1,0,0,0])
-    map.drawmeridians(np.arange(-180,180,4), labels=[0,0,1,0])
+    map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)
+    map.drawmeridians(np.arange(-180,180,5), labels=[0,0,0,1], fontsize=7)
     map.etopo()
     map.drawcoastlines(linewidth=0.5)
     #hacer grid y cargar los datos para la paleta de colores del mapa
-    mlon, mlat = map(longitud,latitud)
+    mlon1, mlat1 = map(longitud1,latitud1)
+    mlon2, mlat2 = map(longitud2,latitud2)
+    mlon3, mlat3 = map(longitud3,latitud3)
+    mlon4, mlat4 = map(longitud4,latitud4)
     x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape[0])
     y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
     xx, yy = np.meshgrid(x, y)
-    q_flowm = ma.masked_invalid(q_flow)
+    q_flowm_1 = ma.masked_invalid(q_flow_1)
+    q_flowm_2 = ma.masked_invalid(q_flow_2)
+    q_flowm_3 = ma.masked_invalid(q_flow_3)
+    q_flowm_4 = ma.masked_invalid(q_flow_4)
     datam = ma.masked_invalid(TM.get_surface_heat_flow())
-    M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading= 'gouraud')
+    M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading= 'gouraud', vmin=-0.2,vmax=0)
     #Graficar datos de Q y barra de color
-    plot_q = map.scatter(mlon, mlat, c = q_flowm.T, cmap = 'afmhot_r')
-    plt.clim(0,-0.2)
-    cbar = plt.colorbar(plot_q)
-    cbar.set_label('Flujo de Calor (W/m2)', rotation=90, labelpad=-60)
+    #q_ind_1
+    plot_q1 = map.scatter(mlon1, mlat1, latlon = True, c = q_flowm_1.T, marker='o', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    #q_ind_2
+    plot_q2 = map.scatter(mlon2, mlat2, latlon = True, c = q_flowm_2.T, marker='^', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    #q_ind_3
+    plot_q3 = map.scatter(mlon3, mlat3, latlon = True, c = q_flowm_3.T, marker='p', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    #q_ind_4
+    plot_q4 = map.scatter(mlon4, mlat4, latlon = True, c = q_flowm_4.T, marker='s', cmap = 'afmhot_r', vmin=-0.2,vmax=0)        
+    cbar = plt.colorbar(M)
+    cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
+    plt.title('Surface Heat Flow')
+    plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],['ODP Borehole', 'Land Borehole',
+                                                    'Geochemical', 'Marine Geophysics'],
+                                                    bbox_to_anchor=(-1.0, 0),loc=3)
+    plt.tight_layout()
     nombre = "Mapa_Q_0%s" %(tmc)
     if not os.path.exists('Mapas'):
         os.makedirs('Mapas')
     os.chdir('Mapas')
-    plt.savefig('%s' %(nombre))
+    plt.savefig('%s' %(nombre),dpi='figure',format='png')
     os.chdir('../')
     plt.close()
     return

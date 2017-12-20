@@ -568,8 +568,7 @@ class ThermalModel(object):
     def __calc_slab_lab_int_sigma(sli_depth, sli_topo, sli_temp, sli_s, sli_k,
                                   sli_q_zero, v):
         sli_sigma = ((sli_temp * sli_s * sli_k)
-                     / (v * abs(sli_depth-sli_topo)*1.e3)
-                     - sli_q_zero/v)
+                     / (v * abs(sli_depth-sli_topo)*1.e3)) - (sli_q_zero/v)
         return sli_sigma
 
     @staticmethod
@@ -610,6 +609,7 @@ class ThermalModel(object):
                                               - np.exp(z_sl/delta))
         heat_flow = (-h*delta-k/(abs(z_sl-z_topo))*base_temp)
         return heat_flow
+
 
     def __init__(self, tm_data, geometric_model, coordinate_system):
         self.geo_model = geometric_model
@@ -679,7 +679,7 @@ class ThermalModel(object):
             'tp': t_input['Tp'],
             'g': t_input['G'],
             'kappa': t_input['kappa'],
-            'v': t_input['V']/(1.e6*365.*24.*60.*60.),
+            'v': t_input['V']/(1.e3*365.*24.*60.*60.),
             'dip': t_input['dip'],
             'b': t_input['b'],
             't': self.__set_trench_age(trench_age, t_input)*(1.e6*365.*24.*60.*60.),

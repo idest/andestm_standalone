@@ -1,6 +1,6 @@
 import setup
 import compute
-#import plot
+import plot
 import numpy as np
 np.set_printoptions(threshold=np.nan)
 from utils import DotDict
@@ -24,7 +24,7 @@ gm_data = np.loadtxt('data/Modelo.dat')
 areas = np.loadtxt('data/areas.dat')
 trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
 rhe_data = setup.read_rheo('data/Rhe_Param.dat')
-data_q = np.loadtxt('datos_Q/QS/ObsQs/QsObs.txt')
+data_q = np.loadtxt('datos_Q/QsObs.txt', comments='#')
 
 D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
 """
@@ -43,11 +43,11 @@ os.chdir(direTerMec)
 fig = plot.plot_mec(CS.get_axes()[0], CS.get_axes()[2], D, CS, GM, MM)
 os.chdir('../../../')
 """
-"""
+
 #plotear mapa q_surface
 os.chdir(direTer)
 fig = plot.map_q_surface(CS, TM, tmc, data_q)
 os.chdir('../../')
-"""
+
 #detachment = plot.get_detachment(CS,GM,MM)
 

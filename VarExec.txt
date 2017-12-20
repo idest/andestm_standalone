@@ -14,7 +14,7 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '11'  temcaso  Numero de referencia para guardar el Modelo Termal
+      '01'  temcaso  Numero de referencia para guardar el Modelo Termal
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima
@@ -33,7 +33,7 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '11'  meccaso  Numero de referencia para guardar el Modelo Mecanico
+      '01'  meccaso  Numero de referencia para guardar el Modelo Mecanico
 #                    (Construido sobre la base del modelo termal "temcaso")
 #·········  ·······  ··························································	
      -10.0  mmi      Latitud inicial

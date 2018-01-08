@@ -15,13 +15,13 @@
       2.25  k_cs     Conductividad termica Corteza superior [W/mK]
        2.5  k_ci     Conductividad termica Corteza inferior [W/mK]
        3.0  k_ml     Conductividad termica Manto litosferico [ W/mK]
-     2.e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
-    0.2e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
-   0.02e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
+      7e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
+    0.7e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
+   0.07e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
      1.e-3  kappa    difusividad termica [m2/s]
     1300.0  Tp       Temperatura potencial del manto [C]
-      0.03  G        Gradiente adiabatico [K/m]
-        66  V        Velocidad de convergencia [mm/yr]
+    0.0003  G        Gradiente adiabatico [K/m]
+        65  V        Velocidad de convergencia [mm/yr]
        1.0  b        Parametro adimensional
       20.0  dip      Angulo de subduccion
        0.1  D        Constante de proporcionalidad adimensional

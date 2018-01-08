@@ -32,11 +32,14 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
 var = 'k_cs'
-var_range = np.arange(0,16.2,2.)
+var_range = np.arange(0,3,0.1)
 model = exec_input.model
 k_cs = t_input.k_cs
 k_ci = t_input.k_ci
 k_ml = t_input.k_ml
+H_cs = t_input.H_cs
+H_ci = t_input.H_ci
+H_ml = t_input.H_ml
 var_mean = 'prom_k'
 
 mem()

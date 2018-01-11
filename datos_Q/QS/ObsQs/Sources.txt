@@ -1,4 +1,0 @@
-1 ODP Borehole
-2 Land Borehole
-3 Geochemical
-4 Marine Geophysics

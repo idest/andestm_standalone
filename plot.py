@@ -102,8 +102,9 @@ def map_q_surface(CS, TM, tmc, data_q):
     latitud3 = data_q[:,1][np.where(data_q[:,-1]==3)]
     longitud4 = data_q[:,0][np.where(data_q[:,-1]==4)]
     latitud4 = data_q[:,1][np.where(data_q[:,-1]==4)]
-    shf_max = np.nanmax(TM.get_surface_heat_flow())
-    shf_min = np.nanmin(TM.get_surface_heat_flow())
+    q_flow = -data_q[:,2]
+    shf_max = np.nanmax([np.nanmax(q_flow)*1e-3, np.nanmax(TM.get_surface_heat_flow())])
+    shf_min = np.nanmin([np.nanmin(q_flow)*1e-3, np.nanmin(TM.get_surface_heat_flow())])
     q_flow_1 = -data_q[:,2][np.where(data_q[:,-1]==1)]*1.e-3
     q_flow_2 = -data_q[:,2][np.where(data_q[:,-1]==2)]*1.e-3
     q_flow_3 = -data_q[:,2][np.where(data_q[:,-1]==3)]*1.e-3
@@ -127,16 +128,16 @@ def map_q_surface(CS, TM, tmc, data_q):
     q_flowm_3 = ma.masked_invalid(q_flow_3)
     q_flowm_4 = ma.masked_invalid(q_flow_4)
     datam = ma.masked_invalid(TM.get_surface_heat_flow())
-    M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading= 'gouraud', vmin=-0.2,vmax=0)
+    M = map.pcolormesh(xx, yy[::-1], datam.T, cmap='afmhot_r', shading= 'gouraud', vmin=shf_min,vmax=shf_max)
     #Graficar datos de Q y barra de color
     #q_ind_1
-    plot_q1 = map.scatter(mlon1, mlat1, latlon = True, c = q_flowm_1.T, marker='o', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    plot_q1 = map.scatter(mlon1, mlat1, latlon = True, c = q_flowm_1.T, marker='o', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)
     #q_ind_2
-    plot_q2 = map.scatter(mlon2, mlat2, latlon = True, c = q_flowm_2.T, marker='^', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    plot_q2 = map.scatter(mlon2, mlat2, latlon = True, c = q_flowm_2.T, marker='^', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)
     #q_ind_3
-    plot_q3 = map.scatter(mlon3, mlat3, latlon = True, c = q_flowm_3.T, marker='p', cmap = 'afmhot_r', vmin=-0.2,vmax=0)
+    plot_q3 = map.scatter(mlon3, mlat3, latlon = True, c = q_flowm_3.T, marker='p', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)
     #q_ind_4
-    plot_q4 = map.scatter(mlon4, mlat4, latlon = True, c = q_flowm_4.T, marker='s', cmap = 'afmhot_r', vmin=-0.2,vmax=0)        
+    plot_q4 = map.scatter(mlon4, mlat4, latlon = True, c = q_flowm_4.T, marker='s', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)        
     cbar = plt.colorbar(M)
     cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
     plt.title('Surface Heat Flow')

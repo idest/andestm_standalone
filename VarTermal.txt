@@ -12,18 +12,18 @@
       True  delta_icd Si delta_icd = True delta depende de icd. Si delta_icd = False => delta_icd = delta 
       True  t_lat     t_lat = True usar edad de la fosa. t_lat = edad (ej. a5=50 Myr)
 #·········  ·······  ··························································
-      2.25  k_cs     Conductividad termica Corteza superior [W/mK]
+       3.0  k_cs     Conductividad termica Corteza superior [W/mK]
        2.5  k_ci     Conductividad termica Corteza inferior [W/mK]
-       3.0  k_ml     Conductividad termica Manto litosferico [ W/mK]
-      7e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
-    0.7e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
-   0.07e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
-     1.e-3  kappa    difusividad termica [m2/s]
+       3.5  k_ml     Conductividad termica Manto litosferico [ W/mK]
+      3e-6  H_cs     Calor radiogenico Corteza superior [W/m3]
+      3e-6  H_ci     Calor radiogenico Corteza inferior [W/m3]
+      3e-6  H_ml     Calor radiogenico Manto litosferico [W/m3]
+    1.0e-6  kappa    difusividad termica [m2/s]
     1300.0  Tp       Temperatura potencial del manto [C]
-    0.0003  G        Gradiente adiabatico [K/m]
-        65  V        Velocidad de convergencia [mm/yr]
+   1.05e-2  G        Gradiente adiabatico [K/m]
+     6.5e4  V        Velocidad de convergencia [m/Myr]
        1.0  b        Parametro adimensional
-      20.0  dip      Angulo de subduccion
+      25.0  dip      Angulo de subduccion
        0.1  D        Constante de proporcionalidad adimensional
         10  delta    Decaimiento radiogenico
         30  t        Edad promedio de la placa oceanica en la fosa (Ma)

@@ -550,7 +550,7 @@ class ThermalModel(object):
 
     @staticmethod
     def __calc_lab_temp(tp, g, depth):
-        lab_temp = tp + g * abs(depth*1.e3)
+        lab_temp = tp + g * abs(depth)*1e3
         return lab_temp
 
     @staticmethod
@@ -609,13 +609,14 @@ class ThermalModel(object):
         base_temp = temp_sl-((h*delta**2)/k)*(np.exp(z_topo/delta)
                                               - np.exp(z_sl/delta))
         heat_flow = (-h*delta-k/(abs(z_sl-z_topo))*base_temp)
+        #heat_flow = -(k*(temp_sl/z_sl)) - (h*delta) + ((h*delta**2)/z_sl)*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
         return heat_flow
 
     @staticmethod
     def __calc_surface_heat_flow_tassa(h, delta, k, z_topo, z_sl, temp_sl):
         z_topo = z_topo*1.e3
         z_sl = z_sl*1.e3
-        heat_flow = -k*(temp_sl/z_sl) - h*delta + h*(delta**2)*(np.exp(z_topo/delta) - np.exp(z_sl/delta))
+        heat_flow = -k*(temp_sl/z_sl)- (h*delta)*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
 
     def __init__(self, tm_data, geometric_model, coordinate_system):
         self.geo_model = geometric_model
@@ -685,7 +686,7 @@ class ThermalModel(object):
             'tp': t_input['Tp'],
             'g': t_input['G'],
             'kappa': t_input['kappa'],
-            'v': t_input['V']/(1.e3*365.*24.*60.*60.),
+            'v': t_input['V']*(1.e6*365.*24.*60.*60.),
             'dip': t_input['dip'],
             'b': t_input['b'],
             't': self.__set_trench_age(trench_age, t_input)*(1.e6*365.*24.*60.*60.),
@@ -785,7 +786,7 @@ class ThermalModel(object):
         slab_lab_k = self.vars.k.extract_surface(z_sl)
         slab_lab_h = self.vars.h.extract_surface(z_sl)
         temp_sl = self.slab_lab_temp
-        heat_flow = self.__calc_surface_heat_flow_tassa(slab_lab_h, delta, slab_lab_k, z_topo, z_sl, temp_sl)
+        heat_flow = self.__calc_surface_heat_flow(slab_lab_h, delta, slab_lab_k, z_topo, z_sl, temp_sl)
         return heat_flow
 
     def __set_geotherm(self):

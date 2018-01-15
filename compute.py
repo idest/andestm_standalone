@@ -686,7 +686,7 @@ class ThermalModel(object):
             'tp': t_input['Tp'],
             'g': t_input['G'],
             'kappa': t_input['kappa'],
-            'v': t_input['V']*(1.e6*365.*24.*60.*60.),
+            'v': t_input['V']/(1.e6*365.*24.*60.*60.),
             'dip': t_input['dip'],
             'b': t_input['b'],
             't': self.__set_trench_age(trench_age, t_input)*(1.e6*365.*24.*60.*60.),

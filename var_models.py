@@ -32,7 +32,7 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
 var = 'b'
-var_range = np.arange(0.1,1,0.05)
+var_range = np.arange(.9,5.2,.1)
 model = exec_input.model
 k_cs = t_input.k_cs
 k_ci = t_input.k_ci

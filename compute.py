@@ -783,10 +783,13 @@ class ThermalModel(object):
         delta = self.vars.delta
         z_topo = self.geo_model.get_topo()
         z_sl = self.geo_model.get_slab_lab()
-        slab_lab_k = self.vars.k.extract_surface(z_sl)
-        slab_lab_h = self.vars.h.extract_surface(z_sl)
+        #slab_lab_k = self.vars.k.extract_surface(z_sl)
+        #slab_lab_h = self.vars.h.extract_surface(z_sl)
+        topo_k = self.vars.k.extract_surface(z_topo-1)
+        topo_h = self.vars.h.extract_surface(h_topo-1)
         temp_sl = self.slab_lab_temp
-        heat_flow = self.__calc_surface_heat_flow(slab_lab_h, delta, slab_lab_k, z_topo, z_sl, temp_sl)
+        heat_flow = self.__calc_surface_heat_flow(topo_h, delta, topo_k,
+                                                  z_topo, z_sl, temp_sl)
         return heat_flow
 
     def __set_geotherm(self):

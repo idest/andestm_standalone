@@ -3,3 +3,5 @@ Output/*
 *.swp
 *.png
 .idea/
+data/
+datos_Q/

@@ -71,46 +71,76 @@ for cdir in next(os.walk(variable_models_directory))[1]:
             shf_max = np.nanmax(surface_heat_flow)
             # Interpolar modelo en puntos de datos Q con Bivariate Spline
             # Interpolation
-            #surface_heat_flow = surface_heat_flow[np.isfinite(surface_heat_flow)]#Remove Nan values
-            surface_heat_flow[np.isnan(surface_heat_flow)] = -1.e-1000000000 # nans = -9999
+            #surface_heat_flow = (surface_heat_flow[np.isfinite(
+            #                                       surface_heat_flow)]
+                                                    #Remove Nan values
+            surface_heat_flow[np.isnan(surface_heat_flow)] = -1.e-1000000000
+                                                             # nans = -9999
+
             shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
                                                     surface_heat_flow[:,::-1])
-            interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
-            interpolated_shf_bsi_1 = shf_interpolator_bsi.ev(datos_q_x_1, datos_q_y_1)
-            interpolated_shf_bsi_2 = shf_interpolator_bsi.ev(datos_q_x_2, datos_q_y_2)
-            interpolated_shf_bsi_3 = shf_interpolator_bsi.ev(datos_q_x_3, datos_q_y_3)
-            interpolated_shf_bsi_4 = shf_interpolator_bsi.ev(datos_q_x_4, datos_q_y_4)
-            slope1,intercept1,r1,p1,std_err1 = stats.linregress(interpolated_shf_bsi_1,datos_q_shf_1)
-            slope2,intercept2,r2,p2,std_err2 = stats.linregress(interpolated_shf_bsi_2,datos_q_shf_2)
-            slope3,intercept3,r3,p3,std_err3 = stats.linregress(interpolated_shf_bsi_3,datos_q_shf_3)
-            slope4,intercept4,r4,p4,std_err4 = stats.linregress(interpolated_shf_bsi_4,datos_q_shf_4)
+            interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x,
+                                                           datos_q_y)
+            interpolated_shf_bsi_1 = shf_interpolator_bsi.ev(datos_q_x_1,
+                                                             datos_q_y_1)
+            interpolated_shf_bsi_2 = shf_interpolator_bsi.ev(datos_q_x_2,
+                                                             datos_q_y_2)
+            interpolated_shf_bsi_3 = shf_interpolator_bsi.ev(datos_q_x_3,
+                                                             datos_q_y_3)
+            interpolated_shf_bsi_4 = shf_interpolator_bsi.ev(datos_q_x_4,
+                                                             datos_q_y_4)
+
+            slope1,intercept1,r1,p1,std_err1 = stats.linregress(
+                                          interpolated_shf_bsi_1,datos_q_shf_1)
+            slope2,intercept2,r2,p2,std_err2 = stats.linregress(
+                                          interpolated_shf_bsi_2,datos_q_shf_2)
+            slope3,intercept3,r3,p3,std_err3 = stats.linregress(
+                                          interpolated_shf_bsi_3,datos_q_shf_3)
+            slope4,intercept4,r4,p4,std_err4 = stats.linregress(
+                                          interpolated_shf_bsi_4,datos_q_shf_4)
+
+
             #Plotting scatter diagram
             fig = plt.figure()
-            plot_q1=plt.scatter(interpolated_shf_bsi_1, datos_q_shf_1, c='b', marker='o', alpha=.4)
-            plt.text(-0.099,-0.30,'R$^{2}$=%s'%(r1),{'color':'b', 'fontsize':7.})
-            fitt1=plt.plot(interpolated_shf_bsi_1,intercept1+slope1*interpolated_shf_bsi_1,'b',alpha=.4)
-            plot_q2=plt.scatter(interpolated_shf_bsi_2, datos_q_shf_2, c='g', marker='^', alpha=.4)
-            plt.text(-0.099,-0.29,'R$^{2}$=%s'%(r2),{'color':'g', 'fontsize':7.})
-            fitt2=plt.plot(interpolated_shf_bsi_2,intercept2+slope2*interpolated_shf_bsi_2,'g',alpha=.4)
-            plot_q3=plt.scatter(interpolated_shf_bsi_3, datos_q_shf_3, c='y', marker='p', alpha=.4)
-            plt.text(-0.099,-0.28,'R$^{2}$=%s'%(r3),{'color':'y', 'fontsize':7.})
-            fitt3=plt.plot(interpolated_shf_bsi_3,intercept3+slope3*interpolated_shf_bsi_3,'y',alpha=.4)
-            plot_q4=plt.scatter(interpolated_shf_bsi_4, datos_q_shf_4, c='k', marker='s', alpha=.4)
-            plt.text(-0.099,-0.27,'R$^{2}$=%s'%(r4),{'color':'k', 'fontsize':7.})
-            fitt4=plt.plot(interpolated_shf_bsi_4,intercept4+slope4*interpolated_shf_bsi_4,'k',alpha=.4)
+            plot_q1=plt.scatter(interpolated_shf_bsi_1, datos_q_shf_1, c='b',
+                                marker='o', alpha=.4)
+            plt.text(-0.099,-0.30,'R$^{2}$=%s'%(r1),{'color':'b',
+                                                     'fontsize':7.})
+            fitt1=plt.plot(interpolated_shf_bsi_1,
+                         intercept1+slope1*interpolated_shf_bsi_1,'b',alpha=.4)
+
+            plot_q2=plt.scatter(interpolated_shf_bsi_2, datos_q_shf_2, c='g',
+                                marker='^', alpha=.4)
+            plt.text(-0.099,-0.29,'R$^{2}$=%s'%(r2),{'color':'g',
+                                                     'fontsize':7.})
+            fitt2=plt.plot(interpolated_shf_bsi_2,
+                         intercept2+slope2*interpolated_shf_bsi_2,'g',alpha=.4)
+            plot_q3=plt.scatter(interpolated_shf_bsi_3, datos_q_shf_3, c='y',
+                                marker='p', alpha=.4)
+            plt.text(-0.099,-0.28,'R$^{2}$=%s'%(r3),{'color':'y',
+                                                     'fontsize':7.})
+            fitt3=plt.plot(interpolated_shf_bsi_3,
+                         intercept3+slope3*interpolated_shf_bsi_3,'y',alpha=.4)
+            plot_q4=plt.scatter(interpolated_shf_bsi_4, datos_q_shf_4, c='k',
+                                marker='s', alpha=.4)
+            plt.text(-0.099,-0.27,'R$^{2}$=%s'%(r4),{'color':'k',
+                                                     'fontsize':7.})
+            fitt4=plt.plot(interpolated_shf_bsi_4,
+                         intercept4+slope4*interpolated_shf_bsi_4,'k',alpha=.4)
             plt.xlim(-.1,0)
-            plt.ylim(np.nanmin(datos_q_shf),0)    
+            plt.ylim(np.nanmin(datos_q_shf),0)
             plt.ylabel('heat flow data (W/m2)')
             plt.xlabel('heat flow modeled (W/m2)')
             plt.grid(True)
             plt.title('Scatter Diagram model/data for {}' .format(var))
             plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],
-                       ['ODP Borehole', 'Land Borehole','Geochemical', 'Marine Geophysics',], loc=4)
+                       ['ODP Borehole', 'Land Borehole',
+                        'Geochemical', 'Marine Geophysics',], loc=4)
             os.chdir(full_cdir_encoded)
             fig.savefig('model_data_{}.png' .format(file))
             os.chdir('../../../')
             plt.close()
-                
+
             #print(surface_heat_flow)
             """
             # Descartar ciertos valores de interpolated_shf_bsi y de datos_q

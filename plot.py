@@ -16,8 +16,10 @@ def plot_thermal(y, z, D, CS, GM, TM):
         c = c+1
         lat = CS.get_axes()[1][c]
         temp = TM.get_geotherm()[:,i,:]
-        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][0]]
-        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][-1]]
+        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo()
+                .mask_irrelevant()[:,i])==False)[0][0]]
+        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo()
+                 .mask_irrelevant()[:,i])==False)[0][-1]]
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -26,13 +28,14 @@ def plot_thermal(y, z, D, CS, GM, TM):
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
         plt.tight_layout()
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[1][:,i], 'w') #ICD
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[2][:,i], 'g') #MOHO
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
         A1, A2 = np.meshgrid(y,z)
         temp_mask = ma.masked_invalid(temp)
-        sub = plt.pcolormesh(A1,A2,temp_mask.T,cmap=cm.coolwarm, shading='gouraud')
+        sub = plt.pcolormesh(A1,A2,temp_mask.T,cmap=cm.coolwarm,
+                             shading='gouraud')
         tmin = 0
         tmax = 1300
         plt.clim(tmin,tmax)
@@ -61,8 +64,10 @@ def plot_mec(y, z, D, CS, GM, MM):
         c = c+1
         lat = CS.get_axes()[1][c]
         meca = MM.get_yse()[0][:,i,:]
-        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][0]]
-        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo().mask_irrelevant()[:,i])==False)[0][-1]] 
+        start = CS.get_x_axis()[np.where(np.isnan(GM.get_topo()
+                .mask_irrelevant()[:,i])==False)[0][0]]
+        finish = CS.get_x_axis()[np.where(np.isnan(GM.get_topo()
+                 .mask_irrelevant()[:,i])==False)[0][-1]]
         fig = plt.figure(figsize=(finish-start,5))
         plt.xlim(start,finish)
         plt.ylim(-150,10)
@@ -71,14 +76,15 @@ def plot_mec(y, z, D, CS, GM, MM):
         plt.ylabel('Profundidad [km]')
         plt.xlabel('Longitud')
         plt.tight_layout()
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[1][:,i], 'w') #ICD
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[2][:,i], 'g') #MOHO
-        plt.plot(CS.get_axes()[0], GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[0][:,i], 'k') #TOPOGRAFIA
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[1][:,i], 'w') #ICD
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[2][:,i], 'g') #MOHO
+        plt.plot(CS.get_axes()[0],GM.get_boundaries()[3][:,i], 'r') #SLAB/LAB
         A1, A2 = np.meshgrid(y,z)
         meca_mask = ma.masked_invalid(meca)
         #plot modelo termomecanico
-        sub = plt.pcolormesh(A1, A2, meca_mask.T, cmap=jet_white_r, shading ='gouraud')
+        sub = plt.pcolormesh(A1, A2, meca_mask.T, cmap=jet_white_r,
+                             shading ='gouraud')
         plt.clim(0,200)
         #plot colorbar
         cbar = plt.colorbar(sub, aspect='20')
@@ -93,6 +99,69 @@ def plot_mec(y, z, D, CS, GM, MM):
         plt.close()
     return
 
+def base_map():
+    map = Basemap(llcrnrlon= -80,llcrnrlat= -45,
+                  urcrnrlon= -60.0,urcrnrlat= -10.0,
+                  epsg= 4326, resolution = 'f')
+    #map.arcgisimage(service='ESRI_Imagery_World_2D',xpixels=2000,verbose=True)
+    map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)
+    map.drawmeridians(np.arange(-180,180,5), labels=[0,0,0,1], fontsize=7)
+    map.etopo()
+    map.drawcoastlines(linewidth=0.5)
+    return map
+
+def map_q_surface_2(CS,surface_heat_flow,tmc,data_q=None,data_types=False,
+                    rmse=None):
+
+    shf_max = np.nanmax(surface_heat_flow)
+    shf_min = np.nanmin(surface_heat_flow)
+    heat_cbar_max = shf_max
+    heat_cbar_min = shf_min
+    if data_q is not None:
+        q_flow = data_q[:,2]*1.e-3
+        q_flow_max = np.nanmax(q_flow[0])
+        q_flow_min = np.nanmin(q_flow[0])
+        heat_cbar_max = np.nanmax([shf_max, q_flow_max])
+        heat_cbar_min = np.nanmin([shf_min, q_flow_min])
+
+    map = base_map()
+    x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape[0])
+    y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
+    xx, yy = np.meshgrid(x, y)
+    datam = ma.masked_invalid(TM.get_surface_heat_flow())
+    M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
+                       vmin=heat_cbar_min,vmax=heat_cbar_max)
+
+    if data_types is True:
+        data_q_types=[1, 2, 3, 4]
+        data_q_types_markers=['o', '^', 'p', 's']
+        for i in range(len(data_q_types)):
+            data_q_i = data_q[np.where(data_q[:,-1]==i)
+            longitude = data_q_i[:,0]
+            latitude = data_q_i[:,1]
+            m_lon, mlat = map(longitude,latitude)
+            q_flow = data_q_i[:,2]*1.e-3
+            q_flowm = ma.masked_invalid(q_flow)
+            map.scatter(m_lon,m_lat,latlon=True, c=q_flowm,
+                        marker=datas_q_types_markers[i], cmap='afmhot_r',
+                        vmin=heat_cbar_min, vmax=heat_cbar_max)
+
+    cbar = plt.colorbar(M)
+    cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
+    plt.title('Surface Heat Flow')
+    plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],
+               ['ODP Borehole', 'Land Borehole',
+                'Geochemical', 'Marine Geophysics'],
+               bbox_to_anchor=(-1.0, 0),loc=3)
+    plt.tight_layout()
+    nombre = "Mapa_Q_0%s" %(tmc)
+    if not os.path.exists('Mapas'):
+        os.makedirs('Mapas')
+    os.chdir('Mapas')
+    plt.savefig('%s' %(nombre),dpi='figure',format='png')
+    os.chdir('../')
+    plt.close()
+    return
 def map_q_surface(CS, TM, tmc, data_q):
     longitud1 = data_q[:,0][np.where(data_q[:,-1]==1)]
     latitud1 = data_q[:,1][np.where(data_q[:,-1]==1)]
@@ -103,8 +172,10 @@ def map_q_surface(CS, TM, tmc, data_q):
     longitud4 = data_q[:,0][np.where(data_q[:,-1]==4)]
     latitud4 = data_q[:,1][np.where(data_q[:,-1]==4)]
     q_flow = -data_q[:,2]
-    shf_max = np.nanmax([np.nanmax(q_flow)*1e-3, np.nanmax(TM.get_surface_heat_flow())])
-    shf_min = np.nanmin([np.nanmin(q_flow)*1e-3, np.nanmin(TM.get_surface_heat_flow())])
+    shf_max = np.nanmax([np.nanmax(q_flow)*1e-3,
+              np.nanmax(TM.get_surface_heat_flow())])
+    shf_min = np.nanmin([np.nanmin(q_flow)*1e-3,
+              np.nanmin(TM.get_surface_heat_flow())])
     q_flow_1 = -data_q[:,2][np.where(data_q[:,-1]==1)]*1.e-3
     q_flow_2 = -data_q[:,2][np.where(data_q[:,-1]==2)]*1.e-3
     q_flow_3 = -data_q[:,2][np.where(data_q[:,-1]==3)]*1.e-3
@@ -137,13 +208,14 @@ def map_q_surface(CS, TM, tmc, data_q):
     #q_ind_3
     plot_q3 = map.scatter(mlon3, mlat3, latlon = True, c = q_flowm_3.T, marker='p', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)
     #q_ind_4
-    plot_q4 = map.scatter(mlon4, mlat4, latlon = True, c = q_flowm_4.T, marker='s', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)        
+    plot_q4 = map.scatter(mlon4, mlat4, latlon = True, c = q_flowm_4.T, marker='s', cmap = 'afmhot_r', vmin=shf_min,vmax=shf_max)
     cbar = plt.colorbar(M)
     cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
     plt.title('Surface Heat Flow')
-    plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],['ODP Borehole', 'Land Borehole',
-                                                    'Geochemical', 'Marine Geophysics'],
-                                                    bbox_to_anchor=(-1.0, 0),loc=3)
+    plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],
+               ['ODP Borehole', 'Land Borehole',
+                'Geochemical', 'Marine Geophysics'],
+               bbox_to_anchor=(-1.0, 0),loc=3)
     plt.tight_layout()
     nombre = "Mapa_Q_0%s" %(tmc)
     if not os.path.exists('Mapas'):

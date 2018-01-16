@@ -110,8 +110,8 @@ def base_map():
     map.drawcoastlines(linewidth=0.5)
     return map
 
-def map_q_surface_2(CS,surface_heat_flow,tmc,data_q=None,data_types=False,
-                    rmse=None):
+def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
+                    data_types=False, interpolated_heat_flow=None):
 
     shf_max = np.nanmax(surface_heat_flow)
     shf_min = np.nanmin(surface_heat_flow)
@@ -125,34 +125,57 @@ def map_q_surface_2(CS,surface_heat_flow,tmc,data_q=None,data_types=False,
         heat_cbar_min = np.nanmin([shf_min, q_flow_min])
 
     map = base_map()
-    x = np.linspace(map.llcrnrx, map.urcrnrx, CS.get_x_axis().shape[0])
-    y = np.linspace(map.llcrnry, map.urcrnry, CS.get_y_axis().shape[0])
+    x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
+    y = np.linspace(map.llcrnry, map.urcrnry, y_axis.shape[0])
     xx, yy = np.meshgrid(x, y)
-    datam = ma.masked_invalid(TM.get_surface_heat_flow())
+    datam = ma.masked_invalid(surface_heat_flow)
     M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
                        vmin=heat_cbar_min,vmax=heat_cbar_max)
 
     if data_types is True:
+        q_plt = {}
+        q_plt_diff = {}
         data_q_types=[1, 2, 3, 4]
         data_q_types_markers=['o', '^', 'p', 's']
         for i in range(len(data_q_types)):
-            data_q_i = data_q[np.where(data_q[:,-1]==i)
+            data_q_i_idxs = np.where(data_q[:,-1]==i+1)
+            data_q_i = data_q[data_q_i_idxs]
+            ihf_i = interpolated_heat_flow[data_q_i_idxs]
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
-            m_lon, mlat = map(longitude,latitude)
+            m_lon, m_lat = map(longitude,latitude)
             q_flow = data_q_i[:,2]*1.e-3
-            q_flowm = ma.masked_invalid(q_flow)
-            map.scatter(m_lon,m_lat,latlon=True, c=q_flowm,
-                        marker=datas_q_types_markers[i], cmap='afmhot_r',
-                        vmin=heat_cbar_min, vmax=heat_cbar_max)
+            if interpolated_heat_flow is None:
+                q_flowm = ma.masked_invalid(q_flow)
+                q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
+                                       c=q_flowm,
+                                       marker=data_q_types_markers[i],
+                                       cmap='afmhot_r',
+                                       vmin=heat_cbar_min, vmax=heat_cbar_max)
+                print(q_plt.keys())
+            else:
+                diff = (q_flow - ihf_i)/q_flow
+                q_plt_diff[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
+                                                   c=diff, cmap='coolwarm',
+                                                marker=data_q_types_markers[i])
+                print(q_plt_diff.keys())
 
     cbar = plt.colorbar(M)
     cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
+    cbar_diff = plt.colorbar(q_plt_diff['1'])
+    cbar.set_label('Diff', rotation=90, labelpad=-70)
     plt.title('Surface Heat Flow')
-    plt.legend([plot_q1, plot_q2, plot_q3, plot_q4],
-               ['ODP Borehole', 'Land Borehole',
-                'Geochemical', 'Marine Geophysics'],
-               bbox_to_anchor=(-1.0, 0),loc=3)
+    if q_plt['1']:
+        plt.legend([q_plt['1'], q_plt['2'], q_plt['3'], q_plt['4']],
+                   ['ODP Borehole', 'Land Borehole',
+                   'Geochemical', 'Marine Geophysics'],
+                   bbox_to_anchor=(-1.0, 0),loc=3)
+    elif q_plt_diff['1']:
+        plt.legend([q_plt_diff['1'],q_plt_diff['2'],q_plt_diff['3'],q_plt_diff['4']],
+                   ['ODP Borehole', 'Land Borehole',
+                   'Geochemical', 'Marine Geophysics'],
+                   bbox_to_anchor=(-1.0, 0),loc=3)
+
     plt.tight_layout()
     nombre = "Mapa_Q_0%s" %(tmc)
     if not os.path.exists('Mapas'):
@@ -162,6 +185,7 @@ def map_q_surface_2(CS,surface_heat_flow,tmc,data_q=None,data_types=False,
     os.chdir('../')
     plt.close()
     return
+
 def map_q_surface(CS, TM, tmc, data_q):
     longitud1 = data_q[:,0][np.where(data_q[:,-1]==1)]
     latitud1 = data_q[:,1][np.where(data_q[:,-1]==1)]

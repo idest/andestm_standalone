@@ -15,6 +15,7 @@ from sklearn.metrics import mean_squared_error
 #matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import os
+from plot import map_q_surface_2
 
 var_therm = 'k_cs'
 exec_input = setup.readVars('VarExec.txt')
@@ -50,6 +51,18 @@ datos_q_x_4 = datos_q[:,0][np.where(datos_q[:,-1]==4)]
 datos_q_y_4 = datos_q[:,1][np.where(datos_q[:,-1]==4)]
 datos_q_shf_4 = -datos_q[:,2][np.where(datos_q[:,-1]==4)]*1.e-3
 
+
+surface_heat_flow = TM.get_surface_heat_flow()
+shf_min = np.nanmin(surface_heat_flow)
+shf_max = np.nanmax(surface_heat_flow)
+surface_heat_flow[np.isnan(surface_heat_flow)] = -1.e-1000000000
+shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
+                                           surface_heat_flow[:,::-1])
+interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
+
+map_q_surface_2(x_axis, y_axis, surface_heat_flow, tmc, data_q=datos_q,
+                data_types=True, interpolated_heat_flow=interpolated_shf_bsi)
+
 variable_models_directory = 'Output/var_models/'
 
 for cdir in next(os.walk(variable_models_directory))[1]:
@@ -81,6 +94,7 @@ for cdir in next(os.walk(variable_models_directory))[1]:
                                                     surface_heat_flow[:,::-1])
             interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x,
                                                            datos_q_y)
+
             interpolated_shf_bsi_1 = shf_interpolator_bsi.ev(datos_q_x_1,
                                                              datos_q_y_1)
             interpolated_shf_bsi_2 = shf_interpolator_bsi.ev(datos_q_x_2,

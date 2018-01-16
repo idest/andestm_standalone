@@ -45,9 +45,9 @@ os.chdir('../../../')
 """
 
 #plotear mapa q_surface
-os.chdir(direTer)
-fig = plot.map_q_surface(CS, TM, tmc, data_q)
-os.chdir('../../')
+#os.chdir(direTer)
+#fig = plot.map_q_surface(CS, TM, tmc, data_q)
+#os.chdir('../../')
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

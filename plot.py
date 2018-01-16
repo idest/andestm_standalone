@@ -110,7 +110,7 @@ def base_map():
     map.drawcoastlines(linewidth=0.5)
     return map
 
-def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
+def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,direTer,data_q=None,
                     data_types=False, interpolated_heat_flow=None):
 
     shf_max = np.nanmax(surface_heat_flow)
@@ -118,9 +118,9 @@ def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
     heat_cbar_max = shf_max
     heat_cbar_min = shf_min
     if data_q is not None:
-        q_flow = data_q[:,2]*1.e-3
-        q_flow_max = np.nanmax(q_flow[0])
-        q_flow_min = np.nanmin(q_flow[0])
+        q_flow = -data_q[:,2]*1.e-3
+        q_flow_max = np.nanmax(q_flow)
+        q_flow_min = np.nanmin(q_flow)
         heat_cbar_max = np.nanmax([shf_max, q_flow_max])
         heat_cbar_min = np.nanmin([shf_min, q_flow_min])
 
@@ -144,8 +144,9 @@ def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
             m_lon, m_lat = map(longitude,latitude)
-            q_flow = data_q_i[:,2]*1.e-3
+            q_flow = -data_q_i[:,2]*1.e-3
             if interpolated_heat_flow is None:
+                color_method = 'shf'
                 q_flowm = ma.masked_invalid(q_flow)
                 q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                        c=q_flowm,
@@ -154,6 +155,8 @@ def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
                                        vmin=heat_cbar_min, vmax=heat_cbar_max)
                 print(q_plt.keys())
             else:
+                color_method = 'diff'
+                print('sii')
                 diff = (q_flow - ihf_i)/q_flow
                 q_plt_diff[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                                    c=diff, cmap='coolwarm',
@@ -162,27 +165,29 @@ def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,data_q=None,
 
     cbar = plt.colorbar(M)
     cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
-    cbar_diff = plt.colorbar(q_plt_diff['1'])
-    cbar.set_label('Diff', rotation=90, labelpad=-70)
     plt.title('Surface Heat Flow')
-    if q_plt['1']:
+    if color_method == 'shf':
         plt.legend([q_plt['1'], q_plt['2'], q_plt['3'], q_plt['4']],
-                   ['ODP Borehole', 'Land Borehole',
+                   ['ODP Borehol', 'Land Borehole',
                    'Geochemical', 'Marine Geophysics'],
                    bbox_to_anchor=(-1.0, 0),loc=3)
-    elif q_plt_diff['1']:
+    elif color_method == 'diff':
+        cbar_diff = plt.colorbar(q_plt_diff['1'])
+        cbar_diff.set_label('Diff', rotation=90, labelpad=-70)
         plt.legend([q_plt_diff['1'],q_plt_diff['2'],q_plt_diff['3'],q_plt_diff['4']],
-                   ['ODP Borehole', 'Land Borehole',
+                   ['ODP Borehol', 'Land Borehole',
                    'Geochemical', 'Marine Geophysics'],
                    bbox_to_anchor=(-1.0, 0),loc=3)
 
     plt.tight_layout()
-    nombre = "Mapa_Q_0%s" %(tmc)
+    nombre = "Mapa_Q_0%s_DIFF" %(tmc)
+    os.chdir(direTer)
     if not os.path.exists('Mapas'):
         os.makedirs('Mapas')
     os.chdir('Mapas')
     plt.savefig('%s' %(nombre),dpi='figure',format='png')
     os.chdir('../')
+    os.chdir('../../')
     plt.close()
     return
 

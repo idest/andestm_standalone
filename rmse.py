@@ -5,7 +5,7 @@ import setup
 np.set_printoptions(threshold=np.nan)
 import scipy as sp
 from scipy.interpolate import RectBivariateSpline, interp2d, RegularGridInterpolator
-from termomecanico import CS, TM
+from termomecanico import CS, TM, direTer
 from mpl_toolkits.basemap import Basemap
 from scipy.interpolate import griddata
 import numpy.ma as ma
@@ -55,12 +55,13 @@ datos_q_shf_4 = -datos_q[:,2][np.where(datos_q[:,-1]==4)]*1.e-3
 surface_heat_flow = TM.get_surface_heat_flow()
 shf_min = np.nanmin(surface_heat_flow)
 shf_max = np.nanmax(surface_heat_flow)
-surface_heat_flow[np.isnan(surface_heat_flow)] = -1.e-1000000000
+surface_heat_flow_masked = surface_heat_flow.copy()
+surface_heat_flow_masked[np.isnan(surface_heat_flow)] = -1.e-1000000000
 shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
-                                           surface_heat_flow[:,::-1])
+                                           surface_heat_flow_masked[:,::-1])
 interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
 
-map_q_surface_2(x_axis, y_axis, surface_heat_flow, tmc, data_q=datos_q,
+map_q_surface_2(x_axis, y_axis, surface_heat_flow, tmc, direTer, data_q=datos_q,
                 data_types=True, interpolated_heat_flow=interpolated_shf_bsi)
 
 variable_models_directory = 'Output/var_models/'

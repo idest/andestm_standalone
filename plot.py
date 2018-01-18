@@ -114,16 +114,14 @@ def base_map(topo=True):
     return map
 
 
-def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,data_q=None,
-                    data_types=False, interpolated_heat_flow=None, topo=True,
-                    name='Mapa_Surface_Heat_Flow'):
-
+def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
+                    data_q=None,data_cmap=None,interpolated_heat_flow=None,
+                    topo=True,name='Mapa_Surface_Heat_Flow'):
 
     map = base_map(topo=topo)
     x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
     y = np.linspace(map.llcrnry, map.urcrnry, y_axis.shape[0])
     xx, yy = np.meshgrid(x, y)
-
 
     if surface_heat_flow is not None:
         shf_max = np.nanmax(surface_heat_flow)
@@ -143,21 +141,23 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,data_q=Non
         cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
         plt.title('Surface Heat Flow')
 
-    if data_types is True:
+    if data_q is not None:
         color_method = None
         q_plt = {}
-        q_plt_diff = {}
         data_q_types=[1,2,3,4]
         data_q_types_markers=['o', '^', 'p', 's']
         for i in range(len(data_q_types)):
             data_q_i_idxs = np.where(data_q[:,-2]==i+1)
             data_q_i = data_q[data_q_i_idxs]
-            if interpolated_heat_flow is not None:
-                ihf_i = interpolated_heat_flow[data_q_i_idxs]
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
             m_lon, m_lat = map(longitude,latitude)
             q_flow = -data_q_i[:,2]*1.e-3
+
+
+
+            if interpolated_heat_flow is not None:
+                ihf_i = interpolated_heat_flow[data_q_i_idxs]
             if surface_heat_flow is not None:
                 if interpolated_heat_flow is None:
                     color_method = 'shf'

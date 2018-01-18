@@ -31,8 +31,11 @@ trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
 rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
+mode = '2d'
 var = 'G'
 var_range = np.arange(1.e-3,5.e-2,5.e-4)
+var2 = 'H'
+var2_range = np.arange(1.e-6,4.e-6,5e-7)
 model = exec_input.model
 #k_cs = t_input.k_cs
 #k_ci = t_input.k_ci
@@ -45,7 +48,7 @@ var_mean = 'prom_k'
 mem()
 queue = mp.Queue()
 
-def comp(model,value,input_type):
+def comp(model,input_type,value,mode='1d',value2=None):
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age,
                                         rhe_data, input_type, m_input)
     array_model = []
@@ -63,20 +66,33 @@ def comp(model,value,input_type):
     if not os.path.exists('Output/var_models/%s_%s' %(var,tmc)):
         os.makedirs('Output/var_models/%s_%s' %(var,tmc), exist_ok=True)
     os.chdir('Output/var_models/%s_%s' %(var,tmc))
-    np.savetxt('%s_%s_%s.txt' %(model_str, var, value), model_ref,
-               fmt="%11.4f",delimiter="  ")
-    os.chdir('../../../')
+    if mode=='1d':
+        np.savetxt('%s_%s_%s.txt' %(model_str, var, value), model_ref,
+                   fmt="%11.4f",delimiter="  ")
+    if mode=='2d':
+        np.savetxt('%s_%s_%s_%s_%s.txt' %(model_str,var,value,var2,value2),
+                   model_ref, fmt="%11.4f",delimiter="  ")
+    os.chdir('Output/var_models/%s_%s' %(var,tmc))
     return
 
 def dif_models(var_range, var, model):
-	for value in var_range:
-	    input_type[var] = value
-	    print(input_type[var])
-	    proc = mp.Process(target=comp, args=(model,value,input_type))
-	    proc.start()
-	    mem()
-	    proc.join()
-	return
+    for value in var_range:
+        input_type[var] = value
+            print(input_type[var])
+        if mode=='2d':
+            for value2 in var2_range:
+                input_type[var2] = value2
+                proc = mp.Process(target=comp, args=(model,input_type,value,
+                                                     mode='2d',value2=value2))
+                proc.start()
+                mem()
+                proc.join()
+        else:
+            proc = mp.Process(target=comp, args=(model,input_type,value))
+            proc.start()
+            mem()
+            proc.join()
+    return
 
 proc = mp.Process(target=dif_models, args=(var_range,var,model))
 proc.start()

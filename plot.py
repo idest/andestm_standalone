@@ -116,7 +116,7 @@ def base_map(topo=True):
 
 def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                     data_q=None,data_cmap=None,interpolated_heat_flow=None,
-                    topo=True,name='Mapa_Surface_Heat_Flow',rmse=None):
+                    topo=True,name='Mapa_Surface_Heat_Flow',rmse=None,datos_rmse_error=None):
 
     map = base_map(topo=topo)
     x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
@@ -138,7 +138,7 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
         M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
                            vmin=heat_cbar_min,vmax=heat_cbar_max)
         cbar = plt.colorbar(M)
-        cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
+        cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-60)
         plt.title('Surface Heat Flow')
 
     if data_q is not None:
@@ -149,6 +149,7 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
         for i in range(len(data_q_types)):
             data_q_i_idxs = np.where(data_q[:,-2]==i+1)
             data_q_i = data_q[data_q_i_idxs]
+            
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
             m_lon, m_lat = map(longitude,latitude)
@@ -162,9 +163,17 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                                               vmin=heat_cbar_min,
                                               vmax=heat_cbar_max)
             elif data_cmap == 'diff':
-                q_flow = -data_q_i[:,2]*1.e-3
-                ihf_i = interpolated_heat_flow[data_q_i_idxs]
-                diff = (q_flow - ihf_i)/abs(q_flow)
+                plt.annotate('rmse = %0.7s' %(rmse), xy=(-.9,.3), xycoords='axes fraction')
+                if datos_rmse_error is not None:
+                    ihf_i = interpolated_heat_flow[data_q_i_idxs]
+                    diff = (datos_rmse_error - ihf_i)/abs(datos_rmse_error)
+                else:
+                    q_flow = -data_q_i[:,2]*1.e-3
+                    ihf_i = interpolated_heat_flow[data_q_i_idxs]
+                    diff = (q_flow - ihf_i)/abs(q_flow)
+                map.drawlsmask(land_color='0.8', ocean_color='0.8',resolution='l')
+                #ihf_i = interpolated_heat_flow[data_q_i_idxs]
+                #diff = (q_flow - ihf_i)/abs(q_flow)
                 diff_max = np.nanmax(diff)
                 diff_min = np.nanmin(diff)
                 diff_limit = np.nanmax([abs(diff_max),abs(diff_min)])
@@ -173,7 +182,8 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                 q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                               c=diff, cmap=diff_cmap,
                                               norm=norm,
-                                              marker=data_q_types_markers[i])
+                                              marker=data_q_types_markers[i],
+                                              edgecolors='k')
             else:
                 q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                               marker=data_q_types_markers[i])
@@ -185,8 +195,10 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
 
         if data_cmap == 'diff':
             cbar_diff = plt.colorbar(q_plt['1'])
-            cbar_diff.set_label('Diff', rotation=90, labelpad=-70)
-            plt.title('Diffs')
+            cbar_diff.set_label('Diff', rotation=90, labelpad=-50)
+            cbar_diff.set_ticks([-1,-.6,-.2,0,.2,.6,1])
+            cbar_diff.set_ticklabels([-1,-.6,-.2,0,.2,.6,1])
+            plt.title('%s' %(name))
 
     plt.tight_layout()
     nombre = "%s_0%s_DIFF" %(name,tmc)

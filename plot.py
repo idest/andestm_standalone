@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import os
 from meccolormap import jet_white_r
+from diffcolormap import diff_cmap
 from mpl_toolkits.basemap import Basemap
+from utils import MidPointNorm
 
 def plot_thermal(y, z, D, CS, GM, TM):
     c = -1
@@ -99,88 +101,102 @@ def plot_mec(y, z, D, CS, GM, MM):
         plt.close()
     return
 
-def base_map():
+def base_map(topo=True):
     map = Basemap(llcrnrlon= -80,llcrnrlat= -45,
                   urcrnrlon= -60.0,urcrnrlat= -10.0,
                   epsg= 4326, resolution = 'f')
     #map.arcgisimage(service='ESRI_Imagery_World_2D',xpixels=2000,verbose=True)
     map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)
     map.drawmeridians(np.arange(-180,180,5), labels=[0,0,0,1], fontsize=7)
-    map.etopo()
+    if topo is True:
+        map.etopo()
     map.drawcoastlines(linewidth=0.5)
     return map
 
-def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,direTer,data_q=None,
-                    data_types=False, interpolated_heat_flow=None):
 
-    shf_max = np.nanmax(surface_heat_flow)
-    shf_min = np.nanmin(surface_heat_flow)
-    heat_cbar_max = shf_max
-    heat_cbar_min = shf_min
-    if data_q is not None:
-        q_flow = -data_q[:,2]*1.e-3
-        q_flow_max = np.nanmax(q_flow)
-        q_flow_min = np.nanmin(q_flow)
-        heat_cbar_max = np.nanmax([shf_max, q_flow_max])
-        heat_cbar_min = np.nanmin([shf_min, q_flow_min])
+def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,data_q=None,
+                    data_types=False, interpolated_heat_flow=None, topo=True,
+                    name='Mapa_Surface_Heat_Flow'):
 
-    map = base_map()
+
+    map = base_map(topo=topo)
     x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
     y = np.linspace(map.llcrnry, map.urcrnry, y_axis.shape[0])
     xx, yy = np.meshgrid(x, y)
-    datam = ma.masked_invalid(surface_heat_flow)
-    M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
-                       vmin=heat_cbar_min,vmax=heat_cbar_max)
+
+
+    if surface_heat_flow is not None:
+        shf_max = np.nanmax(surface_heat_flow)
+        shf_min = np.nanmin(surface_heat_flow)
+        heat_cbar_max = shf_max
+        heat_cbar_min = shf_min
+        if data_q is not None:
+            q_flow = -data_q[:,2]*1.e-3
+            q_flow_max = np.nanmax(q_flow)
+            q_flow_min = np.nanmin(q_flow)
+            #heat_cbar_max = np.nanmax([shf_max, q_flow_max])
+            #heat_cbar_min = np.nanmin([shf_min, q_flow_min])
+        datam = ma.masked_invalid(surface_heat_flow)
+        M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
+                           vmin=heat_cbar_min,vmax=heat_cbar_max)
+        cbar = plt.colorbar(M)
+        cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
+        plt.title('Surface Heat Flow')
 
     if data_types is True:
+        color_method = None
         q_plt = {}
         q_plt_diff = {}
-        data_q_types=[1, 2, 3, 4]
+        data_q_types=[1,2,3,4]
         data_q_types_markers=['o', '^', 'p', 's']
         for i in range(len(data_q_types)):
-            data_q_i_idxs = np.where(data_q[:,-1]==i+1)
+            data_q_i_idxs = np.where(data_q[:,-2]==i+1)
             data_q_i = data_q[data_q_i_idxs]
-            ihf_i = interpolated_heat_flow[data_q_i_idxs]
+            if interpolated_heat_flow is not None:
+                ihf_i = interpolated_heat_flow[data_q_i_idxs]
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
             m_lon, m_lat = map(longitude,latitude)
             q_flow = -data_q_i[:,2]*1.e-3
-            if interpolated_heat_flow is None:
-                color_method = 'shf'
-                q_flowm = ma.masked_invalid(q_flow)
-                q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
-                                       c=q_flowm,
-                                       marker=data_q_types_markers[i],
-                                       cmap='afmhot_r',
-                                       vmin=heat_cbar_min, vmax=heat_cbar_max)
-                print(q_plt.keys())
-            else:
-                color_method = 'diff'
-                print('sii')
-                diff = (q_flow - ihf_i)/q_flow
-                q_plt_diff[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
-                                                   c=diff, cmap='coolwarm',
+            if surface_heat_flow is not None:
+                if interpolated_heat_flow is None:
+                    color_method = 'shf'
+                    q_flowm = ma.masked_invalid(q_flow)
+                    q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
+                                           c=q_flowm,
+                                           marker=data_q_types_markers[i],
+                                           cmap='afmhot_r',
+                                           vmin=heat_cbar_min,
+                                           vmax=heat_cbar_max)
+                else:
+                    color_method = 'diff'
+                    diff = (q_flow - ihf_i)/abs(q_flow)
+                    diff_max = np.nanmax(diff)
+                    diff_min = np.nanmin(diff)
+                    diff_limit = np.nanmax([abs(diff_max),abs(diff_min)])
+                    norm = MidPointNorm(midpoint=0,vmin=-1,
+                                                   vmax=1)
+                    q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
+                                                  c=diff, cmap=diff_cmap,
+                                                  norm=norm,edgecolors='none',
                                                 marker=data_q_types_markers[i])
-                print(q_plt_diff.keys())
+            else:
+                q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
+                                                marker=data_q_types_markers[i])
 
-    cbar = plt.colorbar(M)
-    cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-70)
-    plt.title('Surface Heat Flow')
-    if color_method == 'shf':
         plt.legend([q_plt['1'], q_plt['2'], q_plt['3'], q_plt['4']],
-                   ['ODP Borehol', 'Land Borehole',
-                   'Geochemical', 'Marine Geophysics'],
-                   bbox_to_anchor=(-1.0, 0),loc=3)
-    elif color_method == 'diff':
-        cbar_diff = plt.colorbar(q_plt_diff['1'])
-        cbar_diff.set_label('Diff', rotation=90, labelpad=-70)
-        plt.legend([q_plt_diff['1'],q_plt_diff['2'],q_plt_diff['3'],q_plt_diff['4']],
-                   ['ODP Borehol', 'Land Borehole',
-                   'Geochemical', 'Marine Geophysics'],
-                   bbox_to_anchor=(-1.0, 0),loc=3)
+                    ['ODP Borehole', 'Land Borehole',
+                     'Geochemical', 'Marine Geophysics'],
+                     bbox_to_anchor=(-1.0, 0),loc=3)
+
+        if color_method == 'shf':
+            pass
+        elif color_method == 'diff':
+            cbar_diff = plt.colorbar(q_plt['1'])
+            cbar_diff.set_label('Diff', rotation=90, labelpad=-70)
 
     plt.tight_layout()
-    nombre = "Mapa_Q_0%s_DIFF" %(tmc)
+    nombre = "%s_0%s_DIFF" %(name,tmc)
     os.chdir(direTer)
     if not os.path.exists('Mapas'):
         os.makedirs('Mapas')
@@ -192,23 +208,23 @@ def map_q_surface_2(x_axis, y_axis,surface_heat_flow,tmc,direTer,data_q=None,
     return
 
 def map_q_surface(CS, TM, tmc, data_q):
-    longitud1 = data_q[:,0][np.where(data_q[:,-1]==1)]
-    latitud1 = data_q[:,1][np.where(data_q[:,-1]==1)]
-    longitud2 = data_q[:,0][np.where(data_q[:,-1]==2)]
-    latitud2 = data_q[:,1][np.where(data_q[:,-1]==2)]
-    longitud3 = data_q[:,0][np.where(data_q[:,-1]==3)]
-    latitud3 = data_q[:,1][np.where(data_q[:,-1]==3)]
-    longitud4 = data_q[:,0][np.where(data_q[:,-1]==4)]
-    latitud4 = data_q[:,1][np.where(data_q[:,-1]==4)]
+    longitud1 = data_q[:,0][np.where(data_q[:,-2]==1)]
+    latitud1 = data_q[:,1][np.where(data_q[:,-2]==1)]
+    longitud2 = data_q[:,0][np.where(data_q[:,-2]==2)]
+    latitud2 = data_q[:,1][np.where(data_q[:,-2]==2)]
+    longitud3 = data_q[:,0][np.where(data_q[:,-2]==3)]
+    latitud3 = data_q[:,1][np.where(data_q[:,-2]==3)]
+    longitud4 = data_q[:,0][np.where(data_q[:,-2]==4)]
+    latitud4 = data_q[:,1][np.where(data_q[:,-2]==4)]
     q_flow = -data_q[:,2]
     shf_max = np.nanmax([np.nanmax(q_flow)*1e-3,
               np.nanmax(TM.get_surface_heat_flow())])
     shf_min = np.nanmin([np.nanmin(q_flow)*1e-3,
               np.nanmin(TM.get_surface_heat_flow())])
-    q_flow_1 = -data_q[:,2][np.where(data_q[:,-1]==1)]*1.e-3
-    q_flow_2 = -data_q[:,2][np.where(data_q[:,-1]==2)]*1.e-3
-    q_flow_3 = -data_q[:,2][np.where(data_q[:,-1]==3)]*1.e-3
-    q_flow_4 = -data_q[:,2][np.where(data_q[:,-1]==4)]*1.e-3
+    q_flow_1 = -data_q[:,2][np.where(data_q[:,-2]==1)]*1.e-3
+    q_flow_2 = -data_q[:,2][np.where(data_q[:,-2]==2)]*1.e-3
+    q_flow_3 = -data_q[:,2][np.where(data_q[:,-2]==3)]*1.e-3
+    q_flow_4 = -data_q[:,2][np.where(data_q[:,-2]==4)]*1.e-3
     map = Basemap(llcrnrlon= -80, llcrnrlat= -45, urcrnrlon= -60.0, urcrnrlat= -10.0, epsg= 4326, resolution = 'f')
     #map.arcgisimage(service='ESRI_Imagery_World_2D', xpixels = 2000, verbose= True)
     map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)

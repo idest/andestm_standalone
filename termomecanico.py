@@ -24,9 +24,15 @@ gm_data = np.loadtxt('data/Modelo.dat')
 areas = np.loadtxt('data/areas.dat')
 trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
 rhe_data = setup.read_rheo('data/Rhe_Param.dat')
-data_q = np.loadtxt('datos_Q/QsObs.txt', comments='#')
+datos_q = np.loadtxt('datos_Q/QsObs.txt', comments='#')
+datos_q = datos_q[datos_q[:,0] > -80.]
+datos_q = datos_q[datos_q[:,0] < -60.]
+datos_q = datos_q[datos_q[:,1] > -45.]
+datos_q = datos_q[datos_q[:,1] < -10.]
 
 D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
+x_axis = CS.get_x_axis()
+y_axis = CS.get_y_axis()
 """
 print("After termomecanico M.S:")
 mem()
@@ -48,6 +54,10 @@ os.chdir('../../../')
 #os.chdir(direTer)
 #fig = plot.map_q_surface(CS, TM, tmc, data_q)
 #os.chdir('../../')
+
+#plotear datos q
+fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=None, data_q=datos_q,
+                           data_types=True, topo=False)
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

@@ -67,18 +67,24 @@ shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
                                            surface_heat_flow_masked[:,::-1])
 interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
 
-map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow, data_q=datos_q,
-                data_types=True, interpolated_heat_flow=interpolated_shf_bsi)
+#Mapa Surface Heat Flow, Data Heat Flow
+map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow,
+                data_q=datos_q, data_cmap='heat_flow')
 
-map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow, data_q=datos_q_max,
-                data_types=True, interpolated_heat_flow=interpolated_shf_bsi,
-                name='Mapa_datos_Q_max')
+#Mapa Diffs Max
+map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_max,
+                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+                topo=False, name='Mapa_datos_Q_max_diff')
 
-map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow, data_q=datos_q_min,
-                data_types=True, interpolated_heat_flow=interpolated_shf_bsi,
-                name='Mapa_datos_Q_min')
+#Mapa Diffs Min
+map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_min,
+                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+                topo=False, name='Mapa_datos_Q_min_diff')
 
-
+#Mapa Diffs Prom
+map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
+                interpolated_heat_flow=interpolated_shf_bsi, topo=False,
+                name='Mapa_datos_Q_diff')
 
 variable_models_directory = 'Output/var_models/'
 

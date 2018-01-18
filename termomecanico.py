@@ -56,8 +56,8 @@ os.chdir('../../../')
 #os.chdir('../../')
 
 #plotear datos q
-fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=None, data_q=datos_q,
-                           data_types=True, topo=False)
+#fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=None, data_q=datos_q,
+#                           data_types=True, topo=False)
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

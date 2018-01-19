@@ -35,11 +35,11 @@ datos_q = datos_q[datos_q[:,2] <= 120]
 error = datos_q[:,-1]
 
 datos_q_max = datos_q.copy()
-datos_q_max[:,2] = datos_q_max[:,2]-datos_q_max[:,-1]
+datos_q_max[:,2] = datos_q_max[:,2]+datos_q_max[:,-1]
 datos_q_max_shf = -datos_q_max[:,2]*1e-3
 
 datos_q_min = datos_q.copy()
-datos_q_min[:,2] = datos_q_min[:,2]+datos_q_max[:,-1]
+datos_q_min[:,2] = datos_q_min[:,2]-datos_q_min[:,-1]
 datos_q_min_shf = -datos_q_min[:,2]*1e-3
 
 # All data

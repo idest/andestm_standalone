@@ -76,11 +76,14 @@ def comp(model,input_type,value,mode='1d',value2=None):
     return
 
 def dif_models(var_range, var, model):
+    n = 0
     for value in var_range:
+        n += 1
         input_type[var] = value
             print(input_type[var])
         if mode=='2d':
             for value2 in var2_range:
+                n += 1
                 input_type[var2] = value2
                 proc = mp.Process(target=comp, args=(model,input_type,value,
                                                      mode='2d',value2=value2))

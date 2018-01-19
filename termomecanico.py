@@ -8,6 +8,7 @@ import os
 import sys
 import resource
 
+
 def mem():
     print('Memory usage         : % 2.2f MB' % round(
         resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024.0,1)
@@ -29,8 +30,11 @@ datos_q = datos_q[datos_q[:,0] > -80.]
 datos_q = datos_q[datos_q[:,0] < -60.]
 datos_q = datos_q[datos_q[:,1] > -45.]
 datos_q = datos_q[datos_q[:,1] < -10.]
+datos_q = datos_q[datos_q[:,2] <= 120]
 
 D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
+surface_heat_flow = TM.get_surface_heat_flow()
+
 x_axis = CS.get_x_axis()
 y_axis = CS.get_y_axis()
 """
@@ -56,8 +60,8 @@ os.chdir('../../../')
 #os.chdir('../../')
 
 #plotear datos q
-#fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=None, data_q=datos_q,
-#                           data_types=True, topo=False)
+fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow, 
+                           data_q=datos_q,data_cmap='heat_flow')
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

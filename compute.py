@@ -660,7 +660,7 @@ class ThermalModel(object):
         if t_input.delta_icd is True:
             delta = boundaries[0] - boundaries[1]
         else:
-            delta = t_input.delta
+            delta = (t_input.delta)
         return delta
 
     def __set_trench_age(self, trench_age, t_input):

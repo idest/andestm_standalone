@@ -138,6 +138,7 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
         M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
                            vmin=heat_cbar_min,vmax=heat_cbar_max)
         cbar = plt.colorbar(M)
+        plt.annotate('rmse = %0.7s' %(rmse), xy=(-.9,.3), xycoords='axes fraction')
         cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-60)
         plt.title('Surface Heat Flow')
 
@@ -149,7 +150,6 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
         for i in range(len(data_q_types)):
             data_q_i_idxs = np.where(data_q[:,-2]==i+1)
             data_q_i = data_q[data_q_i_idxs]
-            
             longitude = data_q_i[:,0]
             latitude = data_q_i[:,1]
             m_lon, m_lat = map(longitude,latitude)
@@ -166,7 +166,8 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                 plt.annotate('rmse = %0.7s' %(rmse), xy=(-.9,.3), xycoords='axes fraction')
                 if datos_rmse_error is not None:
                     ihf_i = interpolated_heat_flow[data_q_i_idxs]
-                    diff = (datos_rmse_error - ihf_i)/abs(datos_rmse_error)
+                    datos_rmse_error_i = datos_rmse_error[data_q_i_idxs]
+                    diff = (datos_rmse_error_i - ihf_i)/abs(datos_rmse_error_i)
                 else:
                     q_flow = -data_q_i[:,2]*1.e-3
                     ihf_i = interpolated_heat_flow[data_q_i_idxs]

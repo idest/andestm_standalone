@@ -9,8 +9,8 @@
 #    -----  ------   -----------
      False  k_z       k_z = False prom. de K. k_z = True  valor de K dep de Z
      False  H_z       H_z = False prom. de H. H_z = True  valor de H dep de Z
-      True  delta_icd Si delta_icd = True delta depende de icd. Si delta_icd = False => delta_icd = delta
-      True  t_lat     t_lat = True usar edad de la fosa. t_lat = edad (ej. a5=50 Myr)
+     True   delta_icd Si delta_icd = True delta depende de icd. Si delta_icd = False => delta_icd = delta
+     True   t_lat     t_lat = True usar edad de la fosa. t_lat = edad (ej. a5=50 Myr)
 #·········  ·······  ··························································
        3.0  k_cs     Conductividad termica Corteza superior [W/mK]
        2.5  k_ci     Conductividad termica Corteza inferior [W/mK]
@@ -25,5 +25,5 @@
        1.0  b        Parametro adimensional
       25.0  dip      Angulo de subduccion
        0.1  D        Constante de proporcionalidad adimensional
-        10  delta    Decaimiento radiogenico
+        10  delta    Decaimiento radiogenico (km)
         30  t        Edad promedio de la placa oceanica en la fosa (Ma)

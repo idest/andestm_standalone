@@ -74,20 +74,22 @@ shf_interpolator_bsi = RectBivariateSpline(x_axis, y_axis[::-1],
 interpolated_shf_bsi = shf_interpolator_bsi.ev(datos_q_x, datos_q_y)
 
 #Mapa Surface Heat Flow, Data Heat Flow 
+rmse_model,_ = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
+                               datos_q_max_shf, error)
 map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow,
-                data_q=datos_q, data_cmap='heat_flow')
+                data_q=datos_q, data_cmap='heat_flow',rmse=rmse_model)
 
 #Mapa Diffs Max
-rmse_max = calc_rmse(datos_q_max_shf, interpolated_shf_bsi)
-map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_max,
-                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
-                topo=False, name='Max_Diff_Map',rmse=rmse_max)
+#rmse_max = calc_rmse(datos_q_max_shf, interpolated_shf_bsi)
+#map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_max,
+#                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+#                topo=False, name='Max_Diff_Map',rmse=rmse_max)
 
 #Mapa Diffs Min
-rmse_min = calc_rmse(datos_q_min_shf, interpolated_shf_bsi)
-map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_min,
-                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
-                topo=False, name='Min_Diff_Map',rmse=rmse_min)
+#rmse_min = calc_rmse(datos_q_min_shf, interpolated_shf_bsi)
+#map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_min,
+#                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+#                topo=False, name='Min_Diff_Map',rmse=rmse_min)
 
 #Mapa Diffs Prom
 rmse_prom = calc_rmse(datos_q_shf, interpolated_shf_bsi)
@@ -97,9 +99,9 @@ map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
 
 #Mapa Diff RMSE error
 rmse_error,_ = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
-                             datos_q_max_shf, error)
+                               datos_q_max_shf, error)
 _,data_salida = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
-                             datos_q_max_shf, error)
+                                datos_q_max_shf, error)
 map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
                 interpolated_heat_flow=interpolated_shf_bsi, topo=False,
                 name='Prom_Diff_RMSE_corrected', rmse=rmse_error, datos_rmse_error=data_salida)

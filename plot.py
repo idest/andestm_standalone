@@ -277,6 +277,40 @@ def map_q_surface(CS, TM, tmc, data_q):
     plt.close()
     return
 
+def plot_diffs(model_heat_flow, data_q, data_error=None, rmse=None):
+    plt.figure(figsize=(15,30))
+    data_q_types=[1,2,3,4]
+    data_q_types_markers=['o', '^', 'p', 's']
+    data_q_titles = ['ODP', 'LBH', 'GQ', 'GF']
+    f, (ax1, ax2, ax3, ax4) = plt.subplots(4)
+    data_q_axes = [ax1, ax2, ax3, ax4]
+    for i in range(len(data_q_types)):
+        data_q_i_idxs = np.where(data_q[:,-2]==i+1)
+        data_q_i = data_q[data_q_i_idxs]
+        data_error_i = data_error[data_q_i_idxs]*1e-3
+        model_heat_flow_i = model_heat_flow[data_q_i_idxs]
+        q_flow = -data_q_i[:,2]*1.e-3
+        ax = data_q_axes[i]
+        x = np.arange(len(q_flow))
+        ax.errorbar(x, q_flow, yerr=data_error_i, fmt='r.', capsize=2, capthick=0.5,markersize=2, elinewidth=0.5)
+        ax.plot(x, model_heat_flow_i, 'k.',markersize=2)
+        ax.set_title(data_q_titles[i])
+    plt.tight_layout()
+
+    #data_error = (data_error*1e-3)
+    #x = np.arange(len(q_flow))
+    #plt.plot(x, model_heat_flow, 'k.')
+    #plt.plot(x, q_flow, 'r.')
+    #plt.errorbar(x, q_flow, yerr=0.01, fmt='r.', capsize=2)
+    #plt.plot(x, data_error, '.')
+    #print(os.getcwd())
+    if not os.path.exists('Graficos'):
+        os.makedirs('Graficos')
+    os.chdir('Graficos')
+    plt.savefig('diffs',format='pdf')
+    os.chdir('../')
+    plt.close('all')
+
 """
 def get_detachment(CS,GM,MM):
     c = -1

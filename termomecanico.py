@@ -1,8 +1,12 @@
 import setup
-import compute
-import plot
+from datos_q import *
+from rmse import interpolated_shf_bsi
+from calc_rmse import calc_rmse
+from calc_rmse import calc_rmse_error
 import numpy as np
 np.set_printoptions(threshold=np.nan)
+from plot import map_q_surface_2
+from plot import plot_diffs
 from utils import DotDict
 import os
 import sys
@@ -15,28 +19,7 @@ def mem():
     )
 
 print('Leyendo variables...')
-t_input = setup.readVars('VarTermal.txt')
-m_input = setup.readVars('VarMecanico.txt')
-exec_input = setup.readVars('VarExec.txt')
-tmc = exec_input.temcaso
-mmc = exec_input.meccaso
-direTer, direTerMec = setup.makeDirs(exec_input.temcaso, exec_input.meccaso)
-gm_data = np.loadtxt('data/Modelo.dat')
-areas = np.loadtxt('data/areas.dat')
-trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
-rhe_data = setup.read_rheo('data/Rhe_Param.dat')
-datos_q = np.loadtxt('datos_Q/QsObs.txt', comments='#')
-datos_q = datos_q[datos_q[:,0] > -80.]
-datos_q = datos_q[datos_q[:,0] < -60.]
-datos_q = datos_q[datos_q[:,1] > -45.]
-datos_q = datos_q[datos_q[:,1] < -10.]
-datos_q = datos_q[datos_q[:,2] <= 120]
 
-D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
-surface_heat_flow = TM.get_surface_heat_flow()
-
-x_axis = CS.get_x_axis()
-y_axis = CS.get_y_axis()
 """
 print("After termomecanico M.S:")
 mem()
@@ -60,8 +43,42 @@ os.chdir('../../../')
 #os.chdir('../../')
 
 #plotear datos q
-fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow, 
-                           data_q=datos_q,data_cmap='heat_flow')
+#fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow, 
+#                           data_q=datos_q,data_cmap='heat_flow')
+#Mapa Surface Heat Flow, Data Heat Flow 
+rmse_model,datos_rmse_error_shf = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
+                                          datos_q_max_shf, error)
+map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow,
+                data_q=datos_q, data_cmap='heat_flow', topo=False, rmse=rmse_model,datos_rmse_error=datos_rmse_error_shf)
+
+#Mapa Diffs Max
+#rmse_max = calc_rmse(datos_q_max_shf, interpolated_shf_bsi)
+#map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_max,
+#                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+#                topo=False, name='Max_Diff_Map',rmse=rmse_max)
+
+#Mapa Diffs Min
+#rmse_min = calc_rmse(datos_q_min_shf, interpolated_shf_bsi)
+#map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q_min,
+#                data_cmap='diff', interpolated_heat_flow=interpolated_shf_bsi,
+#                topo=False, name='Min_Diff_Map',rmse=rmse_min)
+
+#Mapa Diffs Prom
+rmse_prom = calc_rmse(datos_q_shf, interpolated_shf_bsi)
+map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
+                interpolated_heat_flow=interpolated_shf_bsi, topo=False,
+                name='Prom_Diff_Map',rmse=rmse_prom)
+
+#Mapa Diff RMSE error
+rmse_error,data_salida = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
+                                                  datos_q_max_shf, error)
+map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
+                interpolated_heat_flow=interpolated_shf_bsi, topo=False,
+                name='Prom_Diff_RMSE_corrected', rmse=rmse_error, datos_rmse_error=data_salida)
+
+#Plotter Diffs
+#plot_diffs(interpolated_shf_bsi,datos_q,error)
+
 
 #detachment = plot.get_detachment(CS,GM,MM)
 

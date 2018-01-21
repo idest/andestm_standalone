@@ -33,9 +33,9 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 input_type = t_input
 mode = '2d'
 var = 'G'
-var_range = np.arange(1.e-3,5.e-2,5.e-4)
+var_range = np.arange(1.e-4,1.e-3,0.5e-4)
 var2 = 'H'
-var2_range = np.arange(1.e-6,4.e-6,5e-7)
+var2_range = np.arange(1.e-6,6.e-6,5e-7)
 model = exec_input.model
 #k_cs = t_input.k_cs
 #k_ci = t_input.k_ci
@@ -48,7 +48,7 @@ var_mean = 'prom_k'
 mem()
 queue = mp.Queue()
 
-def comp(model,input_type,value,mode='1d',value2=None):
+def comp(model,input_type,n,value,mode='1d',value2=None):
     D, CS, GM, TM, MM = compute.compute(gm_data, areas, trench_age,
                                         rhe_data, input_type, m_input)
     array_model = []
@@ -67,39 +67,54 @@ def comp(model,input_type,value,mode='1d',value2=None):
         os.makedirs('Output/var_models/%s_%s' %(var,tmc), exist_ok=True)
     os.chdir('Output/var_models/%s_%s' %(var,tmc))
     if mode=='1d':
-        np.savetxt('%s_%s_%s.txt' %(model_str, var, value), model_ref,
+        np.savetxt('%s_%s_%s_%s.txt' %(model_str, var, value, n), model_ref,
                    fmt="%11.4f",delimiter="  ")
     if mode=='2d':
-        np.savetxt('%s_%s_%s_%s_%s.txt' %(model_str,var,value,var2,value2),
+        np.savetxt('%s_%s_%s_%s_%s_%s.txt' %(model_str,var,value,var2,value2,n),
                    model_ref, fmt="%11.4f",delimiter="  ")
-    os.chdir('Output/var_models/%s_%s' %(var,tmc))
+    os.chdir('../../../')
     return
 
-def dif_models(var_range, var, model):
+def dif_models(var_range, var, var2_range, var2, model):
     n = 0
     for value in var_range:
         n += 1
         input_type[var] = value
-            print(input_type[var])
+        print(input_type[var])
         if mode=='2d':
             for value2 in var2_range:
                 n += 1
-                input_type[var2] = value2
-                proc = mp.Process(target=comp, args=(model,input_type,value,
-                                                     mode='2d',value2=value2))
+                change_var(input_type, var2, value2)
+                keywords = {'mode': '2d', 'value2': value2}
+                proc = mp.Process(target=comp, args=(model,input_type,n,value), kwargs=keywords)
                 proc.start()
                 mem()
                 proc.join()
         else:
-            proc = mp.Process(target=comp, args=(model,input_type,value))
+            proc = mp.Process(target=comp, args=(model,input_type,n,value))
             proc.start()
             mem()
             proc.join()
+    if not os.path.exists('Output/var_models/%s_%s' %(var,tmc)):
+        os.makedirs('Output/var_models/%s_%s' %(var,tmc), exist_ok=True)
+    os.chdir('Output/var_models/%s_%s' %(var,tmc))
+    print(len(var_range))
+    print(len(var2_range))
+    shape_2d = np.asarray([len(var_range), len(var2_range)],dtype=int)
+    np.savetxt('shape_2d.txt', shape_2d)
+    os.chdir('../../../')
     return
 
-proc = mp.Process(target=dif_models, args=(var_range,var,model))
+def change_var(input_type, var, value):
+    if var == 'H':
+        input_type['H_cs'] = value
+        input_type['H_ci'] = value
+        input_type['H_ml'] = value
+    else:
+        input_type[var] = value
+    return
+
+proc = mp.Process(target=dif_models, args=(var_range,var,var2_range,var2,model))
 proc.start()
 print('procesando')
 proc.join()
-
-

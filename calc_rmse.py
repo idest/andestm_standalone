@@ -1,7 +1,8 @@
 import numpy as np
 
 def calc_rmse(model, data):
-    return np.sqrt(((model - data) ** 2).mean())
+    rmse = np.sqrt(((model - data) ** 2).mean())
+    return rmse
 
 def calc_rmse_error(data,model,data_min,data_max,error):
     diff = model - data

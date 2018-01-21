@@ -1006,5 +1006,3 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)
     return d, cs, gm, tm, mm
-
-

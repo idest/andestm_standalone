@@ -6,6 +6,7 @@ from calc_rmse import calc_rmse_error
 import numpy as np
 np.set_printoptions(threshold=np.nan)
 from plot import map_q_surface_2
+from plot import map_surface_heat_flow
 from plot import plot_diffs
 from utils import DotDict
 import os
@@ -44,12 +45,12 @@ os.chdir('../../../')
 
 #plotear datos q
 #fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow, 
-#                           data_q=datos_q,data_cmap='heat_flow')
+#                           data_q=datos_q,data_cmap='heat_flow',topo=False)
 #Mapa Surface Heat Flow, Data Heat Flow 
 rmse_model,datos_rmse_error_shf = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
-                                          datos_q_max_shf, error)
-map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow,
-                data_q=datos_q, data_cmap='heat_flow', topo=False, rmse=rmse_model,datos_rmse_error=datos_rmse_error_shf)
+                                                  datos_q_max_shf, error)
+map_surface_heat_flow(x_axis, y_axis, tmc, direTer, datos_q, surface_heat_flow=surface_heat_flow,
+                      topo=False, rmse=rmse_model,datos_rmse_error=datos_rmse_error_shf)
 
 #Mapa Diffs Max
 #rmse_max = calc_rmse(datos_q_max_shf, interpolated_shf_bsi)
@@ -77,7 +78,7 @@ map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
                 name='Prom_Diff_RMSE_corrected', rmse=rmse_error, datos_rmse_error=data_salida)
 
 #Plotter Diffs
-#plot_diffs(interpolated_shf_bsi,datos_q,error)
+plot_diffs(interpolated_shf_bsi,datos_q,error)
 
 
 #detachment = plot.get_detachment(CS,GM,MM)

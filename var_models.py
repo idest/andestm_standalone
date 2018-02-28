@@ -32,10 +32,10 @@ rhe_data = setup.read_rheo('data/Rhe_Param.dat')
 #
 input_type = t_input
 mode = '2d'
-var = 'G'
-var_range = np.arange(1.e-4,1.e-3,0.5e-4)
-var2 = 'H'
-var2_range = np.arange(1.e-6,6.e-6,5e-7)
+var = 'H'
+var_range = np.arange(.5e-6,4.e-6,5e-7)
+var2 = 'K'
+var2_range = np.arange(1,5,.5)
 model = exec_input.model
 #k_cs = t_input.k_cs
 #k_ci = t_input.k_ci
@@ -110,6 +110,10 @@ def change_var(input_type, var, value):
         input_type['H_cs'] = value
         input_type['H_ci'] = value
         input_type['H_ml'] = value
+    if var == 'K':
+        input_type['k_cs'] = value
+        input_type['k_ci'] = value
+        input_type['k_ml'] = value
     else:
         input_type[var] = value
     return

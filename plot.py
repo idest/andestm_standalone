@@ -117,8 +117,8 @@ def base_map(topo=True):
 
 def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                     data_q=None,data_cmap=None,interpolated_heat_flow=None,
-                    topo=True,name='Mapa_Surface_Heat_Flow',rmse=None,
-                    datos_rmse_error=None):
+                    topo=True,name='Mapa_Surface_Heat_Flow',diffe=None,
+                    rmse=None,datos_rmse_error=None):
     #x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
     #y = np.linspace(map.llcrnry, map.urcrnry, y_axis.shape[0])
     if surface_heat_flow is not None:
@@ -171,21 +171,17 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                                               vmin=heat_cbar_min,
                                               vmax=heat_cbar_max)
             elif data_cmap == 'diff':
-               #plt.annotate('rmse = %0.7s' %(rmse), xy=(-.4,.3), xycoords='axes fraction')
+                plt.annotate('RMSE = %0.7s' %(rmse), xy=(0,-.15), xycoords='axes fraction')
                 if datos_rmse_error is not None:
                     ihf_i = interpolated_heat_flow[data_q_i_idxs]
                     datos_rmse_error_i = datos_rmse_error[data_q_i_idxs]
-                    diff = (ihf_i - datos_rmse_error_i)#/abs(datos_rmse_error_i)
+                    diff = (ihf_i - datos_rmse_error_i)
                 else:
                     q_flow = -data_q_i[:,2]*1.e-3
                     ihf_i = interpolated_heat_flow[data_q_i_idxs]
-                    diff = (ihf_i - q_flow)#/abs(q_flow)
+                    diff= (ihf_i - q_flow)
                 map.drawlsmask(land_color='0.8', ocean_color='0.8',resolution='l')
                 ihf_i = interpolated_heat_flow[data_q_i_idxs]
-                #diff = (q_flow - ihf_i)/abs(q_flow)
-                diff_max = np.nanmax(diff)
-                diff_min = np.nanmin(diff)
-                diff_limit = np.nanmax([abs(diff_max),abs(diff_min)])
                 norm = MidPointNorm(midpoint=0,vmin=-0.1,
                                                vmax=0.1)
                 q_plt[str(i+1)] = map.scatter(m_lon,m_lat,s=20,latlon=True,
@@ -193,28 +189,28 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
                                               norm=norm,
                                               marker=data_q_types_markers[i],
                                               edgecolors='k',
-                                              linewidths=.3)
+                                              linewidths=.2)
             else:
                 q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                               marker=data_q_types_markers[i])
         if data_cmap == 'diff':
-            cbar_diff = plt.colorbar(q_plt['2'],ax=ax1,pad=0.1,fraction=0.0765)
+            cbar_diff = plt.colorbar(q_plt['1'],ax=ax1,pad=0.1,fraction=0.0765)
             cbar_diff.set_label('Diff [W/m²]', rotation=90, labelpad=-60)
             cbar_diff.set_ticks([-0.1,-0.08,-0.06,-0.04,-0.02,0,0.02,0.04,0.06,0.08,0.1])
             cbar_diff.set_ticklabels([-0.1,-0.08,-0.06,-0.04,-0.02,0,0.02,0.04,0.06,0.08,0.1])
-            #ax2 = plt.subplot(gs[:,1])
-            ax2 = fig.add_subplot(122)
-            ax2.hist(diff,5,orientation='horizontal',range=(-.1,.1),color=(0.094, 0.701, 0.705),
-                     alpha=.7,align='mid')
+            if diffe is not None:
+                ax2 = fig.add_subplot(122)
+                ax2.hist(diffe,20,orientation='horizontal',range=(-.1,.1),color=(0.094, 0.701, 0.705),
+                         alpha=.7,align='mid')
             #n, bins, patches = ax2.hist(diff,5,orientation='horizontal',range=(-.1,.1))
             #bin_centers = 0.5 * (bins[:-1] + bins[1:])
             #col = bin_centers - min(bin_centers)
             #col /= max(col)
             #for c, p in zip(col, patches):
             #    plt.setp(p, 'facecolor', diff_cmap(c))
-            ax2.yaxis.set_ticks([-0.1,-0.08,-0.06,-0.04,-0.02,0,0.02,0.04,0.06,0.08,0.1])
-            ax2.yaxis.set_ticklabels([])
-            plt.grid(True)
+                ax2.yaxis.set_ticks([-0.1,-.09,-.08,-.07,-.06,-.05,-.04,-.03,-.02,-.01,0,.01,.02,.03,.04,.05,.06,.07,.08,.09,0.1])
+                ax2.yaxis.set_ticklabels([])
+                plt.grid(True)
     plt.legend([q_plt['1'], q_plt['2'], q_plt['3'], q_plt['4']],
                ['ODP Borehole', 'Land Borehole',
                'Geochemical', 'Marine Geophysics'],
@@ -234,9 +230,10 @@ def map_q_surface_2(x_axis, y_axis,tmc,direTer,surface_heat_flow=None,
 
 def map_surface_heat_flow(x_axis, y_axis,tmc,direTer,data_q,
                           surface_heat_flow=None, interpolated_heat_flow=None,
-                          topo=True,name='Mapa_Surface_Heat_Flow',rmse=None,
+                          topo=False,name='Mapa_Surface_Heat_Flow',rmse=None,
                           datos_rmse_error=None):
     map = base_map(topo=topo)
+    map.drawlsmask(land_color='0.8', ocean_color='0.8',resolution='h')
     x = np.linspace(map.llcrnrx, map.urcrnrx, x_axis.shape[0])
     y = np.linspace(map.llcrnry, map.urcrnry, y_axis.shape[0])
     xx, yy = np.meshgrid(x, y)
@@ -244,12 +241,13 @@ def map_surface_heat_flow(x_axis, y_axis,tmc,direTer,data_q,
     shf_min = np.nanmin(surface_heat_flow)
     heat_cbar_max = shf_max
     heat_cbar_min = shf_min
-    datam = ma.masked_invalid(surface_heat_flow)
-    M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot_r',shading='gouraud',
-                       vmin=heat_cbar_min,vmax=heat_cbar_max)
+    datam = ma.masked_invalid(-surface_heat_flow)
+    M = map.pcolormesh(xx,yy[::-1],datam.T,cmap='afmhot',shading='gouraud',
+                       #vmin=heat_cbar_min,vmax=heat_cbar_max)
+                       vmin=0,vmax=.12)
     cbar = plt.colorbar(M)
-    plt.annotate('rmse = %0.7s' %(rmse), xy=(-.9,.3), xycoords='axes fraction')
-    cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-60)
+    plt.annotate('RMSE = %0.7s' %(rmse), xy=(-1.,.3), xycoords='axes fraction')
+    cbar.set_label('Heat Flow [W/m²]', rotation=90, labelpad=-60)
     plt.title('Surface Heat Flow')
     color_method = None
     q_plt = {}
@@ -261,14 +259,17 @@ def map_surface_heat_flow(x_axis, y_axis,tmc,direTer,data_q,
         longitude = data_q_i[:,0]
         latitude = data_q_i[:,1]
         m_lon, m_lat = map(longitude,latitude)
-        q_flow = -data_q_i[:,2]*1.e-3
+        q_flow = data_q_i[:,2]*1.e-3
         q_flowm = ma.masked_invalid(q_flow)
         q_plt[str(i+1)] = map.scatter(m_lon,m_lat,latlon=True,
                                       c=q_flowm,
                                       marker=data_q_types_markers[i],
-                                      cmap='afmhot_r',
-                                      vmin=heat_cbar_min,
-                                      vmax=heat_cbar_max)
+                                      cmap='afmhot',
+                                      #vmin=heat_cbar_min,
+                                      #vmax=heat_cbar_max)
+                                      vmin=0,vmax=.12,
+                                      edgecolors='k',
+                                      linewidths=.2)
     plt.legend([q_plt['1'], q_plt['2'], q_plt['3'], q_plt['4']],
                ['ODP Borehole', 'Land Borehole',
                'Geochemical', 'Marine Geophysics'],
@@ -280,16 +281,16 @@ def map_surface_heat_flow(x_axis, y_axis,tmc,direTer,data_q,
     if not os.path.exists('Mapas'):
         os.makedirs('Mapas')
     os.chdir('Mapas')
-    plt.savefig('%s' %(nombre),dpi='figure',format='pdf')
+    plt.savefig('%s' %(nombre),dpi='figure',format='png')
     os.chdir('../')
     os.chdir('../../')
     plt.close()
 
-def plot_diffs(model_heat_flow, data_q, data_error):
+def plot_diffs(model_heat_flow, data_q, data_error,tmc):
     plt.figure(figsize=(15,30))
     data_q_types=[1,2,3,4]
     data_q_types_markers=['o', '^', 'p', 's']
-    data_q_titles = ['ODP', 'LBH', 'GQ', 'GF']
+    data_q_titles = ['ODP', 'LBH', 'GCH', 'GPH']
     f, (ax1, ax2, ax3, ax4) = plt.subplots(4)
     data_q_axes = [ax1, ax2, ax3, ax4]
     for i in range(len(data_q_types)):
@@ -305,6 +306,7 @@ def plot_diffs(model_heat_flow, data_q, data_error):
         ax.set_ylim(-.15,0)
         ax.set_yticks(np.arange(0,-.151,-.05))
         ax.set_title('%s Data Map'%(data_q_titles[i]))
+        plt.grid(True)
     plt.tight_layout()
 
     #data_error = (data_error*1e-3)
@@ -317,7 +319,7 @@ def plot_diffs(model_heat_flow, data_q, data_error):
     if not os.path.exists('Graficos'):
         os.makedirs('Graficos')
     os.chdir('Graficos')
-    plt.savefig('diffs',format='pdf')
+    plt.savefig('diffs_%s'%(tmc),format='pdf')
     os.chdir('../')
     plt.close('all')
 

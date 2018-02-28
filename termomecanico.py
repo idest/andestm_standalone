@@ -47,8 +47,8 @@ os.chdir('../../../')
 #fig = plot.map_q_surface_2(x_axis, y_axis, tmc, direTer, surface_heat_flow=surface_heat_flow, 
 #                           data_q=datos_q,data_cmap='heat_flow',topo=False)
 #Mapa Surface Heat Flow, Data Heat Flow 
-rmse_model,datos_rmse_error_shf = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
-                                                  datos_q_max_shf, error)
+rmse_model,datos_rmse_error_shf,trash = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
+                                                    datos_q_max_shf, error)
 map_surface_heat_flow(x_axis, y_axis, tmc, direTer, datos_q, surface_heat_flow=surface_heat_flow,
                       topo=False, rmse=rmse_model,datos_rmse_error=datos_rmse_error_shf)
 
@@ -65,20 +65,20 @@ map_surface_heat_flow(x_axis, y_axis, tmc, direTer, datos_q, surface_heat_flow=s
 #                topo=False, name='Min_Diff_Map',rmse=rmse_min)
 
 #Mapa Diffs Prom
-rmse_prom = calc_rmse(datos_q_shf, interpolated_shf_bsi)
+rmse_prom,diff_p = calc_rmse(datos_q_shf, interpolated_shf_bsi)
 map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
                 interpolated_heat_flow=interpolated_shf_bsi, topo=False,
-                name='Prom_Diff_Map',rmse=rmse_prom)
+                name='Prom_Diff_Map',diffe=diff_p, rmse=rmse_prom)
 
 #Mapa Diff RMSE error
-rmse_error,data_salida = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
+rmse_error,data_salida,diff_m = calc_rmse_error(datos_q_shf, interpolated_shf_bsi, datos_q_min_shf,
                                                   datos_q_max_shf, error)
 map_q_surface_2(x_axis, y_axis, tmc, direTer, data_q=datos_q, data_cmap='diff',
                 interpolated_heat_flow=interpolated_shf_bsi, topo=False,
-                name='Prom_Diff_RMSE_corrected', rmse=rmse_error, datos_rmse_error=data_salida)
+                name='Prom_Diff_RMSE_corrected', diffe=diff_m, rmse=rmse_error, datos_rmse_error=data_salida)
 
 #Plotter Diffs
-plot_diffs(interpolated_shf_bsi,datos_q,error)
+plot_diffs(interpolated_shf_bsi,datos_q,error,tmc)
 
 
 #detachment = plot.get_detachment(CS,GM,MM)

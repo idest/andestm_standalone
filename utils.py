@@ -73,4 +73,21 @@ class MidPointNorm(Normalize):
             else:
                 return  val*abs(vmax-midpoint) + midpoint
 
+from math import log10, floor, ceil
+
+def round_to_1(x, direction = round):
+    # Rounds a number to one significative figure.
+    # If used with direction = 'ceil' or direction = 'floor' rounds up or down
+    if direction == 'ceil':
+        direction = ceil
+    elif direction == 'floor':
+        direction = floor
+    places = -int(floor(log10(abs(x)))) 
+    return direction(x * (10**places)) / float(10**places)
+
+import os
+
+def makedir(dire):
+    if not os.path.exists(dire):
+        os.makedirs(dire)
 

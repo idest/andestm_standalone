@@ -322,12 +322,12 @@ class SpatialArray2D(SpatialArray):
             raise ValueError(error)
         elif latitude:
             #index = list(self.cs.get_y_axis()).index(latitude)
-            index = np.where(self.cs.get_y_axis() == latitude)[0][0]
+            index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
             cross_section = self[:, index]
             return cross_section
         elif longitude:
             #index = list(self.cs.get_x_axis()).index(longitude)
-            index = np.where(self.cs.get_x_axis() == longitude)[0][0]
+            index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
             print("index:", index)
             cross_section = self[:, index]
         elif lat1 and lon1 and lat2 and lon2:
@@ -399,12 +399,12 @@ class SpatialArray3D(SpatialArray):
             raise ValueError(error)
         elif latitude:
             #index = list(self.cs.get_y_axis()).index(latitude)
-            index = np.where(self.cs.get_y_axis() == latitude)[0][0]
+            index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
             cross_section = self[:, index, :]
             return cross_section
         elif longitude:
             #index = list(self.cs.get_x_axis()).index(longitude)
-            index = np.where(self.cs.get_x_axis() == longitude)[0][0]
+            index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
             cross_section = self[:, index, :]
         elif lat1 and lon1 and lat2 and lon2:
             cross_section = self
@@ -812,6 +812,11 @@ class ThermalModel(object):
     def get_geotherm(self):
         return SpatialArray3D(self.geotherm, self.cs)
 
+    def get_geometric_model(self):
+        return self.geo_model
+
+    def get_coordinate_system(self):
+        return self.cs
 
 class MechanicModel(object):
 
@@ -994,6 +999,12 @@ class MechanicModel(object):
     def get_eet(self):
         return SpatialArray2D(self.eet, self.cs)
 
+    def get_geometric_model(self):
+        return self.geo_model
+
+    def get_coordinate_system(self):
+        return self.cs
+
 
 def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     d = Data(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input)
@@ -1005,4 +1016,12 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     gm = GeometricModel(gm_d, cs)
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)
-    return d, cs, gm, tm, mm
+    model = {
+        'd': d,
+        'cs': cs,
+        'gm': gm,
+        'tm': tm,
+        'mm': mm
+    }
+    model = DotMap(model)
+    return model 

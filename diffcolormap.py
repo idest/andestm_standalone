@@ -1,13 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, to_rgb
 
-# --- Colormaps from a list ---
+# --- Colormap from a list ---
 
-colors = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]  # R -> G -> B
-n_bins = [3, 6, 10, 100]  # Discretizes the interpolation into bins
-cmap_name = 'diff'
+def get_diff_cmap(bins):
+    colors = [(1, 0, 0), (1, 1, 1), (0, 0, 1)]  # Red -> White -> Blue
+    n_bins = bins  # Discretizes the interpolation into bins
+    cmap_name = 'diff'
+    diff_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+    return diff_cmap
 
+# --- Custom colormap
+
+custom_cmap_name = 'diff_custom'
 
 cdict = {'red':   ((0.0, 1.00, 1.00),
                    (0.1, 1.00, 1.00),
@@ -47,4 +53,4 @@ cdict = {'red':   ((0.0, 1.00, 1.00),
                    (1.0, 1.0, 1.0))
          }
 
-diff_cmap = LinearSegmentedColormap(cmap_name, cdict)
+diff_cmap_custom = LinearSegmentedColormap(custom_cmap_name, cdict)

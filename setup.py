@@ -60,7 +60,7 @@ def makeDirs(temcaso, meccaso):
     direMec = 'Output/%s_Termal/%s_Mecanico/' %(temcaso,meccaso)
 
     if not os.path.exists(direMec):
-        os.makedirs(direTerMec)
+        os.makedirs(direMec)
 
     shutil.copy( 'VarMecanico.txt', direMec )
 

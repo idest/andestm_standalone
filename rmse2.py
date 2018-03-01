@@ -45,10 +45,10 @@ def calc_rmse_error(model, data, data_min, data_max, error):
         else:
             data_salida[i] = data_max[i]
     rmse, diff = calc_rmse(model, data_salida)
-    np.savetxt('shf_data.txt', data)
-    np.savetxt('ishf.txt', model)
-    np.savetxt('shf_data_error.txt', data_salida)
-    np.savetxt('diff.txt', diff)
+    #np.savetxt('shf_data.txt', data)
+    #np.savetxt('ishf.txt', model)
+    #np.savetxt('shf_data_error.txt', data_salida)
+    #np.savetxt('diff.txt', diff)
     return rmse, diff, data_salida
 
 def interpolate_surface_heat_flow(surface_heat_flow, x, y):

@@ -5,6 +5,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib import cm
+import matplotlib.colors as colors
 from matplotlib.colors import Normalize
 from meccolormap import jet_white_r
 from diffcolormap import get_diff_cmap
@@ -492,10 +493,18 @@ def multi_map(
         #, dpi='figure', format='pdf')
     plt.close()
 
-def rmse_plot(x_name, y_name, x_value, y_value, xy_matrix):
-    plt.contourf(x_value, y_value, xy_matrix)
+def rmse_plot(x_name, y_name, x_value, y_value, xy_matrix, save_dir=None):
+    vmin = np.min(xy_matrix)
+    vmax = np.max(xy_matrix)
+    v = np.linspace(vmin, vmax, 50)
+    plt.contourf(x_value, y_value, xy_matrix.T, v, norm=colors.PowerNorm(gamma=1./2.))
+    #plt.pcolormesh(x_value, y_value, xy_matrix.T, norm=colors.PowerNorm(gamma=2./3.))
     plt.colorbar()
-    plt.x_label(x_value)
-    plt.y_label(y_value)
+    plt.xlabel(x_name)
+    plt.ylabel(y_name)
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     plt.tight_layout()
-    plt.savefig('RMSE_2D', dpi='figure', format='pdf')
+    if save_dir is not None:
+        name = 'RMSE_2D.png'
+        plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')

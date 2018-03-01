@@ -7,9 +7,9 @@ from plot2 import (thermal_latitude_profile, mechanic_latitude_profile,
 from datos_q2 import shf_data, shf_data_coords, shf_data_types
 from utils import makedir
 
-gm_data, areas, trench_age, rhe_data = data_setup()
 
 def termomecanico(t_input, m_input):
+    gm_data, areas, trench_age, rhe_data = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
     model_rmse, ishf = rmse(model.tm.get_surface_heat_flow(), weigh_error=False,
                             return_ishf=True)

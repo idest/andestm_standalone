@@ -498,18 +498,30 @@ def multi_map(
             #dpi='figure', format='pdf')
     plt.close()
 
-def rmse_plot(x_name, y_name, x_value, y_value, xy_matrix, save_dir=None):
-    vmin = np.min(xy_matrix)
-    vmax = np.max(xy_matrix)
-    v = np.linspace(vmin, vmax, 50)
-    plt.contourf(x_value, y_value, xy_matrix.T, v, norm=colors.PowerNorm(gamma=1./2.))
-    #plt.pcolormesh(x_value, y_value, xy_matrix.T, norm=colors.PowerNorm(gamma=2./3.))
-    plt.colorbar()
+def rmse_plot(vnames, vaxes, rmses, save_dir=None):
+    # x axis
+    x_name = vnames[0]
+    x_axis = vaxes[0]
     plt.xlabel(x_name)
-    plt.ylabel(y_name)
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    if len(vnames) > 1:
+        # y axis
+        y_name = vnames[1]
+        y_axis = vnames[1]
+        plt.ylabel(y_name)
+        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        # 2D matrix
+        vmin = np.min(xy_matrix)
+        vmax = np.max(xy_matrix)
+        v = np.linspace(vmin, vmax, 50)
+        #plt.contourf(
+        #    x_axis, y_axis, rmeses.T, v, norm=colors.PowerNorm(gamma=1./2.))
+        plt.pcolormesh(
+            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=2./3.))
+        plt.colorbar()
+        name = 'RMSE_2D.png'
+    else:
+
     plt.tight_layout()
     if save_dir is not None:
-        name = 'RMSE_2D.png'
         plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')

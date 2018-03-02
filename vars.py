@@ -23,36 +23,37 @@ def get_var_name(name):
         var_name = [name]
     return var_name
 
-def get_var_range(tuple):
-    if type(tuple) is not np.ndarray:
-        tuple = np.array(tuple)
-    tuple.astype(np.float)
-    var_range = np.arange(*tuple)
-    var_range = np.append(var_range, var_range[-1] + tuple[2])
-    return var_range
+def get_var_axis(range):
+    #if type(range) is not np.ndarray:
+    #    tuple = np.array(range)
+    #range.astype(np.float)
+    var_axis = np.arange(*range)
+    var_axis = np.append(var_axis, var_axis[-1] + range[2])
+    return var_axis
 
-def vars_rmse(
-        var_tuple_1, var_tuple_2=None, var_type='thermal'):
+def vars_rmse(var_names, var_ranges, var_type='thermal'):
     t_input, m_input = input_setup()
-    var_name_1 = get_var_name(var_tuple_1[0])
-    var_range_1 = get_var_range(var_tuple_1[1:])
-    if var_tuple_2 is not None:
-        var_name_2 = get_var_name(var_tuple_2[0])
-        var_range_2 = get_var_range(var_tuple_2[1:])
+    var_name_1 = get_var_name(var_names[0])
+    var_axis_1 = get_var_axis(var_ranges[0])
+    var_name_2 = None
+    var_axis_2 = None
+    if len(var_names) > 1:
+        var_name_2 = get_var_name(var_names[1])
+        var_axis_2 = get_var_axis(var_ranges[1])
     rmses = []
-    for var_1 in var_range_1:
+    for var_1 in var_axis_1:
         for vn in var_name_1:
             t_input[vn] = var_1
-        if var_tuple_2 is None:
+        if var_name_2 is None:
             rmses.append(get_model_rmse(t_input, m_input))
         else:
-            for var_2 in var_range_2:
+            for var_2 in var_axis_2:
                 for vn in var_name_2:
                     t_input[vn] = var_2
                 #mem()
                 rmses.append(get_model_rmse(t_input, m_input))
-    if var_tuple_2 is not None:
-        rmses = np.array(rmses).reshape(len(var_range_1), len(var_range_2))
+    if var_name_2 is not None:
+        rmses = np.array(rmses).reshape(len(var_axis_1), len(var_axis_2))
     return rmses
 
 def get_model_rmse(t_input, m_input):
@@ -82,29 +83,22 @@ if __name__ == '__main__':
             vtuple = [vname] + vrange
             vnames.append(vname)
             vranges.append(vrange)
-            vtuples.append(vtuple)
-        rmses = vars_rmse(*vtuples)
-        # Save
-        vranges = [get_var_range(vranges[0]), get_var_range(vranges[1])]
-        tuple_1 = np.array([vnames[0], *vranges[0]])
-        tuple_2 = np.array([vnames[1], *vranges[1]])
-        np.savetxt(savedir + 'vars_rmses.txt', rmses)
-        np.savetxt(savedir + 'vars_tuple_1.txt', tuple_1, fmt='%s')
-        np.savetxt(savedir + 'vars_tuple_2.txt', tuple_2, fmt='%s')
+        rmses = vars_rmse(vnames, vranges)
         print('rmses:', rmses)
+        # Save
+        vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
+        np.savetxt(save_dir + 'vars_rmses.txt', rmses)
+        np.savetxt(save_dir + 'vars_names.txt', vnames, fmt='%s')
+        np.savetxt(save_dir + 'vars_axes.txt', vaxes)
         # Plot
-        rmse_plot(*vnames, *vranges, rmses, save_dir)
+        rmse_plot(*vnames, *vaxes, rmses, save_dir)
 
     else:
         # Load and Plot
         rmses = np.loadtxt(save_dir + 'vars_rmses.txt')
-        tuple_1 = np.genfromtxt(save_dir + 'vars_tuple_1.txt', dtype='str')
-        tuple_2 = np.genfromtxt(save_dir + 'vars_tuple_2.txt', dtype='str')
-        vnames = [tuple_1[0], tuple_2[0]]
-        vrange_1 = np.array(tuple_1[1:]).astype(float)
-        vrange_2 = np.array(tuple_2[1:]).astype(float)
-        vranges = [vrange_1, vrange_2]
+        vaxes = np.loadtxt(save_dir + 'vars_axes.txt')
+        vnames = np.genfromtxt(save_dir + 'vars_names.txt', dtype='str')
         print(vnames)
-        print(vranges)
-        rmse_plot(vnames[0], vnames[1], vranges[0], vranges[1], rmses, save_dir)
+        print(vaxes)
+        rmse_plot(*vnames, *vaxes, rmses, save_dir)
         #print("Use: python vars.py var_name '[start, end, step]'")

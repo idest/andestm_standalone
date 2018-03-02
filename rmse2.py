@@ -12,7 +12,7 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
     if weigh_error is True:
         rmse, diff, data = calc_rmse_error(shf_interpolated, dq.shf_data,
                                            dq.shf_data_min, dq.shf_data_max,
-                                           dq.error)
+                                           dq.shf_data_error)
         dic = {'rmse': rmse, 'diff': diff, 'shf_data_weighted': data}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
@@ -32,11 +32,11 @@ def calc_rmse(model, data):
     rmse = np.sqrt((diff**2).mean())
     return rmse, diff
 
-def calc_rmse_error(model, data, data_min, data_max, error):
+def calc_rmse_error(model, data, data_min, data_max, data_error):
     diff = model - data
     data_salida = np.zeros(len(diff))
     for i in range(len(diff)):
-        if abs(diff[i]) < abs(error[i]):
+        if abs(diff[i]) < abs(data_error[i]):
             data_salida[i] = model[i]
         elif diff[i] > 0:
             data_salida[i] = data_min[i]

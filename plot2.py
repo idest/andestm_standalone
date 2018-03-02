@@ -537,5 +537,31 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
     if save_dir is not None:
         plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')
 
-def scatter_plot
+def data_scatter_plot(data, data_error, data_types, shf_models, save_dir=None):
+    fig, axes = plt.subplots(4)
+    markers = np.array(['o', '^', 'p', 's'])
+    titles = np.array(['ODP', 'LBH', 'GQ', 'GP'])
+    data_types = (np.array(data_types) - 1).astype(int)
+    data_markers = markers[data_types]
+    colors = cm.rainbow(np.linspace(0, 1, len(shf_models)))
+    for m, t, ax in zip(markers, labels, axes):
+        mask = data_markers == m
+        m_data = data[mask]
+        m_data_error = data_error[mask]
+        m_data_axis = np.arange(len(m_data))
+        ax.errorbar(
+            m_data_axis, m_data, m_data_error, fmt=m, capsize=2, capthick=0.5,
+            markersize=2, elinewidth=0.5)
+        for shf_model, c in zip(shf_models, colors):
+            m_shf_model = shf_model[mask]
+            ax.scatter(
+                m_data_axis, m_shf_model, marker='.',
+                color=c, label=l, s=3)
+
+        ax.set_title(t)
+    plt.tight_layout()
+    if save_dir is not None:
+        name = 'scatter.pdf'
+        plt.savefig(save_dir + '%s' %(name), dpi='figure', format='pdf')
+
 

@@ -91,14 +91,14 @@ if __name__ == '__main__':
         np.savetxt(save_dir + 'vars_names.txt', vnames, fmt='%s')
         np.savetxt(save_dir + 'vars_axes.txt', vaxes)
         # Plot
-        rmse_plot(*vnames, *vaxes, rmses, save_dir)
+        rmse_plot(vnames, vaxes, rmses, save_dir)
 
     else:
         # Load and Plot
         rmses = np.loadtxt(save_dir + 'vars_rmses.txt')
-        vaxes = np.loadtxt(save_dir + 'vars_axes.txt')
-        vnames = np.genfromtxt(save_dir + 'vars_names.txt', dtype='str')
-        print(vnames)
-        print(vaxes)
-        rmse_plot(*vnames, *vaxes, rmses, save_dir)
+        vaxes = np.loadtxt(save_dir + 'vars_axes.txt', ndmin=2)
+        vnames = np.loadtxt(save_dir + 'vars_names.txt', dtype='str', ndmin=2)
+        # Add dummy member to avoid avoid getting too many indices for array
+        # when there is only one member present and we use vnames[0]
+        rmse_plot(vnames, vaxes, rmses, save_dir)
         #print("Use: python vars.py var_name '[start, end, step]'")

@@ -500,28 +500,42 @@ def multi_map(
 
 def rmse_plot(vnames, vaxes, rmses, save_dir=None):
     # x axis
+    print(type(vnames))
+    print(vnames)
+    print(vaxes)
     x_name = vnames[0]
     x_axis = vaxes[0]
-    plt.xlabel(x_name)
+    plt.xlabel(str(x_name))
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     if len(vnames) > 1:
         # y axis
         y_name = vnames[1]
-        y_axis = vnames[1]
-        plt.ylabel(y_name)
+        y_axis = vaxes[1]
+        plt.ylabel(str(y_name))
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         # 2D matrix
-        vmin = np.min(xy_matrix)
-        vmax = np.max(xy_matrix)
+        vmin = np.min(rmses)
+        vmax = np.max(rmses)
         v = np.linspace(vmin, vmax, 50)
-        #plt.contourf(
-        #    x_axis, y_axis, rmeses.T, v, norm=colors.PowerNorm(gamma=1./2.))
-        plt.pcolormesh(
-            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=2./3.))
+        plt.contourf(
+            x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
+        #plt.pcolormesh(
+        #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=2./3.))
         plt.colorbar()
         name = 'RMSE_2D.png'
     else:
-
+        index = np.arange(len(x_axis))
+        plt.plot(index, rmses, '-r', linewidth=1.)
+        plt.bar(index, rmses, alpha=.4)
+        diff = max(rmses) - min(rmses)
+        plt.ylim(min(rmses)-0.2*diff, max(rmses)+0.2*diff)
+        plt.xticks(index, x_axis)
+        plt.ylabel('RMSE')
+        plt.grid(True)
+        name = 'RMSE.png'
     plt.tight_layout()
     if save_dir is not None:
         plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')
+
+def scatter_plot
+

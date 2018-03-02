@@ -55,18 +55,19 @@ if __name__ == '__main__':
         makedir(scatter_dir)
         ishf_models_dir = scatter_dir + 'ishf_models/'
         makedir(ishf_models_dir)
-        print(ishf_models_dir)
         ishf_models_files = glob(ishf_models_dir + '*')
-        ishf_labels = ishf_models_files.split('/')[-1]
-        print(ishf_models_files)
+        ishf_labels = []
+        for fn in ishf_models_files:
+            fn = fn.split('/')[-1].split('_')[-1]
+            label = 'Model ' + fn[:fn.find('.txt')] 
+            ishf_labels.append(label)
+        print(ishf_labels)
         if len(ishf_models_files) > 0:
             ishf_models = [np.loadtxt(f, ndmin=2) for f in ishf_models_files]
             ishf_models = np.concatenate(ishf_models, axis=1).T
             data_scatter_plot(
                 shf_data, shf_data_error, shf_data_types,
-                ishf_models, save_dir=scatter_dir)
-            print(ishf_models.shape)
-            print(ishf_models[0].shape)
+                ishf_models, ishf_labels, save_dir=scatter_dir)
 
     #Latitude profiles
     exec_input.xt2 = False

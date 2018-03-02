@@ -537,14 +537,15 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
     if save_dir is not None:
         plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')
 
-def data_scatter_plot(data, data_error, data_types, shf_models, save_dir=None):
+def data_scatter_plot(
+        data, data_error, data_types, ishf_models, ishf_labels, save_dir=None):
     fig, axes = plt.subplots(4)
     markers = np.array(['o', '^', 'p', 's'])
     titles = np.array(['ODP', 'LBH', 'GQ', 'GP'])
     data_types = (np.array(data_types) - 1).astype(int)
     data_markers = markers[data_types]
-    colors = cm.rainbow(np.linspace(0, 1, len(shf_models)))
-    for m, t, ax in zip(markers, labels, axes):
+    colors = cm.rainbow(np.linspace(0, 1, len(ishf_models)))
+    for m, t, ax in zip(markers, titles, axes):
         mask = data_markers == m
         m_data = data[mask]
         m_data_error = data_error[mask]
@@ -552,16 +553,22 @@ def data_scatter_plot(data, data_error, data_types, shf_models, save_dir=None):
         ax.errorbar(
             m_data_axis, m_data, m_data_error, fmt=m, capsize=2, capthick=0.5,
             markersize=2, elinewidth=0.5)
-        for shf_model, c in zip(shf_models, colors):
-            m_shf_model = shf_model[mask]
+        for ishf_model, ishf_label, c in zip(ishf_models, ishf_labels, colors):
+            m_ishf_model = ishf_model[mask]
             ax.scatter(
-                m_data_axis, m_shf_model, marker='.',
-                color=c, label=l, s=3)
+                m_data_axis, m_ishf_model, marker='.',
+                color=c, label=ishf_label, s=3)
 
         ax.set_title(t)
     plt.tight_layout()
+    extra_artists = []
+    legend = plt.legend(
+        loc='center left', bbox_to_anchor=(1,0.5),
+        bbox_transform=fig.transFigure)
+    extra_artists.append(legend)
     if save_dir is not None:
         name = 'scatter.pdf'
-        plt.savefig(save_dir + '%s' %(name), dpi='figure', format='pdf')
-
-
+        plt.savefig(
+            save_dir + '%s' %(name),
+            bbox_extra_artists=(extra_artists), bbox_inches='tight',
+            dpi='figure', format='pdf')

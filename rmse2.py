@@ -5,24 +5,22 @@ from dotmap import DotMap
 import datos_q2 as dq
 
 def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
-    shf_interpolated = interpolate_surface_heat_flow(surface_heat_flow,
-                                                     dq.shf_data_x,
-                                                     dq.shf_data_y)
-    #Standard deviation
-    p_1_sigma, n_1_sigma, p_2_sigma, n_2_sigma, e_prom = sigma(shf_interpolated,dq.shf_data)
+    # Surface Heat Flow Model Interpolation
+    shf_interpolated = interpolate_surface_heat_flow(
+        surface_heat_flow, dq.shf_data_x, dq.shf_data_y)
     #RMSE
     if weigh_error is True:
         rmse, diff, data = calc_rmse_error(shf_interpolated, dq.shf_data,
                                            dq.shf_data_min, dq.shf_data_max,
                                            dq.error)
-        dic = {'rmse': rmse, 'diff': diff, 'shf_data_weighted': data, 
-               'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma, 'p_2_sigma': p_2_sigma,
-               'n_2_sigma': n_2_sigma, 'e_prom': e_prom}
+        dic = {'rmse': rmse, 'diff': diff, 'shf_data_weighted': data}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
-        dic = {'rmse': rmse, 'diff': diff,'p_1_sigma': p_1_sigma,
-               'n_1_sigma': n_1_sigma, 'p_2_sigma': p_2_sigma,
-               'n_2_sigma': n_2_sigma, 'e_prom': e_prom}
+        dic = {'rmse': rmse, 'diff': diff}
+    #Standard deviation
+    e_prom, sigmas = sigma(shf_interpolated,dq.shf_data)
+    dic['e_prom'] = e_prom
+    dic['sigmas'] = sigmas
     return_tuple = []
     return_tuple.append(DotMap(dic))
     if return_ishf:
@@ -70,6 +68,8 @@ def sigma(shf_interpolated,data):
     n_2_sigma = diff.mean() - sigma2
     p_2_sigma = diff.mean() + sigma2
     e_prom = mean_absolute_error(data, shf_interpolated)
-    return p_1_sigma,n_1_sigma,p_2_sigma,n_2_sigma,e_prom
-
-
+    sigmas = {
+        'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
+        'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
+    sigmas = DotMap(sigmas)
+    return e_prom, sigmas

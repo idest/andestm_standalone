@@ -26,19 +26,16 @@ if __name__ == '__main__':
     diff = model_rmse.diff
     rmse = model_rmse.rmse
     e_prom = model_rmse.e_prom
-    p_1_sigma = model_rmse.p_1_sigma
-    n_1_sigma = model_rmse.n_1_sigma
-    p_2_sigma = model_rmse.p_2_sigma
-    n_2_sigma = model_rmse.n_2_sigma
-    shf_map(shf, save_dir=save_dir, name='shf_map')
+    sigmas = model_rmse.sigmas
+    shf_map(shf, save_dir=save_dir, name='shf_map.png')
     data_map(shf_data, data_coords=shf_data_coords, data_types=shf_data_types,
-             rmse=rmse, save_dir=save_dir, name='data_map')
+             rmse=rmse, save_dir=save_dir, name='data_map.png')
     diff_map(diff, data_coords=shf_data_coords, data_types=shf_data_types,
-             rmse=rmse, save_dir=save_dir, name='diff_map', e_prom=e_prom,
-             n_1_sigma=n_1_sigma, p_1_sigma=p_1_sigma, n_2_sigma=n_2_sigma, p_2_sigma=p_2_sigma)
+             rmse=rmse, save_dir=save_dir, name='diff_map.png', e_prom=e_prom,
+             sigmas=sigmas)
     multi_map(shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
-              data_types=shf_data_types, save_dir=save_dir, rmse=rmse, e_prom=e_prom,
-              n_1_sigma=n_1_sigma, p_1_sigma=p_1_sigma, n_2_sigma=n_2_sigma, p_2_sigma=p_2_sigma)
+              data_types=shf_data_types, save_dir=save_dir, rmse=rmse,
+              e_prom=e_prom, sigmas=sigmas, name='multi_map.png')
     #Latitude profiles
     exec_input.xt2 = False
     exec_input.xm2 = False

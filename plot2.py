@@ -268,8 +268,9 @@ def shf_map(
     # Options
     #plt.tight_layout()
     if save_dir:
-        plt.savefig(save_dir + '%s' %(name), bbox_inches='tight',
-                    dpi='figure', format='pdf')
+        plt.savefig(
+            save_dir + '%s' %(name), bbox_inches='tight')
+            #dpi='figure', format='pdf')
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12
         return width_ratio
@@ -346,9 +347,10 @@ def data_map(
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
     if save_dir:
-        plt.savefig(save_dir + '%s' %(name),
-                    bbox_extra_artists=extra_artists, bbox_inches='tight',
-                    dpi='figure', format='pdf')
+        plt.savefig(
+            save_dir + '%s' %(name),
+            bbox_extra_artists=extra_artists, bbox_inches='tight')
+            #dpi='figure', format='pdf')
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12
         return width_ratio
@@ -356,8 +358,7 @@ def data_map(
 def diff_map(
         diff, data_coords=None, data_types=None, map=None, ax=None,
         rmse=None, legend=True, return_width_ratio=False,
-        save_dir=None, name='diff_map', e_prom=None,
-        n_1_sigma=None, p_1_sigma=None, n_2_sigma=None, p_2_sigma=None):
+        save_dir=None, name='diff_map', e_prom=None, sigmas=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -393,14 +394,15 @@ def diff_map(
     hist_ax.set_yticks(ticks)
     hist_ax.set_ylim([-diff_limit, diff_limit])
     hist_ax.yaxis.tick_right()
-    hist_ax.axhline(y=n_1_sigma)
-    hist_ax.text(15,n_1_sigma-0.005,r'-$\sigma$',size='small')
-    hist_ax.axhline(y=p_1_sigma)
-    hist_ax.text(15,p_1_sigma+0.002,r'+$\sigma$',size='small')
-    hist_ax.axhline(y=n_2_sigma)
-    hist_ax.text(15,n_2_sigma-0.005,r'-2$\sigma$',size='small')
-    hist_ax.axhline(y=p_2_sigma)
-    hist_ax.text(15,p_2_sigma+0.002,r'+2$\sigma$',size='small')
+    if sigmas is not None:
+        hist_ax.axhline(y=sigmas.n_1_sigma)
+        hist_ax.text(15,sigmas.n_1_sigma-0.005,r'-$\sigma$',size='small')
+        hist_ax.axhline(y=sigmas.p_1_sigma)
+        hist_ax.text(15,sigmas.p_1_sigma+0.002,r'+$\sigma$',size='small')
+        hist_ax.axhline(y=sigmas.n_2_sigma)
+        hist_ax.text(15,sigmas.n_2_sigma-0.005,r'-2$\sigma$',size='small')
+        hist_ax.axhline(y=sigmas.p_2_sigma)
+        hist_ax.text(15,sigmas.p_2_sigma+0.002,r'+2$\sigma$',size='small')
     norm = Normalize(bins.min(), bins.max())
     for bin, patch in zip(bins, patches):
         color = diff_cmap(norm(bin))
@@ -412,8 +414,10 @@ def diff_map(
     extra_artists=[]
     if e_prom is not None:
         # MAE
-        e_prom_text = plt.figtext(0.4,0.03, 'MAE: %0.3f' %(e_prom),
-                                  fontweight='bold')
+        e_prom_text = plt.figtext(
+            0.4,0.03, 'MAE: %0.3f' %(e_prom),
+            fontweight='bold')
+        extra_artists.append(e_prom_text)
     if rmse is not None:
         # RMSE
         rmse_text = plt.figtext(
@@ -425,9 +429,10 @@ def diff_map(
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
     if save_dir:
-        plt.savefig(save_dir + '%s' %(name),
-                    bbox_extra_artists=extra_artists, bbox_inches='tight',
-                    dpi='figure', format='pdf')
+        plt.savefig(
+            save_dir + '%s' %(name),
+            bbox_extra_artists=extra_artists, bbox_inches='tight')
+            #dpi='figure', format='pdf')
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12 + 0.30
         return width_ratio
@@ -435,7 +440,7 @@ def diff_map(
 def multi_map(
         shf=None, data=None, diff=None, data_coords=None, data_types=None,
         rmse=None, topo=True, save_dir=None, name='multi_map',
-        e_prom=None, n_1_sigma=None, p_1_sigma=None, n_2_sigma=None, p_2_sigma=None):
+        e_prom=None, sigmas=None):
     # Gridspec
     fig = plt.figure(figsize=(9,6))
     gs = gridspec.GridSpec(1,2)
@@ -462,9 +467,8 @@ def multi_map(
         data_types=data_types,
         map=map2, ax=ax2,
         legend=False,  return_width_ratio=True,
-        save_dir=None, name='diff_map', e_prom=None,
-        n_1_sigma=n_1_sigma, p_1_sigma=p_1_sigma, 
-        n_2_sigma=n_2_sigma, p_2_sigma=p_2_sigma)
+        save_dir=None, name='diff_map',
+        sigmas=sigmas)
     ax2.set_yticks([])
     # Aspect
     gs.set_width_ratios([wr1,wr2])
@@ -475,6 +479,7 @@ def multi_map(
     e_prom_text = plt.figtext(
         0.03, -0.02, 'MAE: %0.3f' %(e_prom),
         fontweight='bold')
+    extra_artists.append(e_prom_text)
     # RMSE
     rmse_text = plt.figtext(
         0.03, 0, 'RMSE: %0.7f' %(rmse),
@@ -487,10 +492,10 @@ def multi_map(
     extra_artists.append(legend)
     # Options
     if save_dir:
-        plt.savefig(save_dir + '%s' %(name),
-                    bbox_extra_artists=(extra_artists), bbox_inches='tight',
-                    dpi='figure', format='pdf')
-        #, dpi='figure', format='pdf')
+        plt.savefig(
+            save_dir + '%s' %(name),
+            bbox_extra_artists=(extra_artists), bbox_inches='tight')
+            #dpi='figure', format='pdf')
     plt.close()
 
 def rmse_plot(x_name, y_name, x_value, y_value, xy_matrix, save_dir=None):

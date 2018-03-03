@@ -27,7 +27,6 @@ if __name__ == '__main__':
     np.savetxt(files_dir + 'ishf_' + exec_input.temcaso + '.txt', ishf)
 
     #Maps
-    exec_input.xt3 = False
     if exec_input.xt3:
         maps_dir = direTer + 'Mapas/'
         makedir(maps_dir)
@@ -36,18 +35,18 @@ if __name__ == '__main__':
         rmse = model_rmse.rmse
         e_prom = model_rmse.e_prom
         sigmas = model_rmse.sigmas
-        shf_map(shf, save_dir=maps_dir, name='shf_map.png')
+        shf_map(shf, save_dir=maps_dir, name='shf_map')
         data_map(
             shf_data, data_coords=shf_data_coords, data_types=shf_data_types,
-            rmse=rmse, save_dir=maps_dir, name='data_map.png')
+            rmse=rmse, save_dir=maps_dir, name='data_map')
         diff_map(
             diff, data_coords=shf_data_coords, data_types=shf_data_types,
-            rmse=rmse, save_dir=maps_dir, name='diff_map.png',
+            rmse=rmse, save_dir=maps_dir, name='diff_map',
             e_prom=e_prom, sigmas=sigmas)
         multi_map(
             shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
             data_types=shf_data_types, save_dir=maps_dir, rmse=rmse,
-            e_prom=e_prom, sigmas=sigmas, name='multi_map.png')
+            e_prom=e_prom, sigmas=sigmas, name='multi_map')
 
     # Data and Models Scatter Plot
     if exec_input.xt4:
@@ -61,7 +60,6 @@ if __name__ == '__main__':
             fn = fn.split('/')[-1].split('_')[-1]
             label = 'Model ' + fn[:fn.find('.txt')] 
             ishf_labels.append(label)
-        print(ishf_labels)
         if len(ishf_models_files) > 0:
             ishf_models = [np.loadtxt(f, ndmin=2) for f in ishf_models_files]
             ishf_models = np.concatenate(ishf_models, axis=1).T
@@ -70,14 +68,12 @@ if __name__ == '__main__':
                 ishf_models, ishf_labels, save_dir=scatter_dir)
 
     #Latitude profiles
-    exec_input.xt2 = False
-    exec_input.xm2 = False
     for lat in np.arange(exec_input.tmi, exec_input.tmx, -exec_input.tdelta):
         if exec_input.xt2:
             save_dir = direTer + 'Perfiles/'
-            makedir(savedir)
-            thermal_latitude_profile(model.tm, lat, save_dir)
+            makedir(save_dir)
+            thermal_latitude_profile(model.tm, lat, save_dir, name='t')
         if exec_input.xm2:
             save_dir = direMec + 'Perfiles/'
-            makedir(savedir)
-            mechanic_latitude_profile(model.mm, lat, save_dir)
+            makedir(save_dir)
+            mechanic_latitude_profile(model.mm, lat, save_dir, name='m')

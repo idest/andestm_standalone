@@ -34,7 +34,7 @@ def base_latitude_profile(cs,gm,lat):
     plt.plot(x_axis, gm.get_slab_lab().cross_section(latitude=lat), 'r')
     return fig
 
-def thermal_latitude_profile(tm, lat, save_dir=None, show=False):
+def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t'):
     # Base
     cs = tm.get_coordinate_system()
     gm = tm.get_geometric_model()
@@ -59,11 +59,12 @@ def thermal_latitude_profile(tm, lat, save_dir=None, show=False):
     if show is True:
         plt.show()
     if save_dir:
-        fig.savefig(save_dir + '%s' %(lat), dpi='figure', format='pdf')
+        name = name + '_%s' %(lat) + '.png'
+        fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
     plt.close()
     return
 
-def mechanic_latitude_profile(mm, lat, save_dir=None, show=False):
+def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m'):
     # Base
     cs = mm.get_coordinate_system()
     gm = mm.get_geometric_model()
@@ -84,7 +85,8 @@ def mechanic_latitude_profile(mm, lat, save_dir=None, show=False):
     if show is True:
         plt.show()
     if save_dir:
-        fig.savefig(save_dir + '%s' %(lat), dpi='figure', format='pdf')
+        name = name + '_%s' %(lat) + '.png'
+        fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
     plt.close()
     return
 
@@ -268,6 +270,7 @@ def shf_map(
     # Options
     #plt.tight_layout()
     if save_dir:
+        name = name + '.png'
         plt.savefig(
             save_dir + '%s' %(name), bbox_inches='tight')
             #dpi='figure', format='pdf')
@@ -347,6 +350,7 @@ def data_map(
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
     if save_dir:
+        name = name + '.png'
         plt.savefig(
             save_dir + '%s' %(name),
             bbox_extra_artists=extra_artists, bbox_inches='tight')
@@ -429,6 +433,7 @@ def diff_map(
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
     if save_dir:
+        name = name + '.png'
         plt.savefig(
             save_dir + '%s' %(name),
             bbox_extra_artists=extra_artists, bbox_inches='tight')
@@ -492,6 +497,7 @@ def multi_map(
     extra_artists.append(legend)
     # Options
     if save_dir:
+        name = name + '.png'
         plt.savefig(
             save_dir + '%s' %(name),
             bbox_extra_artists=(extra_artists), bbox_inches='tight')
@@ -522,7 +528,7 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         #plt.pcolormesh(
         #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=2./3.))
         plt.colorbar()
-        name = 'RMSE_2D.png'
+        name = 'RMSE_2D'
     else:
         index = np.arange(len(x_axis))
         plt.plot(index, rmses, '-r', linewidth=1.)
@@ -532,9 +538,10 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         plt.xticks(index, x_axis)
         plt.ylabel('RMSE')
         plt.grid(True)
-        name = 'RMSE.png'
+        name = 'RMSE'
     plt.tight_layout()
     if save_dir is not None:
+        name = name + '.png'
         plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')
 
 def data_scatter_plot(

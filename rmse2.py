@@ -13,14 +13,15 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
         rmse, diff, data = calc_rmse_error(shf_interpolated, dq.shf_data,
                                            dq.shf_data_min, dq.shf_data_max,
                                            dq.shf_data_error)
-        dic = {'rmse': rmse, 'diff': diff, 'shf_data_weighted': data}
+        e_prom, sigmas = sigma(shf_interpolated, data)
+        dic = {
+            'rmse': rmse, 'diff': diff, 'shf_data_weighted': data,
+            'e_prom': e_prom, 'sigmas': sigmas}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
-        dic = {'rmse': rmse, 'diff': diff}
+        e_prom, sigmas = sigma(shf_interpolated, dq.shf_data)
+        dic = {'rmse': rmse, 'diff': diff, 'e_prom': e_prom, 'sigmas': sigmas}
     #Standard deviation
-    e_prom, sigmas = sigma(shf_interpolated,dq.shf_data)
-    dic['e_prom'] = e_prom
-    dic['sigmas'] = sigmas
     return_tuple = []
     return_tuple.append(DotMap(dic))
     if return_ishf:
@@ -39,9 +40,9 @@ def calc_rmse_error(model, data, data_min, data_max, data_error):
         if abs(diff[i]) < abs(data_error[i]):
             data_salida[i] = model[i]
         elif diff[i] > 0:
-            data_salida[i] = data_min[i]
-        else:
             data_salida[i] = data_max[i]
+        else:
+            data_salida[i] = data_min[i]
     rmse, diff = calc_rmse(model, data_salida)
     #np.savetxt('shf_data.txt', data)
     #np.savetxt('ishf.txt', model)

@@ -12,8 +12,8 @@ from utils import makedir
 def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
-    model_rmse, ishf = rmse(model.tm.get_surface_heat_flow(), weigh_error=False,
-                            return_ishf=True)
+    shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
+    model_rmse, ishf = rmse(shf, weigh_error=False, return_ishf=True)
     return model, model_rmse, ishf
 
 if __name__ == '__main__':
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     if exec_input.xt3:
         maps_dir = direTer + 'Mapas/'
         makedir(maps_dir)
-        shf = model.tm.get_surface_heat_flow()
+        shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
         diff = model_rmse.diff
         rmse = model_rmse.rmse
         e_prom = model_rmse.e_prom
@@ -58,7 +58,7 @@ if __name__ == '__main__':
         ishf_labels = []
         for fn in ishf_models_files:
             fn = fn.split('/')[-1].split('_')[-1]
-            label = 'Model ' + fn[:fn.find('.txt')] 
+            label = 'Model ' + fn[:fn.find('.txt')]
             ishf_labels.append(label)
         if len(ishf_models_files) > 0:
             ishf_models = [np.loadtxt(f, ndmin=2) for f in ishf_models_files]

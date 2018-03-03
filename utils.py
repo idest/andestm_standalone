@@ -75,6 +75,10 @@ class MidPointNorm(Normalize):
 
 from math import log10, floor, ceil
 
+def get_magnitude(x):
+    magnitude = int(floor(log10(abs(x)))) 
+    return magnitude
+
 def round_to_1(x, direction = round):
     # Rounds a number to one significative figure.
     # If used with direction = 'ceil' or direction = 'floor' rounds up or down
@@ -82,7 +86,7 @@ def round_to_1(x, direction = round):
         direction = ceil
     elif direction == 'floor':
         direction = floor
-    places = -int(floor(log10(abs(x)))) 
+    places = -get_magnitude(x)
     return direction(x * (10**places)) / float(10**places)
 
 import os

@@ -806,8 +806,11 @@ class ThermalModel(object):
         geotherm = self.__calc_geotherm(h, delta, k, z, z_topo, z_sl, temp_sl)
         return geotherm
 
-    def get_surface_heat_flow(self):
-        return SpatialArray2D(self.surface_heat_flow, self.cs)
+    def get_surface_heat_flow(self, format='negative watts'):
+        surface_heat_flow = SpatialArray2D(self.surface_heat_flow, self.cs)
+        if format == 'positive milliwatts':
+            surface_heat_flow = surface_heat_flow*-1*1.e3
+        return surface_heat_flow
 
     def get_geotherm(self):
         return SpatialArray3D(self.geotherm, self.cs)

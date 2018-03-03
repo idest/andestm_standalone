@@ -11,7 +11,7 @@ from meccolormap import jet_white_r
 from diffcolormap import get_diff_cmap
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from utils import MidPointNorm, round_to_1
+from utils import MidPointNorm, round_to_1, get_magnitude
 
 def base_latitude_profile(cs,gm,lat):
     # Axes configuration
@@ -125,12 +125,12 @@ def shf_map_old(
         shf_masked = np.ma.masked_invalid(shf) # Before: shf*-1 ¿?
         shf_heatmap = map.pcolormesh(
             xx, yy, shf_masked.T,
-            cmap='afmhot_r', shading='gouraud',
+            cmap='afmhot', shading='gouraud',
             vmin=cbar_min, vmax=cbar_max)
         shf_cbar_ax = divider.append_axes('right', '5%', pad='12%')
         plt.sca(main_ax)
         shf_cbar = plt.colorbar(shf_heatmap, cax=shf_cbar_ax)# pad=0.2)
-        shf_cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-55)
+        shf_cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
         #plt.tight_layout()
         main_ax.set_title('Surface Heat Flow')
 
@@ -167,10 +167,10 @@ def shf_map_old(
             shf_cbar_ax = divider.append_axes('right', '5%', pad='12%')
             plt.sca(main_ax)
         m_scatter, scatter = map_scatter(
-            data, cmap='afmhot_r',
+            data, cmap='afmhot',
             vmin=cbar_min, vmax=cbar_max)
         shf_cbar = plt.colorbar(scatter, cax=shf_cbar_ax)# pad=0.2)
-        shf_cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-55)
+        shf_cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
         main_ax.set_title('Surface Heat Flow')
 
     if diff is not None:
@@ -196,7 +196,7 @@ def shf_map_old(
         diff_cbar_ax = divider.append_axes('right', '5%', pad=diff_cbar_pad)
         plt.sca(diff_ax)
         diff_cbar = plt.colorbar(scatter, cax=diff_cbar_ax)# pad=0.2)
-        diff_cbar.set_label('Diff [W/m²]', rotation=90, labelpad=-18)
+        diff_cbar.set_label('Diff [mW/m²]', rotation=90, labelpad=-20)
         diff_cbar.set_ticks([])
         hist_ax = divider.append_axes('right', '30%', pad='0%')
         plt.sca(diff_ax)
@@ -216,7 +216,7 @@ def shf_map_old(
     extra_artists = []
     if rmse is not None:
         rmse_text = main_ax.annotate(
-            'RMSE = %0.7f' %(rmse), xy=(0,-0.13),
+            'RMSE = %0.2f' %(rmse), xy=(0,-0.13),
             xycoords='axes fraction')
         extra_artists.append(rmse_text)
 
@@ -257,14 +257,14 @@ def shf_map(
     shf_masked = np.ma.masked_invalid(shf) # Before: shf*-1 ¿?
     shf_heatmap = map.pcolormesh(
         xx, yy, shf_masked.T,
-        cmap='afmhot_r', shading='gouraud',
+        cmap='afmhot', shading='gouraud',
         vmin=cbar_min, vmax=cbar_max)
     # Colorbar
     divider = make_axes_locatable(ax)
     cbar_ax = divider.append_axes('right', '5%', pad='12%')
     plt.sca(ax)
     cbar = plt.colorbar(shf_heatmap, cax=cbar_ax)# pad=0.2)
-    cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-55)
+    cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
     # Title
     ax.set_title('Surface Heat Flow')
     # Options
@@ -327,14 +327,14 @@ def data_map(
     if cbar_limits is not None:
         cbar_max, cbar_min = cbar_limits[0], cbar_limits[1]
     map_scatter = get_map_scatter_function(data_coords, data_types, map)
-    m_scatter, scatter = map_scatter(data, cmap='afmhot_r', vmin=cbar_min,
+    m_scatter, scatter = map_scatter(data, cmap='afmhot', vmin=cbar_min,
                                      vmax=cbar_max)
     # Colorbar
     if cbar is True:
         divider = make_axes_locatable(ax)
         cbar_ax = divider.append_axes('right', '5%', '12%')
         cbar = plt.colorbar(scatter, cax=cbar_ax)# pad=0.2)
-        cbar.set_label('Heat Flow (W/m2)', rotation=90, labelpad=-55)
+        cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-45)
     # Title
     ax.set_title('Surface Heat Flow')
     # Options
@@ -342,7 +342,7 @@ def data_map(
     if rmse is not None:
         # RMSE
         rmse_text = plt.figtext(
-            0.4, 0.01, 'RMSE: %0.7f' %(rmse),
+            0.4, 0.01, 'RMSE: %0.2f' %(rmse),
             fontweight='bold')
         extra_artists.append(rmse_text)
     if legend is True:
@@ -373,7 +373,8 @@ def diff_map(
     diff_min = np.nanmin(diff)
     diff_limit = np.nanmax([abs(diff_max), abs(diff_min)])
     diff_limit = round_to_1(diff_limit, 'ceil')
-    ticks = np.arange(-diff_limit, diff_limit+0.01, 0.01)
+    diff_step = 10**get_magnitude(diff_limit)
+    ticks = np.arange(-diff_limit, diff_limit+diff_step, diff_step)
     bins = len(ticks) - 1
     diff_cmap = get_diff_cmap(bins)
     norm = MidPointNorm(midpoint=0, vmin=-diff_limit, vmax=diff_limit)
@@ -387,7 +388,7 @@ def diff_map(
     cbar_ax = divider.append_axes('right', '5%', pad=cbar_pad)
     plt.sca(ax)
     cbar = plt.colorbar(scatter, cax=cbar_ax)# pad=0.2)
-    cbar.set_label('Diff [W/m²]', rotation=90, labelpad=-18)
+    cbar.set_label('Diff [mW/m²]', rotation=90, labelpad=-20)
     cbar.set_ticks([])
     # Colorbar histogram
     hist_ax = divider.append_axes('right', '30%', pad='0%')
@@ -400,13 +401,13 @@ def diff_map(
     hist_ax.yaxis.tick_right()
     if sigmas is not None:
         hist_ax.axhline(y=sigmas.n_1_sigma)
-        hist_ax.text(15,sigmas.n_1_sigma-0.005,r'-$\sigma$',size='small')
+        hist_ax.text(15,sigmas.n_1_sigma-0.5*diff_step,r'-$\sigma$',size='small')
         hist_ax.axhline(y=sigmas.p_1_sigma)
-        hist_ax.text(15,sigmas.p_1_sigma+0.002,r'+$\sigma$',size='small')
+        hist_ax.text(15,sigmas.p_1_sigma+0.2*diff_step,r'+$\sigma$',size='small')
         hist_ax.axhline(y=sigmas.n_2_sigma)
-        hist_ax.text(15,sigmas.n_2_sigma-0.005,r'-2$\sigma$',size='small')
+        hist_ax.text(15,sigmas.n_2_sigma-0.5*diff_step,r'-2$\sigma$',size='small')
         hist_ax.axhline(y=sigmas.p_2_sigma)
-        hist_ax.text(15,sigmas.p_2_sigma+0.002,r'+2$\sigma$',size='small')
+        hist_ax.text(15,sigmas.p_2_sigma+0.2*diff_step,r'+2$\sigma$',size='small')
     norm = Normalize(bins.min(), bins.max())
     for bin, patch in zip(bins, patches):
         color = diff_cmap(norm(bin))
@@ -419,13 +420,13 @@ def diff_map(
     if e_prom is not None:
         # MAE
         e_prom_text = plt.figtext(
-            0.4,0.03, 'MAE: %0.3f' %(e_prom),
+            0.4,0.03, 'MAE: %0.2f' %(e_prom),
             fontweight='bold')
         extra_artists.append(e_prom_text)
     if rmse is not None:
         # RMSE
         rmse_text = plt.figtext(
-            0.4, 0, 'RMSE: %0.7f' %(rmse),
+            0.4, 0, 'RMSE: %0.2f' %(rmse),
             fontweight='bold')
         extra_artists.append(rmse_text)
     if legend is True:
@@ -482,12 +483,12 @@ def multi_map(
     extra_artists=[]
     #MEA
     e_prom_text = plt.figtext(
-        0.03, -0.02, 'MAE: %0.3f' %(e_prom),
+        0.03, -0.02, 'MAE: %0.2f' %(e_prom),
         fontweight='bold')
     extra_artists.append(e_prom_text)
     # RMSE
     rmse_text = plt.figtext(
-        0.03, 0, 'RMSE: %0.7f' %(rmse),
+        0.03, 0, 'RMSE: %0.2f' %(rmse),
         fontweight='bold')
     extra_artists.append(rmse_text)
     ## Legend
@@ -506,9 +507,6 @@ def multi_map(
 
 def rmse_plot(vnames, vaxes, rmses, save_dir=None):
     # x axis
-    print(type(vnames))
-    print(vnames)
-    print(vaxes)
     x_name = vnames[0]
     x_axis = vaxes[0]
     plt.xlabel(str(x_name))

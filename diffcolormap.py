@@ -5,7 +5,7 @@ from matplotlib.colors import LinearSegmentedColormap, to_rgb
 # --- Colormap from a list ---
 
 def get_diff_cmap(bins):
-    colors = [(1, 0, 0), (1, 1, 1), (0, 0, 1)]  # Red -> White -> Blue
+    colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Red -> White -> Blue
     n_bins = bins  # Discretizes the interpolation into bins
     cmap_name = 'diff'
     diff_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)

@@ -4,8 +4,8 @@ import resource
 import sys
 import ast
 from setup import input_setup, exec_setup
-from termomecanico2 import termomecanico
-from plot2 import rmse_plot
+from termomecanico import termomecanico
+from plot import rmse_plot
 from utils import makedir
 
 # print memory usage
@@ -23,12 +23,20 @@ def get_var_name(name):
         var_name = [name]
     return var_name
 
+#def get_var_axis(range):
+#    #if type(range) is not np.ndarray:
+#    #    tuple = np.array(range)
+#    #range.astype(np.float)
+#    var_axis = np.arange(*range)
+#    var_axis = np.append(var_axis, var_axis[-1] + range[2])
+#    return var_axis
+
 def get_var_axis(range):
-    #if type(range) is not np.ndarray:
-    #    tuple = np.array(range)
-    #range.astype(np.float)
-    var_axis = np.arange(*range)
-    var_axis = np.append(var_axis, var_axis[-1] + range[2])
+    step = range[2] 
+    first_v = range[0]
+    last_v = range[1]
+    var_axis = np.linspace(first_v, last_v, num=(abs(last_v-first_v))/step+1,
+                           endpoint=True)
     return var_axis
 
 def vars_rmse(var_names, var_ranges, var_type='thermal'):
@@ -89,14 +97,17 @@ if __name__ == '__main__':
         vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
         np.savetxt(save_dir + 'vars_rmses.txt', rmses)
         np.savetxt(save_dir + 'vars_names.txt', vnames, fmt='%s')
-        np.savetxt(save_dir + 'vars_axes.txt', vaxes)
+        np.savetxt(save_dir + 'vars_ranges.txt', vranges)
+        #np.savetxt(save_dir + 'vars_axes.txt', vaxes)#, dtype='object')
         # Plot
         rmse_plot(vnames, vaxes, rmses, save_dir)
 
     else:
         # Load and Plot
         rmses = np.loadtxt(save_dir + 'vars_rmses.txt')
-        vaxes = np.loadtxt(save_dir + 'vars_axes.txt', ndmin=2)
+        #vaxes = np.loadtxt(save_dir + 'vars_axes.txt', ndmin=2)#, dtype='object')
+        vranges = np.loadtxt(save_dir + 'vars_ranges.txt')
+        vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
         vnames = np.loadtxt(save_dir + 'vars_names.txt', dtype='str', ndmin=2)
         # Add dummy member to avoid avoid getting too many indices for array
         # when there is only one member present and we use vnames[0]

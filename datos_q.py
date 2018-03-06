@@ -1,6 +1,6 @@
 import numpy as np
 
-shf_data_table = np.loadtxt('datos_Q/QsObs_nuevo.txt', comments='#')
+shf_data_table = np.loadtxt('datos_Q/QsObs_rev.txt', comments='#')
 
 # Limitar datos al area de estudio
 shf_data_table = shf_data_table[shf_data_table[:,0] > -80.]

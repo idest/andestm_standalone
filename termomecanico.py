@@ -2,10 +2,10 @@ import numpy as np
 from glob import glob
 from setup import data_setup, input_setup, exec_setup
 from compute import compute
-from rmse2 import rmse
-from plot2 import (thermal_latitude_profile, mechanic_latitude_profile,
-                   shf_map, data_map, diff_map, multi_map, data_scatter_plot)
-from datos_q2 import shf_data, shf_data_coords, shf_data_types, shf_data_error
+from rmse import rmse
+from plot import (thermal_latitude_profile, mechanic_latitude_profile,
+                   heatmap_map, data_map, diff_map, multi_map, data_scatter_plot)
+from datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
 from utils import makedir
 
 
@@ -35,10 +35,14 @@ if __name__ == '__main__':
         rmse = model_rmse.rmse
         e_prom = model_rmse.e_prom
         sigmas = model_rmse.sigmas
-        shf_map(shf, save_dir=maps_dir, name='shf_map')
+        heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]', 
+                    title='Surface Heat Flow', save_dir=maps_dir, name='shf_map')
         data_map(
             shf_data, data_coords=shf_data_coords, data_types=shf_data_types,
             rmse=rmse, save_dir=maps_dir, name='data_map')
+        data_map(
+            ishf, data_coords=shf_data_coords, data_types=shf_data_types,
+            rmse=rmse, save_dir=maps_dir, name='ishf_map')
         diff_map(
             diff, data_coords=shf_data_coords, data_types=shf_data_types,
             rmse=rmse, save_dir=maps_dir, name='diff_map',
@@ -47,6 +51,12 @@ if __name__ == '__main__':
             shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
             data_types=shf_data_types, save_dir=maps_dir, rmse=rmse,
             e_prom=e_prom, sigmas=sigmas, name='multi_map')
+        k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)
+        heatmap_map(k_prom, save_dir=maps_dir, name='k_prom_map')
+        h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
+        heatmap_map(h_prom, save_dir=maps_dir, name='h_prom_map')
+        labslab = model.gm.get_slab_lab()
+        heatmap_map(labslab, save_dir=maps_dir, name='labslab', colormap='afmhot')
 
     # Data and Models Scatter Plot
     if exec_input.xt4:

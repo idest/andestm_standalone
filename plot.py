@@ -239,34 +239,39 @@ def shf_map_old(
     plt.close()
     return
 
-def shf_map(
-        shf, cbar_limits=None, map=None, ax=None, save_dir=None,
-        name='shf_map', return_width_ratio=False):
+def heatmap_map(
+        array_2D, colormap=None, cbar_limits=None, map=None, ax=None,
+        save_dir=None, name='colormesh_map', return_width_ratio=False,
+        cbar_label=None, title=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
     if map is None:
         map = base_map(topo=False)
     # Pcolormesh
-    x_axis = shf.cs.get_x_axis()
-    y_axis = shf.cs.get_y_axis()
+    x_axis = array_2D.cs.get_x_axis()
+    y_axis = array_2D.cs.get_y_axis()
     xx, yy = np.meshgrid(x_axis, y_axis)
-    cbar_max, cbar_min = np.nanmax(shf), np.nanmin(shf)
+    cbar_max, cbar_min = np.nanmax(array_2D), np.nanmin(array_2D)
     if cbar_limits is not None:
         cbar_max, cbar_min = cbar_limits[0], cbar_limits[1]
-    shf_masked = np.ma.masked_invalid(shf) # Before: shf*-1 ¿?
-    shf_heatmap = map.pcolormesh(
-        xx, yy, shf_masked.T,
-        cmap='afmhot', shading='gouraud',
-        vmin=cbar_min, vmax=cbar_max)
+    array_2D_masked = np.ma.masked_invalid(array_2D) # Before: shf*-1 ¿?
+    kwargs = {}
+    if colormap is not None:
+        kwargs['cmap'] = colormap
+    array_2D_heatmap = map.pcolormesh(
+        xx, yy, array_2D_masked.T, shading='gouraud',
+        vmin=cbar_min, vmax=cbar_max, **kwargs)
     # Colorbar
     divider = make_axes_locatable(ax)
     cbar_ax = divider.append_axes('right', '5%', pad='12%')
     plt.sca(ax)
-    cbar = plt.colorbar(shf_heatmap, cax=cbar_ax)# pad=0.2)
-    cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
+    cbar = plt.colorbar(array_2D_heatmap, cax=cbar_ax)# pad=0.2)
+    if cbar_label is not None:
+        cbar.set_label(cbar_label, rotation=90, labelpad=-40)
     # Title
-    ax.set_title('Surface Heat Flow')
+    if title is not None:
+        ax.set_title(title)
     # Options
     #plt.tight_layout()
     if save_dir:
@@ -327,8 +332,9 @@ def data_map(
     if cbar_limits is not None:
         cbar_max, cbar_min = cbar_limits[0], cbar_limits[1]
     map_scatter = get_map_scatter_function(data_coords, data_types, map)
-    m_scatter, scatter = map_scatter(data, cmap='afmhot', vmin=cbar_min,
-                                     vmax=cbar_max)
+    m_scatter, scatter = map_scatter(
+        data, cmap='afmhot',
+        vmin=cbar_min, vmax=cbar_max)
     # Colorbar
     if cbar is True:
         divider = make_axes_locatable(ax)
@@ -454,10 +460,10 @@ def multi_map(
     ax1 = fig.add_subplot(gs[0,0])
     map1 = base_map(topo=False)
     cbar_limits = [np.nanmax(shf), np.nanmin(shf)]
-    wr1 = shf_map(
-        shf, cbar_limits=cbar_limits,
-        map=map1, ax=ax1,
-        return_width_ratio=True)
+    wr1 = heatmap_map(
+        shf, cbar_limits=cbar_limits, colormap='afmhot',
+        cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
+        map=map1, ax=ax1, return_width_ratio=True)
     data_map(
         data, cbar_limits=cbar_limits,
         data_coords=data_coords,
@@ -520,11 +526,11 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         # 2D matrix
         vmin = np.min(rmses)
         vmax = np.max(rmses)
-        v = np.linspace(vmin, vmax, 50)
-        plt.contourf(
-            x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
-        #plt.pcolormesh(
-        #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=2./3.))
+        v = np.linspace(vmin, vmax, 100)
+        #plt.contourf(
+        #    x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
+        plt.pcolormesh(
+            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
         plt.colorbar()
         name = 'RMSE_2D'
     else:
@@ -560,9 +566,9 @@ def data_scatter_plot(
             markersize=2, elinewidth=0.5)
         for ishf_model, ishf_label, c in zip(ishf_models, ishf_labels, colors):
             m_ishf_model = ishf_model[mask]
-            ax.scatter(
+            ax.plot(
                 m_data_axis, m_ishf_model, marker='.',
-                color=c, label=ishf_label, s=3)
+                color=c, label=ishf_label, linewidth=0.5, markersize=0.5)
 
         ax.set_title(t)
     plt.tight_layout()

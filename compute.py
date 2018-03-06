@@ -370,7 +370,7 @@ class SpatialArray3D(SpatialArray):
         array_3D[a] = 0
         surface = np.sum(array_3D, axis=2)
         surface[surface == 0] = np.nan
-        return SpatialArray2D(surface)
+        return SpatialArray2D(surface, self.cs)
 
     def crop(self, top_z='top', bottom_z='bottom'):
         z_3D = self.cs.get_3D_grid()[2]
@@ -672,16 +672,21 @@ class ThermalModel(object):
 
     def __set_variables(self, t_input, trench_age):
         t_input = DotMap(t_input)
+        t_input_2 = t_input.copy()
+        t_input_2['k_z'] = False
+        t_input_2['H_z'] = False
         # TODO: find a way to save memory by not storing 3D arrays as k and h
         t_vars = {
             'k_cs': t_input['k_cs'],
             'k_ci': t_input['k_ci'],
             'k_ml': t_input['k_ml'],
             'k': self.__set_k_or_h(t_input, 'k'),
+            'k_prom': self.__set_k_or_h(t_input_2, 'k'),
             'h_cs': t_input['H_cs'],
             'h_ci': t_input['H_ci'],
             'h_ml': t_input['H_ml'],
             'h': self.__set_k_or_h(t_input, 'h'),
+            'h_prom': self.__set_k_or_h(t_input_2, 'h'),
             'delta': self.__set_delta(t_input)*1.e3,
             'tp': t_input['Tp'],
             'g': t_input['G'],

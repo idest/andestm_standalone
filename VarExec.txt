@@ -14,7 +14,7 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '01'  temcaso  Numero de referencia para guardar el Modelo Termal
+      '4'  temcaso  Numero de referencia para guardar el Modelo Termal
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima
@@ -47,7 +47,7 @@
 #·········  ·······  ··························································
          0  xm3      Graficar mapas?
 #·········  ·······  ··························································
-         1  xm7      Graficar Yield Strenght Envelope? Si am5 = 1, No am5 = 0
+         0  xm7      Graficar Yield Strenght Envelope? Si am5 = 1, No am5 = 0
 #                    (tdelta y mdelta deben ser iguales a 0.2)
      -36.0  minlat   Latitud inicial
      -39.0  maxlat   Latitud final

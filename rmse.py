@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
-from sklearn.metrics import mean_absolute_error
+#from sklearn.metrics import mean_absolute_error
 from dotmap import DotMap
 import datos_q as dq
 
@@ -13,14 +13,14 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
         rmse, diff, data = calc_rmse_error(shf_interpolated, dq.shf_data,
                                            dq.shf_data_min, dq.shf_data_max,
                                            dq.shf_data_error)
-        e_prom, sigmas = sigma(shf_interpolated, data)
+        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data)
         dic = {
             'rmse': rmse, 'diff': diff, 'shf_data_weighted': data,
-            'e_prom': e_prom, 'sigmas': sigmas}
+            'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
-        e_prom, sigmas = sigma(shf_interpolated, dq.shf_data)
-        dic = {'rmse': rmse, 'diff': diff, 'e_prom': e_prom, 'sigmas': sigmas}
+        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data)
+        dic = {'rmse': rmse, 'diff': diff, 'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
     #Standard deviation
     return_tuple = []
     return_tuple.append(DotMap(dic))
@@ -43,7 +43,7 @@ def calc_rmse_error(model, data, data_min, data_max, data_error):
             data_salida[i] = data_max[i]
         else:
             data_salida[i] = data_min[i]
-    rmse, diff = calc_rmse(model, data_salida)
+    rmse, diff2 = calc_rmse(model, data_salida)
     #np.savetxt('shf_data.txt', data)
     #np.savetxt('ishf.txt', model)
     #np.savetxt('shf_data_error.txt', data_salida)
@@ -68,9 +68,11 @@ def sigma(shf_interpolated,data):
     sigma2 = 2*(np.std(diff))
     n_2_sigma = diff.mean() - sigma2
     p_2_sigma = diff.mean() + sigma2
-    e_prom = mean_absolute_error(data, shf_interpolated)
+    #e_prom = mean_absolute_error(data, shf_interpolated)
+    e_prom = diff.sum()/len(diff)
     sigmas = {
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
     sigmas = DotMap(sigmas)
-    return e_prom, sigmas
+    moda = np.nanmax(abs(diff))
+    return e_prom, sigmas, moda

@@ -13,7 +13,7 @@ def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, t_input, m_input)
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    model_rmse, ishf = rmse(shf, weigh_error=False, return_ishf=True)
+    model_rmse, ishf = rmse(shf, weigh_error=True, return_ishf=True)
     return model, model_rmse, ishf
 
 if __name__ == '__main__':
@@ -25,6 +25,7 @@ if __name__ == '__main__':
     files_dir = direTer + 'Archivos/'
     makedir(files_dir)
     np.savetxt(files_dir + 'ishf_' + exec_input.temcaso + '.txt', ishf)
+    #np.savetxt('sigmas_' + exec_input.temcaso + '.txt', model_rmse['sigmas'])
 
     #Maps
     if exec_input.xt3:
@@ -35,6 +36,7 @@ if __name__ == '__main__':
         rmse = model_rmse.rmse
         e_prom = model_rmse.e_prom
         sigmas = model_rmse.sigmas
+        moda = model_rmse.moda
         heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]', 
                     title='Surface Heat Flow', save_dir=maps_dir, name='shf_map')
         data_map(
@@ -46,7 +48,7 @@ if __name__ == '__main__':
         diff_map(
             diff, data_coords=shf_data_coords, data_types=shf_data_types,
             rmse=rmse, save_dir=maps_dir, name='diff_map',
-            e_prom=e_prom, sigmas=sigmas)
+            e_prom=e_prom, sigmas=sigmas, moda=moda)
         multi_map(
             shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
             data_types=shf_data_types, save_dir=maps_dir, rmse=rmse,

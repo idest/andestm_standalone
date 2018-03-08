@@ -368,7 +368,7 @@ def data_map(
 def diff_map(
         diff, data_coords=None, data_types=None, map=None, ax=None,
         rmse=None, legend=True, return_width_ratio=False,
-        save_dir=None, name='diff_map', e_prom=None, sigmas=None):
+        save_dir=None, name='diff_map', e_prom=None, sigmas=None, moda=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -379,7 +379,8 @@ def diff_map(
     diff_min = np.nanmin(diff)
     diff_limit = np.nanmax([abs(diff_max), abs(diff_min)])
     diff_limit = round_to_1(diff_limit, 'ceil')
-    diff_step = 10**get_magnitude(diff_limit)
+    #diff_step = 10**get_magnitude(diff_limit)
+    diff_step = 5 
     ticks = np.arange(-diff_limit, diff_limit+diff_step, diff_step)
     bins = len(ticks) - 1
     diff_cmap = get_diff_cmap(bins)
@@ -426,7 +427,7 @@ def diff_map(
     if e_prom is not None:
         # MAE
         e_prom_text = plt.figtext(
-            0.4,0.03, 'MAE: %0.2f' %(e_prom),
+            0.4,0.03, 'ME: %0.2f' %(e_prom),
             fontweight='bold')
         extra_artists.append(e_prom_text)
     if rmse is not None:
@@ -435,6 +436,12 @@ def diff_map(
             0.4, 0, 'RMSE: %0.2f' %(rmse),
             fontweight='bold')
         extra_artists.append(rmse_text)
+    if moda is not None:
+        # MODA
+        moda_text = plt.figtext(
+            0.4, 0.06, 'MODA: %0.2f' %(moda),
+            fontweight='bold')
+        extra_artists.append(moda_text)
     if legend is True:
         legend = ax.legend(bbox_to_anchor=(0.5, 0.0), loc='upper center',
                            ncol=2, bbox_transform=fig.transFigure)
@@ -489,7 +496,7 @@ def multi_map(
     extra_artists=[]
     #MEA
     e_prom_text = plt.figtext(
-        0.03, -0.02, 'MAE: %0.2f' %(e_prom),
+        0.03, -0.02, 'ME: %0.2f' %(e_prom),
         fontweight='bold')
     extra_artists.append(e_prom_text)
     # RMSE
@@ -527,10 +534,15 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         vmin = np.min(rmses)
         vmax = np.max(rmses)
         v = np.linspace(vmin, vmax, 100)
-        #plt.contourf(
-        #    x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
-        plt.pcolormesh(
-            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
+        plt.contourf(
+            x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
+        #plt.pcolormesh(
+        #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
+        #xx, yy = np.meshgrid(x_axis, y_axis)
+        #xx = xx.flatten()
+        #yy = yy.flatten()
+        #rmses_f = rmses.T.flatten()
+        #plt.scatter(xx, yy, c=rmses_f, cmap='rainbow')
         plt.colorbar()
         name = 'RMSE_2D'
     else:

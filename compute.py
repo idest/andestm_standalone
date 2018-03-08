@@ -609,7 +609,7 @@ class ThermalModel(object):
         base_temp = temp_sl-((h*delta**2)/k)*(np.exp(z_topo/delta)
                                               - np.exp(z_sl/delta))
         heat_flow = (-h*delta-k/(abs(z_sl-z_topo))*base_temp)
-        #heat_flow = -(k*(temp_sl/z_sl)) - (h*delta) + ((h*delta**2)/z_sl)*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
+        #heat_flow = -(k*temp_sl)/abs(z_sl-z_topo) - (h*delta) + ((h*delta**2)/abs(z_sl-z_topo))*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
         return heat_flow
 
     @staticmethod

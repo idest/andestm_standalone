@@ -91,10 +91,11 @@ if __name__ == '__main__':
             vtuple = [vname] + vrange
             vnames.append(vname)
             vranges.append(vrange)
+        vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
+        print('Numero de modelos:', len(vaxes[0])*len(vaxes[1]))
         rmses = vars_rmse(vnames, vranges)
         print('rmses:', rmses)
         # Save
-        vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
         np.savetxt(save_dir + 'vars_rmses.txt', rmses)
         np.savetxt(save_dir + 'vars_names.txt', vnames, fmt='%s')
         np.savetxt(save_dir + 'vars_ranges.txt', vranges)

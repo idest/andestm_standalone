@@ -104,141 +104,6 @@ def base_map(topo=True):
     map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
     return map
 
-def shf_map_old(
-        shf=None, data_coords=None, data=None, diff=None,
-        data_types=None, rmse=None, topo=True, name='Surface_Heat_Flow',
-        save_dir=None):
-    #fig, main_ax = plt.subplots(figsize=(6,6))
-    fig, main_ax = plt.subplots()
-    divider = make_axes_locatable(main_ax)
-    diff_ax = main_ax
-    map = base_map(topo=False)
-    if shf is not None:
-        x_axis = shf.cs.get_x_axis()
-        y_axis = shf.cs.get_y_axis()
-        xx, yy = np.meshgrid(x_axis, y_axis)
-        shf_max, shf_min = np.nanmax(shf), np.nanmin(shf)
-        cbar_max, cbar_min = shf_max, shf_min
-        #if data:
-        #    vmax, vmin = [shf_max, np.nanmax(data)], [shf_min, np.nanmin(data)]
-        #    cbar_max, cbar_min = np.nanmax(vmax), np.nanmin(vmin)
-        shf_masked = np.ma.masked_invalid(shf) # Before: shf*-1 ¿?
-        shf_heatmap = map.pcolormesh(
-            xx, yy, shf_masked.T,
-            cmap='afmhot', shading='gouraud',
-            vmin=cbar_min, vmax=cbar_max)
-        shf_cbar_ax = divider.append_axes('right', '5%', pad='12%')
-        plt.sca(main_ax)
-        shf_cbar = plt.colorbar(shf_heatmap, cax=shf_cbar_ax)# pad=0.2)
-        shf_cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
-        #plt.tight_layout()
-        main_ax.set_title('Surface Heat Flow')
-
-    if data is not None or diff is not None:
-        if data_coords is None:
-            raise ValueError('data_cords variable is missing.')
-        else:
-            lon = data_coords[:,0]
-            lat = data_coords[:,1]
-            map_lon, map_lat = map(lon, lat)
-        markers = ['o']
-        data_markers = np.array(markers * len(lon))
-        m_scatter = {}
-        if data_types is not None:
-            _, indices = np.unique(data_types, return_inverse=True)
-            markers = np.array(['o', '^', 'p', 's'])
-            data_markers = markers[indices]
-        def map_scatter(scatter_data, **kwargs):
-            scatter_data = np.ma.masked_invalid(scatter_data)
-            for m in markers:
-                mask = data_markers == m
-                m_scatter_data = scatter_data[mask]
-                m_lon, m_lat = map_lon[mask], map_lat[mask]
-                scatter = map.scatter(
-                    m_lon, m_lat, latlon=True,
-                    c=m_scatter_data, marker=m, **kwargs)
-                if data_types is not None:
-                    m_scatter[m] = scatter
-            return m_scatter, scatter
-
-    if data is not None:
-        if shf is None:
-            cbar_max, cbar_min = np.nanmax(data), np.nanmin(data)
-            shf_cbar_ax = divider.append_axes('right', '5%', pad='12%')
-            plt.sca(main_ax)
-        m_scatter, scatter = map_scatter(
-            data, cmap='afmhot',
-            vmin=cbar_min, vmax=cbar_max)
-        shf_cbar = plt.colorbar(scatter, cax=shf_cbar_ax)# pad=0.2)
-        shf_cbar.set_label('Heat Flow [mW/m²]', rotation=90, labelpad=-40)
-        main_ax.set_title('Surface Heat Flow')
-
-    if diff is not None:
-        diff_max = np.nanmax(diff)
-        diff_min = np.nanmin(diff)
-        diff_limit = np.nanmax([abs(diff_max), abs(diff_min)])
-        diff_limit = round_to_1(diff_limit, 'ceil')
-        ticks = np.arange(-diff_limit, diff_limit+0.01, 0.01)
-        bins = len(ticks) - 1
-        diff_cmap = get_diff_cmap(bins)
-        norm = MidPointNorm(midpoint=0, vmin=-diff_limit, vmax=diff_limit)
-
-        diff_cbar_pad = '12%'
-        if shf is not None and data is None:
-            diff_cbar_pad = '35%'
-        if data is not None:
-            diff_ax = divider.append_axes('right', '100%', pad='35%')#, pad='50%')
-            diff_ax.set_yticks([])
-            map = base_map(topo=False)
-        m_scatter, scatter = map_scatter(
-            diff, cmap=diff_cmap, norm=norm,
-            edgecolors='k', linewidths=.3)
-        diff_cbar_ax = divider.append_axes('right', '5%', pad=diff_cbar_pad)
-        plt.sca(diff_ax)
-        diff_cbar = plt.colorbar(scatter, cax=diff_cbar_ax)# pad=0.2)
-        diff_cbar.set_label('Diff [mW/m²]', rotation=90, labelpad=-20)
-        diff_cbar.set_ticks([])
-        hist_ax = divider.append_axes('right', '30%', pad='0%')
-        plt.sca(diff_ax)
-        N, bins, patches = hist_ax.hist(
-            diff, bins=ticks,
-            orientation='horizontal')
-        hist_ax.set_yticks(ticks)
-        hist_ax.set_ylim([-diff_limit, diff_limit])
-        hist_ax.yaxis.tick_right()
-        norm = Normalize(bins.min(), bins.max())
-        for bin, patch in zip(bins, patches):
-            color = diff_cmap(norm(bin))
-            patch.set_facecolor(color)
-        #hist_ax.grid(True)
-        diff_ax.set_title('Modelled Surface Heat Flow minus Data')
-
-    extra_artists = []
-    if rmse is not None:
-        rmse_text = main_ax.annotate(
-            'RMSE = %0.2f' %(rmse), xy=(0,-0.13),
-            xycoords='axes fraction')
-        extra_artists.append(rmse_text)
-
-    if data_types is not None:
-        legend = main_ax.legend(
-            [m_scatter[markers[0]], m_scatter[markers[1]],
-             m_scatter[markers[2]], m_scatter[markers[3]]],
-            ['ODP Borehole', 'Land Borehole',
-             'Geochemical', 'Marine Geophysics'],
-            bbox_to_anchor=(0.5, 0), loc='upper center',
-            ncol=4, bbox_transform=fig.transFigure)
-        extra_artists.append(legend)
-
-    plt.tight_layout()
-    if save_dir:
-        plt.savefig(
-            save_dir + '%s' %(name),
-            bbox_extra_artists=(extra_artists), bbox_inches='tight',
-            dpi='figure', format='pdf')
-    plt.close()
-    return
-
 def heatmap_map(
         array_2D, colormap=None, cbar_limits=None, map=None, ax=None,
         save_dir=None, name='colormesh_map', return_width_ratio=False,
@@ -381,8 +246,9 @@ def diff_map(
     diff_limit = round_to_1(diff_limit, 'ceil')
     #diff_step = 10**get_magnitude(diff_limit)
     diff_step = 5 
-    ticks = np.arange(-diff_limit, diff_limit+diff_step, diff_step)
-    bins = len(ticks) - 1
+    divisions = np.arange(-diff_limit, diff_limit+diff_step, diff_step)
+    ticks = np.arange(-diff_limit, diff_limit+diff_step, 2*diff_step)
+    bins = len(divisions) - 1
     diff_cmap = get_diff_cmap(bins)
     norm = MidPointNorm(midpoint=0, vmin=-diff_limit, vmax=diff_limit)
     map_scatter = get_map_scatter_function(data_coords, data_types, map)
@@ -401,7 +267,7 @@ def diff_map(
     hist_ax = divider.append_axes('right', '30%', pad='0%')
     plt.sca(ax)
     N, bins, patches = hist_ax.hist(
-        diff, bins=ticks,
+        diff, bins=divisions,
         orientation='horizontal')
     hist_ax.set_yticks(ticks)
     hist_ax.set_ylim([-diff_limit, diff_limit])

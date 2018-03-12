@@ -400,10 +400,10 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         vmin = np.min(rmses)
         vmax = np.max(rmses)
         v = np.linspace(vmin, vmax, 100)
-        plt.contourf(
-            x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
-        #plt.pcolormesh(
-        #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
+        #plt.contourf(
+        #    x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
+        plt.pcolormesh(
+            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
         #xx, yy = np.meshgrid(x_axis, y_axis)
         #xx = xx.flatten()
         #yy = yy.flatten()

@@ -37,7 +37,7 @@ if __name__ == '__main__':
         e_prom = model_rmse.e_prom
         sigmas = model_rmse.sigmas
         moda = model_rmse.moda
-        heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]', 
+        heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
                     title='Surface Heat Flow', save_dir=maps_dir, name='shf_map')
         data_map(
             shf_data, data_coords=shf_data_coords, data_types=shf_data_types,

@@ -369,8 +369,12 @@ class SpatialArray3D(SpatialArray):
         array_3D = self.copy()
         array_3D[a] = 0
         surface = np.sum(array_3D, axis=2)
-        surface[surface == 0] = np.nan
-        return SpatialArray2D(surface, self.cs)
+        #surface2 = surface.copy()
+        #surface2[surface2 == 0] = np.nan #Returns NaNs when input array has zeros
+        # innecesary when using mask_irrelevant() down below
+        surface = SpatialArray2D(surface, self.cs).mask_irrelevant()
+        #np.testing.assert_equal(surface, surface2)
+        return surface
 
     def crop(self, top_z='top', bottom_z='bottom'):
         z_3D = self.cs.get_3D_grid()[2]
@@ -609,7 +613,9 @@ class ThermalModel(object):
         base_temp = temp_sl-((h*delta**2)/k)*(np.exp(z_topo/delta)
                                               - np.exp(z_sl/delta))
         heat_flow = (-h*delta-k/(abs(z_sl-z_topo))*base_temp)
-        #heat_flow = -(k*temp_sl)/abs(z_sl-z_topo) - (h*delta) + ((h*delta**2)/abs(z_sl-z_topo))*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
+        #heat_flow2 = -(k*temp_sl)/abs(z_sl-z_topo) - (h*delta) + ((h*delta**2)/abs(z_sl-z_topo))*(np.exp(z_topo/delta)-np.exp(z_sl/delta))
+        #if np.allclose(heat_flow, heat_flow2, equal_nan=True):
+        #    print('Arrays are equal')
         return heat_flow
 
     @staticmethod

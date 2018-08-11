@@ -231,7 +231,8 @@ class SpatialArray(np.ndarray):
         # print('new method of SpatialArray called')
         # print('cls is', cls)
         obj = np.asarray(input_array).view(cls)
-        #obj.array = np.asarray(input_array).view(np.ndarray)
+        #Returns unmodified numpy array
+        obj.array = np.asarray(input_array).view(np.ndarray)
         obj.cs = coordinate_system
         return obj
 

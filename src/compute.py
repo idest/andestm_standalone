@@ -440,11 +440,14 @@ class GeometricModel(object):
         self.icd = self.__set_boundary(self.data.z_icd)
         self.topo = self.__set_boundary(self.data.z_topo)
         self.geo_model_3D = self.__set_3D_geometric_model()
+        # Para generar un archivo de areas preliminares
         # self.slab_lab_int_index = self.__set_slab_lab_int_index()
+        # self.slab_lab_int_area = self.__set_slab_lab_int_area(save=True)
+        # Para utilizar un archivo de areas ya generado (areas.dat):
         self.slab_lab_int_index = self.__set_slab_lab_int_index_from_areas()
+        self.slab_lab_int_area = self.__set_slab_lab_int_area()
         self.slab_lab_int_depth = self.__set_slab_lab_int_depth()
         self.slab_lab_int_topo = self.__set_slab_lab_int_topo()
-        self.slab_lab_int_area = self.__set_slab_lab_int_area()
 
     def __set_boundary(self, geometric_data):
         return SpatialArray2D(self.cs.reshape_data(geometric_data), self.cs)
@@ -504,12 +507,18 @@ class GeometricModel(object):
         sli_topo = self.topo[sli_idx, j_idx]
         return sli_topo
 
-    def __set_slab_lab_int_area(self):
+    def __set_slab_lab_int_area(self, save=False):
         sli_idx = self.slab_lab_int_index
         i_idx = self.cs.get_2D_indexes()[0]
         sli_area = np.zeros(self.cs.get_2D_shape())
         sli_area[i_idx > sli_idx] = 1
         sli_ara = np.asarray(sli_area, dtype=bool)
+        if save == True:
+            # Agregar latitudes en la primera columna:
+            # latitudes = self.cs.get_y_axis()
+            # sli_ara = np.r_[latitudes[np.newaxis, :], sli_ara]
+            # np.savetxt('data/preliminar_areas.dat', sli_ara.T, fmt='%2d')
+            np.savetxt('data/preliminar_areas.dat', sli_ara.T, fmt='%.0f')
         return sli_area
 
     def set_layer_property(self, cs, ci, ml):
@@ -1039,4 +1048,4 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
         'mm': mm
     }
     model = DotMap(model)
-    return model 
+    return model

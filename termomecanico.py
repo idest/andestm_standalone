@@ -1,13 +1,13 @@
 import numpy as np
 from glob import glob
-from setup import data_setup, input_setup, exec_setup
-from compute import compute
-from rmse import rmse
-from plot import (thermal_latitude_profile, mechanic_latitude_profile,
+from src.setup import data_setup, input_setup, exec_setup
+from src.compute import compute
+from src.rmse import rmse
+from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    heatmap_map, data_map, diff_map, multi_map, data_scatter_plot)
-from datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
-from utils import makedir
-from meccolormap import jet_white_r
+from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
+from src.utils import makedir
+from src.meccolormap import jet_white_r
 
 
 def termomecanico(t_input, m_input):
@@ -61,7 +61,10 @@ if __name__ == '__main__':
         labslab = model.gm.get_slab_lab()
         eet = model.mm.get_eet()
         heatmap_map(labslab, save_dir=maps_dir, name='labslab', colormap='afmhot')
-        heatmap_map(eet, save_dir=maps_dir, name='eet', colormap=jet_white_r)
+        print('what')
+        heatmap_map(
+            eet, save_dir=maps_dir, name='eet', colormap=jet_white_r,
+            cbar_limits=[0,100])
 
     # Data and Models Scatter Plot
     if exec_input.xt4:

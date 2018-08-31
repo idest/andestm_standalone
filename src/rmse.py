@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import RectBivariateSpline
 #from sklearn.metrics import mean_absolute_error
 from dotmap import DotMap
-import datos_q as dq
+import src.datos_q as dq
 
 def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
     # Surface Heat Flow Model Interpolation

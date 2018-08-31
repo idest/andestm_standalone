@@ -7,11 +7,11 @@ import matplotlib.gridspec as gridspec
 from matplotlib import cm
 import matplotlib.colors as colors
 from matplotlib.colors import Normalize
-from meccolormap import jet_white_r
-from diffcolormap import get_diff_cmap
+from src.meccolormap import jet_white_r
+from src.diffcolormap import get_diff_cmap
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from utils import MidPointNorm, round_to_1, get_magnitude
+from src.utils import MidPointNorm, round_to_1, get_magnitude
 
 def base_latitude_profile(cs,gm,lat):
     # Axes configuration

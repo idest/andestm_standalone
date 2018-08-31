@@ -2,6 +2,9 @@ import numpy as np
 
 shf_data_table = np.loadtxt('datos_Q/QsObs.txt', comments='#')
 
+print('hola')
+np.savetxt('shf_dt', shf_data_table)
+
 # Limitar datos al area de estudio
 shf_data_table = shf_data_table[shf_data_table[:,0] > -80.]
 shf_data_table = shf_data_table[shf_data_table[:,0] < -60.]

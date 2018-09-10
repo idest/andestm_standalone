@@ -96,10 +96,10 @@ def read_rheo(name):
     return DotDict(dic)
 
 def data_setup():
-    gm_data = np.loadtxt('data2/Modelo.dat')
-    areas = np.loadtxt('data2/areas.dat')
-    trench_age = np.loadtxt('data2/PuntosFosaEdad.dat')
-    rhe_data = read_rheo('data2/Rhe_Param.dat')
+    gm_data = np.loadtxt('data/Modelo.dat')
+    areas = np.loadtxt('data/areas.dat')
+    trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
+    rhe_data = read_rheo('data/Rhe_Param.dat')
     return gm_data, areas, trench_age, rhe_data
 
 def input_setup():

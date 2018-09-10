@@ -21,11 +21,14 @@ if __name__ == '__main__':
     t_input, m_input = input_setup()
     exec_input, direTer, direMec = exec_setup()
     model, model_rmse, ishf = termomecanico(t_input,m_input)
-
+    eet = model.mm.get_eet()
     # Save
-    files_dir = direTer + 'Archivos/'
-    makedir(files_dir)
-    np.savetxt(files_dir + 'ishf_' + exec_input.temcaso + '.txt', ishf)
+    files_dir_ter = direTer + 'Archivos/'
+    files_dir_eet = direTer + 'Archivos_EET/'
+    makedir(files_dir_ter)
+    makedir(files_dir_eet)
+    np.savetxt(files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt', ishf)
+    np.savetxt(files_dir_eet + 'eet_' + exec_input.meccaso + '.txt', eet)
     #np.savetxt('sigmas_' + exec_input.temcaso + '.txt', model_rmse['sigmas'])
 
     #Maps
@@ -59,12 +62,15 @@ if __name__ == '__main__':
         h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
         heatmap_map(h_prom, save_dir=maps_dir, name='h_prom_map')
         labslab = model.gm.get_slab_lab()
-        eet = model.mm.get_eet()
         heatmap_map(labslab, save_dir=maps_dir, name='labslab', colormap='afmhot')
-        print('what')
+
+    if exec_input.xm3:
+        maps_dir_eet = direTer + 'Mapas_EET/'
+        makedir(maps_dir_eet)
         heatmap_map(
-            eet, save_dir=maps_dir, name='eet', colormap=jet_white_r,
-            cbar_limits=[0,100])
+            eet, colormap=jet_white_r, cbar_label='EET [km]', cbar_limits=[0,100],
+            title='Effective Elastic Thickness', save_dir=maps_dir_eet,
+            name='eet_' + exec_input.meccaso + '.txt')
 
     # Data and Models Scatter Plot
     if exec_input.xt4:

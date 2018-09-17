@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from dotmap import DotMap
+import inspect
 
 
 class Data(object):
@@ -891,7 +892,10 @@ class MechanicModel(object):
         self.vars = DotMap(self.__set_variables(mm_data.m_input,
                                                  mm_data.rheologic_data))
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
-        self.eet = self.__set_eet(self.yse_t)
+        self.eet, self.eet_calc_data = self.__set_eet(self.yse_t)
+        self.depth_from_topo = self.__get_depth_from_topo()
+        self.depth_from_topo2 = self.__get_depth_from_topo2()
+        self.depth_from_topo3 = self.__get_depth_from_topo3()
 
     def __get_rheologic_vars_from_model(self, rock_id):
         rock = RheologicModel.objects.get(name=rock_id)
@@ -928,6 +932,21 @@ class MechanicModel(object):
     def __get_depth_from_topo(self):
         depth_from_topo = -(self.cs.get_3D_grid()[2]
                             - self.geo_model.get_topo()[:, :, np.newaxis])
+        return depth_from_topo
+
+    def __get_depth_from_topo2(self):
+        depth_from_topo = -(self.cs.get_3D_grid()[2]
+                            - self.geo_model.get_topo()[:, :, np.newaxis])
+        depth_from_topo = SpatialArray3D(depth_from_topo
+                                         .astype(np.float64, copy=False),
+                                         self.cs).mask_irrelevant()
+        return depth_from_topo
+    def __get_depth_from_topo3(self):
+        depth_from_topo = -(self.cs.get_3D_grid()[2]
+                            - np.ceil(self.geo_model.get_topo())[:, :, np.newaxis])
+        depth_from_topo = SpatialArray3D(depth_from_topo
+                                         .astype(np.float64, copy=False),
+                                         self.cs).mask_irrelevant()
         return depth_from_topo
 
     def __get_brittle_yield_strength(self):
@@ -995,6 +1014,7 @@ class MechanicModel(object):
         elastic_z = self.__get_depth_from_topo().copy()
         with np.errstate(invalid='ignore'):
             elastic_z[yse < self.vars.s_max] = np.nan
+        elastic_z[np.isnan(yse)] = np.nan
         uc_tuple, e_z_uc = self.__get_layer_elastic_tuple(elastic_z, 'uc')
         lc_tuple, e_z_lc = self.__get_layer_elastic_tuple(elastic_z, 'lc')
         lm_tuple, e_z_lm = self.__get_layer_elastic_tuple(elastic_z, 'lm')
@@ -1013,15 +1033,25 @@ class MechanicModel(object):
         attached_eet = self.__calc_eet_attached(attached_ths)
         detached_eet = self.__calc_eet_detached(detached_ths)
         eet = SpatialArray.combine_arrays_by_areas(attached_eet, detached_eet, share_moho)
+        eet_calc_data = {
+            'uc_tuple': uc_tuple,
+            'lc_tuple': lc_tuple,
+            'lm_tuple': lm_tuple,
+            'e_z_uc': e_z_uc,
+            'e_z_lc': e_z_lc,
+            'e_z_lm': e_z_lm,
+            'share_icd': share_icd,
+            'share_moho': share_moho
+        }
 
-        return eet
+        return eet, eet_calc_data
 
     def get_yse(self):
         return (SpatialArray3D(self.yse_t, self.cs),
                 SpatialArray3D(self.yse_c, self.cs))
 
     def get_eet(self):
-        return SpatialArray2D(self.eet, self.cs)
+        return SpatialArray2D(self.eet, self.cs).mask_irrelevant()
 
     def get_geometric_model(self):
         return self.geo_model

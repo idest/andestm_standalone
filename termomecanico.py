@@ -7,7 +7,7 @@ from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    heatmap_map, data_map, diff_map, multi_map, data_scatter_plot)
 from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
 from src.utils import makedir
-from src.meccolormap import jet_white_r
+from src.colormaps import jet_white_r
 
 
 def termomecanico(t_input, m_input):
@@ -24,11 +24,11 @@ if __name__ == '__main__':
     eet = model.mm.get_eet()
     # Save
     files_dir_ter = direTer + 'Archivos/'
-    files_dir_eet = direTer + 'Archivos_EET/'
+    #files_dir_eet = direTer + 'Archivos_EET/'
     makedir(files_dir_ter)
-    makedir(files_dir_eet)
+    #makedir(files_dir_eet)
     np.savetxt(files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt', ishf)
-    np.savetxt(files_dir_eet + 'eet_' + exec_input.meccaso + '.txt', eet)
+    #np.savetxt(files_dir_eet + 'eet_' + exec_input.meccaso + '.txt', eet)
     #np.savetxt('sigmas_' + exec_input.temcaso + '.txt', model_rmse['sigmas'])
 
     #Maps

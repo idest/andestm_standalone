@@ -2,11 +2,13 @@ import numpy as np
 import multiprocessing as mp
 import resource
 import sys
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
 from src.utils import makedir
-from src.plot import heatmap_map
-from src.meccolormap import jet_white_r
+from src.plot import heatmap_map, base_map
+from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07
 from src.eet_deviation import eet_deviation
 
 # print memory usage
@@ -14,6 +16,29 @@ def mem():
     print('Memory usage         : % 2.2f MB' % round(
         resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024.0,1)
     )
+
+def eet_map(eet, colormap=jet_white_r, save_dir=None, name='eet_map',
+        image=None):
+    fig = plt.figure(figsize=(9,6))
+    gs = gridspec.GridSpec(1,2)
+    # Axis 1: EET Model
+    ax1 = fig.add_subplot(gs[0,0])
+    map1 = base_map(topo=False)
+    wr1 = heatmap_map(
+        eet, colormap=colormap, cbar_label='EET [km]', cbar_limits=[0,100],
+        title='Effective Elastic Thickness', map=map1, ax=ax1,
+        return_width_ratio=True)
+    # Axis 2: EET invertido
+    ax2 = fig.add_subplot(gs[0,1])
+    img = plt.imread(image)
+    ax2.imshow(img)
+    ax2.set_yticks([])
+    ax2.set_xticks([])
+    if save_dir:
+        name = name + '.png'
+        plt.savefig(save_dir + '%s' %(name))
+    plt.close() 
+
 
 def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
     t_input, m_input = input_setup()
@@ -42,10 +67,32 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                 names.append(name)
                 np.savetxt(save_dir_files + name + '.txt', eet)
                 if plot is True:
+                    save_dir_tassara_07 = save_dir_maps + 'Tassara_07/'
+                    save_dir_pg_07 = save_dir_maps + 'Perez_Gussinye_07/'
+                    save_dir_pg_07_400 = save_dir_pg_07 + '400/'
+                    save_dir_pg_07_600 = save_dir_pg_07 + '600/'
+                    save_dir_pg_07_800 = save_dir_pg_07 + '800/'
+                    makedir(save_dir_tassara_07)
+                    makedir(save_dir_pg_07)
+                    makedir(save_dir_pg_07_400)
+                    makedir(save_dir_pg_07_600)
+                    makedir(save_dir_pg_07_800)
                     heatmap_map(
                         eet, colormap=jet_white_r, cbar_label='EET [km]',
                         cbar_limits=[0,100], title='Effective Elastic Thickness',
                         save_dir=save_dir_maps, name=name)
+                    eet_map(eet, colormap=eet_tassara_07,
+                        save_dir=save_dir_tassara_07, name=name,
+                        image='EET_invertidos/Tassara_07.png')
+                    eet_map(eet, colormap=eet_pg_07,
+                        save_dir=save_dir_pg_07_400 + '', name=name,
+                        image='EET_invertidos/PG_07_400.png')
+                    eet_map(eet, colormap=eet_pg_07,
+                        save_dir=save_dir_pg_07_600 + '', name=name,
+                        image='EET_invertidos/PG_07_600.png')
+                    eet_map(eet, colormap=eet_pg_07,
+                        save_dir=save_dir_pg_07_800 + '', name=name,
+                        image='EET_invertidos/PG_07_800.png')
                 mem()
     return eets, names
 
@@ -68,5 +115,5 @@ if __name__ == '__main__':
     uc_params = [9]
     lc_params = [11, 28, 12, 19, 13, 20, 14, 15, 16, 17, 18, 21]
     lm_params = [22]
-    eets, names = eet_exploration(uc_params, lc_params, lm_params, save_dir, False)
+    eets, names = eet_exploration(uc_params, lc_params, lm_params, save_dir, True)
     eet_deviation(eets, names, save_dir)

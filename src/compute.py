@@ -851,7 +851,7 @@ class MechanicModel(object):
         return bys
 
     @staticmethod
-    def __calc_ductile_yield_strength(es, n, a, h, r, temp):
+    def calc_ductile_yield_strength(es, n, a, h, r, temp):
         #with np.errstate(over='ignore'):
         #    dys = (es/a)**(1/n)*np.exp(h/(n*r*(temp+273.15)))*1.e-6
         #return dys
@@ -891,6 +891,7 @@ class MechanicModel(object):
         self.thermal_model = thermal_model
         self.vars = DotMap(self.__set_variables(mm_data.m_input,
                                                  mm_data.rheologic_data))
+        self.bys_t, self.bys_c = self.__get_brittle_yield_strength()
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
         self.eet, self.eet_calc_data = self.__set_eet(self.yse_t)
         self.depth_from_topo = self.__get_depth_from_topo()
@@ -975,7 +976,7 @@ class MechanicModel(object):
         a = self.geo_model.set_layer_property(cs.a, ci.a, ml.a)
         h = self.geo_model.set_layer_property(cs.h, ci.h, ml.h)
 
-        dys = self.__calc_ductile_yield_strength(e, n, a, h, r, temp)
+        dys = self.calc_ductile_yield_strength(e, n, a, h, r, temp)
         return dys
 
     def __set_yield_strength_envelope(self):

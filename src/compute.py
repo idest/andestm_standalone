@@ -331,7 +331,7 @@ class SpatialArray2D(SpatialArray):
             #index = list(self.cs.get_x_axis()).index(longitude)
             index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
             print("index:", index)
-            cross_section = self[:, index]
+            cross_section = self[index, :]
         elif lat1 and lon1 and lat2 and lon2:
             cross_section = self
         return cross_section
@@ -407,14 +407,25 @@ class SpatialArray3D(SpatialArray):
             #index = list(self.cs.get_y_axis()).index(latitude)
             index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
             cross_section = self[:, index, :]
-            return cross_section
         elif longitude:
             #index = list(self.cs.get_x_axis()).index(longitude)
             index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
             cross_section = self[:, index, :]
         elif lat1 and lon1 and lat2 and lon2:
             cross_section = self
-        return cross_section
+        return SpatialArray2D(cross_section, self.cs)
+
+    def point_depth_profile(self, latitude=None, longitude=None):
+        if self.ndim != 3:
+            dims = self.ndim
+            error = ("Array with 3 dimensions expected,",
+                     " array with {} dimensions recieved").format(dims)
+            raise ValueError(error)
+        else:
+            lat_index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
+            lon_index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
+            point_depth_profile = self[lon_index, lat_index, :]
+        return point_depth_profile
 
     def divide_by_areas(self, areas):
         array_1, array_2 = super().divide_array_by_areas(self, areas)
@@ -955,9 +966,12 @@ class MechanicModel(object):
         bs_c = self.vars.bs_c
         #depth = self.cs.get_3D_indexes()[2]  # needs to be Z from topo
         depth_from_topo = self.__get_depth_from_topo()
+        geo_model_mask = np.isnan(self.geo_model.get_3D_geometric_model())
+        depth_from_topo = np.ma.array(depth_from_topo, mask=geo_model_mask).filled(np.nan)
         depth_from_topo = SpatialArray3D(depth_from_topo
                                          .astype(np.float64, copy=False),
                                                  self.cs).mask_irrelevant()
+
         #depth = self.cs.mask_3d_array(depth.astype(np.float64),
         #                                          nan_fill=True)
         bys_t = self.__calc_brittle_yield_strength(bs_t, depth_from_topo)

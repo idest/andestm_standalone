@@ -1,5 +1,37 @@
 import numpy as np
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+
+def categorical_cmap(nc, nsc, cmap="tab10", continuous=False,
+    desaturated_first=False):
+    if nc > plt.get_cmap(cmap).N:
+        raise ValueError("Too many categories for colormap.")
+    if isinstance(nsc, list):
+        if len(nsc) != nc:
+            raise ValueError("Length of shades array should match" +
+                " number of categories")
+    else:
+        nsc = np.repeat(nsc,nc)
+    if continuous:
+        ccolors = plt.get_cmap(cmap)(np.linspace(0,1,nc))
+    else:
+        ccolors = plt.get_cmap(cmap)(np.arange(nc, dtype=int))
+    #cols = np.zeros((nc*sum(nsc), 3))
+    cols = np.empty((0,3))
+    for i, c in enumerate(ccolors):
+        chsv = mcolors.rgb_to_hsv(c[:3])
+        arhsv = np.tile(chsv,nsc[i]).reshape(nsc[i],3)
+        if desaturated_first is True:
+            arhsv[:,1] = np.linspace(0.25,chsv[1],nsc[i])
+            arhsv[:,2] = np.linspace(1,chsv[2],nsc[i])
+        else:
+            arhsv[:,1] = np.linspace(chsv[1],0.25,nsc[i])
+            arhsv[:,2] = np.linspace(chsv[2],1,nsc[i])
+        rgb = mcolors.hsv_to_rgb(arhsv)
+        #cols[i*nsc[i]:(i+1)*nsc[i],:] = rgb       
+        cols = np.vstack((cols,rgb))
+    cmap = mcolors.ListedColormap(cols)
+    return cmap
 
 def make_colormap(seq):
     """Return a LinearSegmentedColormap
@@ -55,6 +87,14 @@ def reverse_colourmap(cmap, name = 'my_cmap_r'):
 
 def get_diff_cmap(bins):
     colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Red -> White -> Blue
+    n_bins = bins  # Discretizes the interpolation into bins
+    cmap_name = 'diff'
+    diff_cmap = mcolors.LinearSegmentedColormap.from_list(
+        cmap_name, colors, N=n_bins)
+    return diff_cmap
+
+def get_elevation_diff_cmap(bins):
+    colors = [(0, 0.433, 0), (1, 1, 1), (0.314, 0, 0.472)]# Green->White->Purple
     n_bins = bins  # Discretizes the interpolation into bins
     cmap_name = 'diff'
     diff_cmap = mcolors.LinearSegmentedColormap.from_list(

@@ -3,7 +3,7 @@ from dotmap import DotMap
 import src.datos_q as dq
 from src.plot import heatmap_map
 from src.utils import makedir
-from src.colormaps import jet_white_r, get_diff_cmap
+from src.colormaps import jet_white_r, get_elevation_diff_cmap
 
 def eet_deviation(eets, names, save_dir):
     save_dir_deviations = save_dir + 'Deviations/'
@@ -16,9 +16,12 @@ def eet_deviation(eets, names, save_dir):
     for i in np.arange(len(eets)):
         eet = eets[i]
         name = names[i]
-        eet_sd = abs(eet - eet_prom).sum()/eet.size
+        #print(eet)
+        #print(eet_prom)
+        eet_sd = np.nansum(abs(eet - eet_prom))/eet.size
+        print(eet_sd)
         eet_diff = eet - eet_prom
-        cmap = get_diff_cmap(100)
+        cmap = get_elevation_diff_cmap(100)
         heatmap_map(
             eet_diff, colormap=cmap, cbar_label='EET Diff [km]',
             cbar_limits=[-20,20], title='EET Diff. SD: {}'.format(eet_sd),

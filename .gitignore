@@ -2,7 +2,6 @@
 *.pyc
 Output/*
 *.swp
-*.png
 .idea/
 data/
 data2/

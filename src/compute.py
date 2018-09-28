@@ -1017,9 +1017,9 @@ class MechanicModel(object):
         #                                             bottom_z=bottom_z)
         elastic_z = elastic_z.crop(top_z=top_z, bottom_z=bottom_z)
         elastic_z = np.ma.array(elastic_z, mask=np.isnan(elastic_z))
-        top_elastic_z = np.amax(elastic_z, axis=2).filled(np.nan)
-        bottom_elastic_z = np.amin(elastic_z, axis=2).filled(np.nan)
-        elastic_thickness = top_elastic_z - bottom_elastic_z
+        bottom_elastic_z = np.amax(elastic_z, axis=2).filled(np.nan)
+        top_elastic_z = np.amin(elastic_z, axis=2).filled(np.nan)
+        elastic_thickness = bottom_elastic_z - top_elastic_z
         layer_tuple = np.stack((top_elastic_z, bottom_elastic_z,
                                 elastic_thickness), axis=2)
         return layer_tuple, elastic_z.filled(np.nan)
@@ -1055,8 +1055,8 @@ class MechanicModel(object):
             'e_z_uc': e_z_uc,
             'e_z_lc': e_z_lc,
             'e_z_lm': e_z_lm,
-            'share_icd': share_icd,
-            'share_moho': share_moho
+            'share_icd': SpatialArray2D(share_icd, self.cs),
+            'share_moho': SpatialArray2D(share_moho, self.cs)
         }
 
         return eet, eet_calc_data

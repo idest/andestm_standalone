@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec
 from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
 from src.utils import makedir
-from src.plot import heatmap_map, base_map
+from src.plot import heatmap_map, base_map, boolean_map
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07
 from src.eet_deviation import eet_deviation
 
@@ -58,7 +58,7 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
             m_input[lc_var_name] = lc_param
             for uc_param in uc_params:
                 m_input[uc_var_name] = uc_param
-                eet = get_model_eet(t_input, m_input)
+                eet, share_icd, share_moho = get_model_eet(t_input, m_input)
                 eets.append(eet)
                 name = ('eet' + '__'
                     + rhe_data[str(uc_param)]['name'] + '__'
@@ -81,6 +81,10 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                         eet, colormap=jet_white_r, cbar_label='EET [km]',
                         cbar_limits=[0,100], title='Effective Elastic Thickness',
                         save_dir=save_dir_maps, name=name)
+                    boolean_map(
+                        share_moho, title='Share Moho', save_dir=save_dir_maps,
+                        name='Share_moho'
+                        )
                     eet_map(eet, colormap=eet_tassara_07,
                         save_dir=save_dir_tassara_07, name=name,
                         image='EET_invertidos/Tassara_07.png')
@@ -100,30 +104,40 @@ def get_model_eet(t_input, m_input):
     out_q = mp.Queue()
     def mp_termomecanico(t_input, m_input, queue):
         model, _, _ = termomecanico(t_input, m_input)
-        queue.put(model.mm.get_eet())
+        data = {
+            'eet': model.mm.get_eet(),
+            'share_icd': model.mm.eet_calc_data['share_icd'],
+            'share_moho': model.mm.eet_calc_data['share_moho']
+        }
+        #queue.put(model.mm.get_eet())
+        queue.put(data)
         return
     proc = mp.Process(target=mp_termomecanico, args=(t_input, m_input, out_q))
     proc.start()
-    eet = out_q.get()
+    #eet = out_q.get()
+    data = out_q.get()
+    eet = data['eet']
+    share_icd = data['share_icd']
+    share_moho = data['share_moho']
     proc.join()
-    return eet
+    return eet, share_icd, share_moho
 
 if __name__ == '__main__':
     exec_input, direTer, direMec = exec_setup()
     save_dir = direMec + 'EETs/'
     makedir(save_dir)
     #Corteza Inferior
-    #uc_params = [9]
-    #lc_params = [11, 28, 12, 19, 13, 20, 14, 15, 16, 17, 18, 21]
-    #lm_params = [22]
+    uc_params = [9]
+    lc_params = [11, 28, 12, 19, 13, 20, 14, 15, 16, 17, 18, 21]
+    lm_params = [22]
     #Corteza Superior
     #uc_params = [1, 9, 10, 5, 4, 2, 3, 6, 7, 8]
     #lc_params = [28]
     #lm_params = [22]
     #Manto Litosferico
-    uc_params=[9]
-    lc_params=[28]
-    lm_params=[26,22,23,24,25,27,29]
+    #uc_params=[9]
+    #lc_params=[28]
+    #lm_params=[26,22,23,24,25,27,29]
 
     eets, names = eet_exploration(uc_params, lc_params, lm_params, save_dir, True)
     eet_deviation(eets, names, save_dir)

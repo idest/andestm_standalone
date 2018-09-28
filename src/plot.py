@@ -103,8 +103,38 @@ def base_map(topo=True):
     map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
     return map
 
+def boolean_map(
+        array_2D, color='green', map=None, ax=None, alpha=1, save_dir=None,
+        name='boolean_map', return_width_ratio=False, title=None):
+    #Axes and map setup
+    if ax is None:
+        fig, ax = plt.subplots()
+    if map is None:
+        map = base_map(topo=False)
+    #Pcolormesh
+    x_axis = array_2D.cs.get_x_axis()
+    y_axis = array_2D.cs.get_y_axis()
+    xx, yy = np.meshgrid(x_axis, y_axis)
+    array_2D_masked = np.ma.masked_where(array_2D == False, array_2D)
+    cmap = colors.ListedColormap([color])
+    cmap.set_bad(color='red')
+    ax.pcolormesh(array_2D_masked.T, alpha=alpha, cmap=cmap)
+    # Title
+    if title is not None:
+        ax.set_title(title)
+    #Options
+    if save_dir:
+        name = name + '.png'
+        plt.savefig(
+            save_dir + '%s' %(name), bbox_inches='tight')
+            #dpi='figure', format='pdf')
+        plt.close()
+    if return_width_ratio:
+        width_ratio = 1 + 0.05 + 0.12
+        return width_ratio
+
 def heatmap_map(
-        array_2D, colormap=None, cbar_limits=None, map=None, ax=None,
+        array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
         save_dir=None, name='colormesh_map', return_width_ratio=False,
         cbar_label=None, title=None):
     # Axes and map setup
@@ -124,7 +154,7 @@ def heatmap_map(
     if colormap is not None:
         kwargs['cmap'] = colormap
     array_2D_heatmap = map.pcolormesh(
-        xx, yy, array_2D_masked.T, shading='gouraud',
+        xx, yy, array_2D_masked.T, shading='gouraud', alpha=alpha,
         vmin=cbar_min, vmax=cbar_max, **kwargs)
     # Colorbar
     divider = make_axes_locatable(ax)

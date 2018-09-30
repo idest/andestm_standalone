@@ -390,7 +390,7 @@ class SpatialArray3D(SpatialArray):
             bottom_z = np.ceil(bottom_z)[:, :, np.newaxis]
         with np.errstate(invalid='ignore'): # error_ignore
             a = top_z < z_3D
-            b = bottom_z > z_3D
+            b = bottom_z >= z_3D
         array_3D = self.copy()
         array_3D[a] = np.nan
         array_3D[b] = np.nan
@@ -469,13 +469,13 @@ class GeometricModel(object):
         z = self.cs.get_3D_grid()[2]
         geo_model_3D = np.empty(z.shape)*np.nan
         for n in range(len(boundaries)):
-            c = boundaries[n][:, :, np.newaxis]
+            c = np.ceil(boundaries[n][:, :, np.newaxis])
             if n < (len(boundaries)-1):
                 a = n + 1
             else:
                 a = np.nan
             with np.errstate(invalid='ignore'): # error_ignore
-                geo_model_3D[z < c] = a
+                geo_model_3D[z <= c] = a
         return SpatialArray3D(geo_model_3D, self.cs).mask_irrelevant()
 
     def __set_layer_thickness(self):
@@ -504,6 +504,7 @@ class GeometricModel(object):
     def __set_slab_lab_int_index_from_areas(self):
         sli_idx = np.argmax(self.slab_lab_areas, axis=1)
         # sli_idx = sli_idx - 1
+        # TODO: Check what is this next line for?
         sli_idx[-1] = 0
         return sli_idx
 
@@ -523,7 +524,10 @@ class GeometricModel(object):
         sli_idx = self.slab_lab_int_index
         i_idx = self.cs.get_2D_indexes()[0]
         sli_area = np.zeros(self.cs.get_2D_shape())
+        # TODO: this moves sli_area 1 index to the right compared with areas.dat
+        # is it necessary?
         sli_area[i_idx > sli_idx] = 1
+        # TODO: Is sli_ara a typo? It is not returned.
         sli_ara = np.asarray(sli_area, dtype=bool)
         if save == True:
             # Agregar latitudes en la primera columna:
@@ -728,23 +732,23 @@ class ThermalModel(object):
         return t_vars
 
     def __get_slab_lab_int_temperature(self):
-        sli_depth = self.geo_model.get_slab_lab_int_depth()
+        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
         tp = self.vars.tp
         g = self.vars.g
         sli_temp = self.__calc_lab_temp(tp, g, sli_depth)
         return sli_temp
 
     def __get_slab_lab_int_sigma(self):
-        sli_depth = self.geo_model.get_slab_lab_int_depth()
-        sli_topo = self.geo_model.get_slab_lab_int_topo()
+        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
+        sli_topo = np.ceil(self.geo_model.get_slab_lab_int_topo())
         sli_temp = self.__get_slab_lab_int_temperature()
         kappa = self.vars.kappa
         v = self.vars.v
         dip = self.vars.dip
         b = self.vars.b
         sli_s = self.__calc_s(sli_depth, sli_topo, kappa, v, dip, b)
-        z_sl = self.geo_model.get_slab_lab()
-        slab_k = self.vars.k.extract_surface(z_sl)
+        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        slab_k = self.vars.k.extract_surface(z_sl+1)
         sli_idx = self.geo_model.get_slab_lab_int_index()
         j_idx = self.cs.get_2D_indexes()[1][0]
         sli_k = slab_k[sli_idx, j_idx]
@@ -757,10 +761,10 @@ class ThermalModel(object):
         return sli_sigma
 
     def __get_slab_sigma(self):
-        z_sl = self.geo_model.get_slab_lab()
-        z_topo = self.geo_model.get_topo()
-        sli_depth = self.geo_model.get_slab_lab_int_depth()
-        sli_topo = self.geo_model.get_slab_lab_int_topo()
+        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        z_topo = np.ceil(self.geo_model.get_topo())
+        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
+        sli_topo = np.ceil(self.geo_model.get_slab_lab_int_topo())
         sli_sigma = self.__get_slab_lab_int_sigma()
         d = self.vars.d
         slab_sigma = self.__calc_slab_sigma(z_sl, z_topo, sli_depth, sli_topo,
@@ -771,9 +775,9 @@ class ThermalModel(object):
         return slab_sigma
 
     def __get_slab_temp(self):
-        z_sl = self.geo_model.get_slab_lab()
-        z_topo = self.geo_model.get_topo()
-        slab_k = self.vars.k.extract_surface(z_sl)
+        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        z_topo = np.ceil(self.geo_model.get_topo())
+        slab_k = self.vars.k.extract_surface(z_sl+1)
         tp = self.vars.tp
         kappa = self.vars.kappa
         v = self.vars.v
@@ -791,7 +795,7 @@ class ThermalModel(object):
         return slab_temp
 
     def __get_lab_temp(self):
-        z_sl = self.geo_model.get_slab_lab()
+        z_sl = np.ceil(self.geo_model.get_slab_lab())
         # z_lab = self.geo_model.mask_slab(z_sl)
         tp = self.vars.tp
         g = self.vars.g
@@ -814,10 +818,10 @@ class ThermalModel(object):
 
     def __set_surface_heat_flow(self):
         delta = self.vars.delta
-        z_topo = self.geo_model.get_topo()
-        z_sl = self.geo_model.get_slab_lab()
-        #slab_lab_k = self.vars.k.extract_surface(z_sl)
-        #slab_lab_h = self.vars.h.extract_surface(z_sl)
+        z_topo = np.ceil(self.geo_model.get_topo())
+        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        #slab_lab_k = self.vars.k.extract_surface(z_sl+1)
+        #slab_lab_h = self.vars.h.extract_surface(z_sl+1)
         topo_k = self.vars.k.extract_surface(z_topo-1)
         topo_h = self.vars.h.extract_surface(z_topo-1)
         temp_sl = self.slab_lab_temp
@@ -833,8 +837,8 @@ class ThermalModel(object):
         else:
             delta = self.vars.delta[:, :, np.newaxis]
         z = self.cs.get_3D_grid()[2]
-        z_topo = self.geo_model.get_topo()[:, :, np.newaxis]
-        z_sl = self.geo_model.get_slab_lab()[:, :, np.newaxis]
+        z_topo = np.ceil(self.geo_model.get_topo()[:, :, np.newaxis])
+        z_sl = np.ceil(self.geo_model.get_slab_lab()[:, :, np.newaxis])
         temp_sl = self.slab_lab_temp[:, :, np.newaxis]
         geotherm = self.__calc_geotherm(h, delta, k, z, z_topo, z_sl, temp_sl)
         return geotherm
@@ -902,12 +906,10 @@ class MechanicModel(object):
         self.thermal_model = thermal_model
         self.vars = DotMap(self.__set_variables(mm_data.m_input,
                                                  mm_data.rheologic_data))
+        self.depth_from_topo = self.__get_depth_from_topo()
         self.bys_t, self.bys_c = self.__get_brittle_yield_strength()
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
         self.eet, self.eet_calc_data = self.__set_eet(self.yse_t)
-        self.depth_from_topo = self.__get_depth_from_topo()
-        self.depth_from_topo2 = self.__get_depth_from_topo2()
-        self.depth_from_topo3 = self.__get_depth_from_topo3()
 
     def __get_rheologic_vars_from_model(self, rock_id):
         rock = RheologicModel.objects.get(name=rock_id)
@@ -943,22 +945,7 @@ class MechanicModel(object):
 
     def __get_depth_from_topo(self):
         depth_from_topo = -(self.cs.get_3D_grid()[2]
-                            - self.geo_model.get_topo()[:, :, np.newaxis])
-        return depth_from_topo
-
-    def __get_depth_from_topo2(self):
-        depth_from_topo = -(self.cs.get_3D_grid()[2]
-                            - self.geo_model.get_topo()[:, :, np.newaxis])
-        depth_from_topo = SpatialArray3D(depth_from_topo
-                                         .astype(np.float64, copy=False),
-                                         self.cs).mask_irrelevant()
-        return depth_from_topo
-    def __get_depth_from_topo3(self):
-        depth_from_topo = -(self.cs.get_3D_grid()[2]
-                            - np.ceil(self.geo_model.get_topo())[:, :, np.newaxis])
-        depth_from_topo = SpatialArray3D(depth_from_topo
-                                         .astype(np.float64, copy=False),
-                                         self.cs).mask_irrelevant()
+                            - np.ceil(self.geo_model.get_topo()[:, :, np.newaxis]))
         return depth_from_topo
 
     def __get_brittle_yield_strength(self):
@@ -971,7 +958,6 @@ class MechanicModel(object):
         depth_from_topo = SpatialArray3D(depth_from_topo
                                          .astype(np.float64, copy=False),
                                                  self.cs).mask_irrelevant()
-
         #depth = self.cs.mask_3d_array(depth.astype(np.float64),
         #                                          nan_fill=True)
         bys_t = self.__calc_brittle_yield_strength(bs_t, depth_from_topo)
@@ -998,7 +984,7 @@ class MechanicModel(object):
         dys = self.__get_ductile_yield_strength()  # type: np.ndarray
         with np.errstate(invalid='ignore'):
             yse_t = np.where(bys_t < dys, bys_t, dys)
-            yse_c = np.where(bys_c > dys, bys_c, dys)
+            yse_c = np.where(bys_c > -dys, bys_c, -dys)
         return yse_t, yse_c
 
     def __get_layer_elastic_tuple(self, elastic_z, layer):
@@ -1033,8 +1019,8 @@ class MechanicModel(object):
         uc_tuple, e_z_uc = self.__get_layer_elastic_tuple(elastic_z, 'uc')
         lc_tuple, e_z_lc = self.__get_layer_elastic_tuple(elastic_z, 'lc')
         lm_tuple, e_z_lm = self.__get_layer_elastic_tuple(elastic_z, 'lm')
-        share_icd = uc_tuple[:, :, 1] == lc_tuple[:, :, 0]
-        share_moho = lc_tuple[:, :, 1] == lm_tuple[:, :, 0]
+        share_icd = uc_tuple[:, :, 1] + 1 == lc_tuple[:, :, 0]
+        share_moho = lc_tuple[:, :, 1] + 1 == lm_tuple[:, :, 0]
         elastic_thickness = np.stack((uc_tuple[:, :, 2],
                                       lc_tuple[:, :, 2],
                                       lm_tuple[:, :, 2]),
@@ -1058,7 +1044,6 @@ class MechanicModel(object):
             'share_icd': SpatialArray2D(share_icd, self.cs),
             'share_moho': SpatialArray2D(share_moho, self.cs)
         }
-
         return eet, eet_calc_data
 
     def get_yse(self):

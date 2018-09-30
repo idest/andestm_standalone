@@ -19,8 +19,11 @@ if __name__ == '__main__':
     bys_t = model.mm.bys_t
     bys_c = model.mm.bys_c
     #geotherm_1D = geotherm[90,0,:]
-    lat = -10.
+    lat = -30.
     lon = -70.
+    depth_from_topo = model.mm.depth_from_topo.point_depth_profile(latitude=lat,longitude=lon)
+    topo_index = np.where(depth_from_topo == 0)[0]
+    topo_depth = model.cs.get_z_axis()[topo_index]
     geotherm_1D = geotherm.point_depth_profile(latitude=lat,longitude=lon)
     bys_t_1D = bys_t.point_depth_profile(latitude=lat, longitude=lon)
     bys_c_1D = bys_c.point_depth_profile(latitude=lat, longitude=lon)
@@ -47,11 +50,14 @@ if __name__ == '__main__':
         ax.plot(dys_1D, z_axis_2, color=color, label=dys['name'])
     ax.plot(np.repeat(200,len(z_axis)),z_axis,'r', linestyle='dashed')
     #ax.plot(np.repeat(-200,len(z_axis)),z_axis,'r', linestyle='dashed')
+    ax.axhline(y=topo_depth, color='r')
     ax2 = fig.add_subplot(gs[0,0])
     ax2.set_ylim(-180,20)
     ax2.set_yticks([])
     ax2.set_title('Temperatura')
     ax2.plot(geotherm_1D, z_axis)
+    ax2.axhline(y=topo_depth, color='r')
+    ax2.axvline(x=0, color='r')
     legend = ax.legend(loc=2, bbox_to_anchor=(1.05, 1.00))
     fig.suptitle('Lat: {}, Lon: {}'.format(lat,lon))
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])

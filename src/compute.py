@@ -8,12 +8,12 @@ class Data(object):
 
     @staticmethod
     def __get_max(values):
-        max_v = math.ceil(np.nanmax(values))
+        max_v = np.nanmax(values)
         return max_v
 
     @staticmethod
     def __get_min(values):
-        min_v = math.floor(np.nanmin(values))
+        min_v = np.nanmin(values)
         return min_v
 
     def __init__(self, initial_data, slab_lab_areas, trench_age, rheologic_data,
@@ -69,7 +69,8 @@ class Data(object):
         cs_data = {
             'coordinate_data': self.coordinate_data,
             'populated_points': self.populated_points,
-            'z_slab_lab': self.geometric_data.z_slab_lab  # to get plates_areas
+            'z_slab_lab': self.geometric_data.z_slab_lab,  # to get plates_areas
+            'z_topo': self.geometric_data.z_topo # to get relevant area
         }
         return DotMap(cs_data)
 
@@ -96,25 +97,39 @@ class Data(object):
 
 class CoordinateSystem(object):
 
-    def __init__(self, cs_data, xy_step, z_step):
+    @staticmethod
+    def round_to_step(x, step=1, prec=0):
+        return (step * (np.array(x) / step).round()).round(prec)
+
+    def __init__(self, cs_data, xy_step, z_step, z_precision=0):
         self.data = cs_data.coordinate_data
+        self.z_topo_not_rounded = cs_data.z_topo
+        self.z_slab_lab_not_rounded = cs_data.z_slab_lab
         self.xy_step = xy_step
         self.z_step = z_step
+        self.z_precision = z_precision
         self.x_axis = self.__set_axis(self.data.max_lon, self.data.min_lon,
                                       self.xy_step)
         self.y_axis = self.__set_axis(self.data.max_lat, self.data.min_lat,
                                       self.xy_step, revert=True)
         self.z_axis = self.__set_axis(self.data.max_z, self.data.min_z,
-                                      self.z_step, revert=True)
+                                      self.z_step, revert=True,
+                                      precision=z_precision)
         self.grid_2D = self.__set_grid([self.x_axis, self.y_axis])
         self.grid_3D = self.__set_grid([self.x_axis, self.y_axis, self.z_axis])
         self.populated_points = cs_data.populated_points
-        self.plates_areas = self.__set_plates_areas(cs_data.z_slab_lab)
+        self.plates_areas = self.__set_plates_areas()
         self.relevant_area = self.__set_relevant_area(self.populated_points,
                                                       self.plates_areas)
         self.relevant_volume = self.__set_relevant_volume(self.relevant_area)
 
-    def __set_axis(self, max_v, min_v, step, revert=False):
+    def __set_axis(self, max_v, min_v, step, revert=False, precision=None):
+        if precision is not None:
+            max_v = self.round_to_step(max_v, step=step, prec=precision)
+            min_v = self.round_to_step(min_v, step=step, prec=precision)
+        else:
+            max_v = np.ceil(max_v)
+            min_v = np.floor(min_v)
         if revert is True:
             first_v, last_v = max_v, min_v
         else:
@@ -128,9 +143,9 @@ class CoordinateSystem(object):
         grid = np.meshgrid(*[n for n in axes], indexing='ij')
         return grid
 
-    def __set_plates_areas(self, z_slab_lab):
+    def __set_plates_areas(self):
         """False (0) in Nazca Plate, True (1) in South American Plate"""
-        slab_lab = self.reshape_data(z_slab_lab)
+        slab_lab = self.reshape_data(self.z_slab_lab_not_rounded)
         g = np.gradient(slab_lab, axis=0)
         with np.errstate(invalid='ignore'):  # error_ignore
             high_g = np.absolute(g) > 1  # type: np.ndarray
@@ -151,6 +166,10 @@ class CoordinateSystem(object):
         relevant_volume = np.zeros(self.get_3D_shape(), dtype=bool)
         relevant_volume[:, :, :] = relevant_area[:, :, np.newaxis]
         return relevant_volume
+
+    def round_depth_data(self, data):
+        data = self.round_to_step(data, step=self.z_step, prec=self.z_precision)
+        return data
 
     def reshape_data(self, data_column):
         return data_column.T.reshape(len(self.y_axis), len(self.x_axis)).T
@@ -365,7 +384,7 @@ class SpatialArray3D(SpatialArray):
         return masked_array
 
     def extract_surface(self, z_2D):
-        z_2D = np.ceil(z_2D)
+        z_2D = z_2D
         z_3D = self.cs.get_3D_grid()[2]
         a = z_3D != z_2D[:, :, np.newaxis]
         array_3D = self.copy()
@@ -383,11 +402,11 @@ class SpatialArray3D(SpatialArray):
         if isinstance(top_z, str):
             top_z = np.inf
         else:
-            top_z = np.ceil(top_z)[:, :, np.newaxis]
+            top_z = top_z[:, :, np.newaxis]
         if isinstance(bottom_z, str):
             bottom_z = -np.inf
         else:
-            bottom_z = np.ceil(bottom_z)[:, :, np.newaxis]
+            bottom_z = bottom_z[:, :, np.newaxis]
         with np.errstate(invalid='ignore'): # error_ignore
             a = top_z < z_3D
             b = bottom_z >= z_3D
@@ -462,14 +481,16 @@ class GeometricModel(object):
         self.slab_lab_int_topo = self.__set_slab_lab_int_topo()
 
     def __set_boundary(self, geometric_data):
-        return SpatialArray2D(self.cs.reshape_data(geometric_data), self.cs)
+        return SpatialArray2D(
+            self.cs.reshape_data(self.cs.round_depth_data(geometric_data)),
+            self.cs)
 
     def __set_3D_geometric_model(self):
         boundaries = self.get_boundaries()
         z = self.cs.get_3D_grid()[2]
         geo_model_3D = np.empty(z.shape)*np.nan
         for n in range(len(boundaries)):
-            c = np.ceil(boundaries[n][:, :, np.newaxis])
+            c = boundaries[n][:, :, np.newaxis]
             if n < (len(boundaries)-1):
                 a = n + 1
             else:
@@ -483,7 +504,8 @@ class GeometricModel(object):
 
     def __set_slab_lab_int_index(self):
         # Slab/Lab gradients array
-        g = np.gradient(self.slab_lab, axis=0)
+        g = np.gradient(
+            self.cs.reshape_data(self.cs.z_slab_lab_not_rounded), axis=0)
         # Min gradient Indexes
         min_g_idx = np.nanargmin(np.ma.masked_invalid(g), axis=0)
         # Positive gradient boolean array (True where gradient > 0 ...)
@@ -732,22 +754,22 @@ class ThermalModel(object):
         return t_vars
 
     def __get_slab_lab_int_temperature(self):
-        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
+        sli_depth = self.geo_model.get_slab_lab_int_depth()
         tp = self.vars.tp
         g = self.vars.g
         sli_temp = self.__calc_lab_temp(tp, g, sli_depth)
         return sli_temp
 
     def __get_slab_lab_int_sigma(self):
-        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
-        sli_topo = np.ceil(self.geo_model.get_slab_lab_int_topo())
+        sli_depth = self.geo_model.get_slab_lab_int_depth()
+        sli_topo = self.geo_model.get_slab_lab_int_topo()
         sli_temp = self.__get_slab_lab_int_temperature()
         kappa = self.vars.kappa
         v = self.vars.v
         dip = self.vars.dip
         b = self.vars.b
         sli_s = self.__calc_s(sli_depth, sli_topo, kappa, v, dip, b)
-        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        z_sl = self.geo_model.get_slab_lab()
         slab_k = self.vars.k.extract_surface(z_sl+1)
         sli_idx = self.geo_model.get_slab_lab_int_index()
         j_idx = self.cs.get_2D_indexes()[1][0]
@@ -761,10 +783,10 @@ class ThermalModel(object):
         return sli_sigma
 
     def __get_slab_sigma(self):
-        z_sl = np.ceil(self.geo_model.get_slab_lab())
-        z_topo = np.ceil(self.geo_model.get_topo())
-        sli_depth = np.ceil(self.geo_model.get_slab_lab_int_depth())
-        sli_topo = np.ceil(self.geo_model.get_slab_lab_int_topo())
+        z_sl = self.geo_model.get_slab_lab()
+        z_topo = self.geo_model.get_topo()
+        sli_depth = self.geo_model.get_slab_lab_int_depth()
+        sli_topo = self.geo_model.get_slab_lab_int_topo()
         sli_sigma = self.__get_slab_lab_int_sigma()
         d = self.vars.d
         slab_sigma = self.__calc_slab_sigma(z_sl, z_topo, sli_depth, sli_topo,
@@ -775,8 +797,8 @@ class ThermalModel(object):
         return slab_sigma
 
     def __get_slab_temp(self):
-        z_sl = np.ceil(self.geo_model.get_slab_lab())
-        z_topo = np.ceil(self.geo_model.get_topo())
+        z_sl = self.geo_model.get_slab_lab()
+        z_topo = self.geo_model.get_topo()
         slab_k = self.vars.k.extract_surface(z_sl+1)
         tp = self.vars.tp
         kappa = self.vars.kappa
@@ -795,7 +817,7 @@ class ThermalModel(object):
         return slab_temp
 
     def __get_lab_temp(self):
-        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        z_sl = self.geo_model.get_slab_lab()
         # z_lab = self.geo_model.mask_slab(z_sl)
         tp = self.vars.tp
         g = self.vars.g
@@ -818,8 +840,8 @@ class ThermalModel(object):
 
     def __set_surface_heat_flow(self):
         delta = self.vars.delta
-        z_topo = np.ceil(self.geo_model.get_topo())
-        z_sl = np.ceil(self.geo_model.get_slab_lab())
+        z_topo = self.geo_model.get_topo()
+        z_sl = self.geo_model.get_slab_lab()
         #slab_lab_k = self.vars.k.extract_surface(z_sl+1)
         #slab_lab_h = self.vars.h.extract_surface(z_sl+1)
         topo_k = self.vars.k.extract_surface(z_topo-1)
@@ -837,8 +859,8 @@ class ThermalModel(object):
         else:
             delta = self.vars.delta[:, :, np.newaxis]
         z = self.cs.get_3D_grid()[2]
-        z_topo = np.ceil(self.geo_model.get_topo()[:, :, np.newaxis])
-        z_sl = np.ceil(self.geo_model.get_slab_lab()[:, :, np.newaxis])
+        z_topo = self.geo_model.get_topo()[:, :, np.newaxis]
+        z_sl = self.geo_model.get_slab_lab()[:, :, np.newaxis]
         temp_sl = self.slab_lab_temp[:, :, np.newaxis]
         geotherm = self.__calc_geotherm(h, delta, k, z, z_topo, z_sl, temp_sl)
         return geotherm
@@ -945,7 +967,7 @@ class MechanicModel(object):
 
     def __get_depth_from_topo(self):
         depth_from_topo = -(self.cs.get_3D_grid()[2]
-                            - np.ceil(self.geo_model.get_topo()[:, :, np.newaxis]))
+                            - self.geo_model.get_topo()[:, :, np.newaxis])
         return depth_from_topo
 
     def __get_brittle_yield_strength(self):
@@ -1019,8 +1041,8 @@ class MechanicModel(object):
         uc_tuple, e_z_uc = self.__get_layer_elastic_tuple(elastic_z, 'uc')
         lc_tuple, e_z_lc = self.__get_layer_elastic_tuple(elastic_z, 'lc')
         lm_tuple, e_z_lm = self.__get_layer_elastic_tuple(elastic_z, 'lm')
-        share_icd = uc_tuple[:, :, 1] + 1 == lc_tuple[:, :, 0]
-        share_moho = lc_tuple[:, :, 1] + 1 == lm_tuple[:, :, 0]
+        share_icd = uc_tuple[:, :, 1] + self.cs.z_step == lc_tuple[:, :, 0]
+        share_moho = lc_tuple[:, :, 1] + self.cs.z_step == lm_tuple[:, :, 0]
         elastic_thickness = np.stack((uc_tuple[:, :, 2],
                                       lc_tuple[:, :, 2],
                                       lm_tuple[:, :, 2]),

@@ -134,10 +134,12 @@ class CoordinateSystem(object):
             first_v, last_v = max_v, min_v
         else:
             first_v, last_v = min_v, max_v
-
-        return np.linspace(first_v, last_v,
-                           num=(abs(last_v-first_v))/step+1,
+        axis = np.linspace(first_v, last_v,
+                           num=int(round((abs(last_v-first_v))/step+1)),
                            endpoint=True)
+        if precision is not None:
+            axis = self.round_to_step(axis, step=step, prec=precision)
+        return axis
 
     def __set_grid(self, axes, mask=False):
         grid = np.meshgrid(*[n for n in axes], indexing='ij')
@@ -386,7 +388,9 @@ class SpatialArray3D(SpatialArray):
     def extract_surface(self, z_2D):
         z_2D = z_2D
         z_3D = self.cs.get_3D_grid()[2]
-        a = z_3D != z_2D[:, :, np.newaxis]
+        # round to step to fix any floating precision errors
+        a = z_3D != self.cs.round_to_step(
+            z_2D[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
         array_3D = self.copy()
         array_3D[a] = 0
         surface = np.sum(array_3D, axis=2)
@@ -402,11 +406,15 @@ class SpatialArray3D(SpatialArray):
         if isinstance(top_z, str):
             top_z = np.inf
         else:
-            top_z = top_z[:, :, np.newaxis]
+            # round to step to fix any floating precision errors
+            top_z = self.cs.round_to_step(
+                top_z[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
         if isinstance(bottom_z, str):
             bottom_z = -np.inf
         else:
-            bottom_z = bottom_z[:, :, np.newaxis]
+            # round to step to fix any floating precision errors
+            bottom_z = self.cs.round_to_step(
+                bottom_z[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
         with np.errstate(invalid='ignore'): # error_ignore
             a = top_z < z_3D
             b = bottom_z >= z_3D
@@ -700,6 +708,8 @@ class ThermalModel(object):
             n = 0
             while n < len(boundaries)-1:
                 h.append(boundaries[n] - boundaries[n+1])
+                # Erase negative values due to data errors (e.g. z_moho < z_sl)
+                h[n][h[n] < 0] = 0
                 rh.append(prop_v[n]*h[n])
                 n += 1
             r = (sum(rh) / sum(h))[:, :, np.newaxis]
@@ -770,7 +780,7 @@ class ThermalModel(object):
         b = self.vars.b
         sli_s = self.__calc_s(sli_depth, sli_topo, kappa, v, dip, b)
         z_sl = self.geo_model.get_slab_lab()
-        slab_k = self.vars.k.extract_surface(z_sl+1)
+        slab_k = self.vars.k.extract_surface(z_sl+self.cs.z_step)
         sli_idx = self.geo_model.get_slab_lab_int_index()
         j_idx = self.cs.get_2D_indexes()[1][0]
         sli_k = slab_k[sli_idx, j_idx]
@@ -799,7 +809,7 @@ class ThermalModel(object):
     def __get_slab_temp(self):
         z_sl = self.geo_model.get_slab_lab()
         z_topo = self.geo_model.get_topo()
-        slab_k = self.vars.k.extract_surface(z_sl+1)
+        slab_k = self.vars.k.extract_surface(z_sl + self.cs.z_step)
         tp = self.vars.tp
         kappa = self.vars.kappa
         v = self.vars.v
@@ -842,8 +852,8 @@ class ThermalModel(object):
         delta = self.vars.delta
         z_topo = self.geo_model.get_topo()
         z_sl = self.geo_model.get_slab_lab()
-        #slab_lab_k = self.vars.k.extract_surface(z_sl+1)
-        #slab_lab_h = self.vars.h.extract_surface(z_sl+1)
+        #slab_lab_k = self.vars.k.extract_surface(z_sl+self.cs.z_step)
+        #slab_lab_h = self.vars.h.extract_surface(z_sl+self.cs.z_step)
         topo_k = self.vars.k.extract_surface(z_topo-1)
         topo_h = self.vars.h.extract_surface(z_topo-1)
         temp_sl = self.slab_lab_temp

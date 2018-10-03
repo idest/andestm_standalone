@@ -329,6 +329,7 @@ class SpatialArray2D(SpatialArray):
 
     def mask_irrelevant(self, nan_fill=False):
         mask = np.invert(self.cs.get_relevant_area())
+        # TODO: figure out if this .copy() is necessary
         masked_array = self.copy()
         masked_array[mask] = np.nan
         #masked_array = np.ma.array(self, mask=mask)
@@ -378,6 +379,7 @@ class SpatialArray3D(SpatialArray):
 
     def mask_irrelevant(self, nan_fill=True):
         mask = np.invert(self.cs.get_relevant_volume())
+        # TODO: figure out if this .copy() is necessary
         masked_array = self.copy()
         masked_array[mask] = np.nan
         #masked_array = np.ma.array(self, mask=mask)
@@ -389,8 +391,7 @@ class SpatialArray3D(SpatialArray):
         z_2D = z_2D
         z_3D = self.cs.get_3D_grid()[2]
         # round to step to fix any floating precision errors
-        a = z_3D != self.cs.round_to_step(
-            z_2D[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
+        a = z_3D != self.cs.round_depth_data(z_2D[:, :, np.newaxis])
         array_3D = self.copy()
         array_3D[a] = 0
         surface = np.sum(array_3D, axis=2)
@@ -407,14 +408,12 @@ class SpatialArray3D(SpatialArray):
             top_z = np.inf
         else:
             # round to step to fix any floating precision errors
-            top_z = self.cs.round_to_step(
-                top_z[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
+            top_z = self.cs.round_depth_data(top_z[:, :, np.newaxis])
         if isinstance(bottom_z, str):
             bottom_z = -np.inf
         else:
             # round to step to fix any floating precision errors
-            bottom_z = self.cs.round_to_step(
-                bottom_z[:, :, np.newaxis], step=self.cs.z_step, prec=self.cs.z_precision)
+            bottom_z = self.cs.round_depth_data(bottom_z[:, :, np.newaxis])
         with np.errstate(invalid='ignore'): # error_ignore
             a = top_z < z_3D
             b = bottom_z >= z_3D
@@ -899,22 +898,33 @@ class MechanicModel(object):
 
     @staticmethod
     def calc_ductile_yield_strength(es, n, a, h, r, temp):
-        #with np.errstate(over='ignore'):
-        #    dys = (es/a)**(1/n)*np.exp(h/(n*r*(temp+273.15)))*1.e-6
-        #return dys
-        result = np.empty(temp.shape)
-        stored_value = np.empty(temp.shape)
-        np.add(temp, 273.15, result)
-        np.multiply(r, result, result)
-        np.multiply(n, result, result)
-        np.divide(h, result, result)
-        np.exp(result, result)
-        np.multiply(1.e-6, result, stored_value)
-        np.divide(es, a, result)
         with np.errstate(over='ignore'):
-            np.power(result, (1/n), result)
-        np.multiply(result, stored_value,result)
-        return result
+            dys = (es/a)**(1/n)*np.exp(h/(n*r*(temp+273.15)))*1.e-6
+        #result = np.empty(temp.shape)
+        #stored_value = np.empty(temp.shape)
+        #np.add(temp, 273.15, result)
+        #np.multiply(r, result, result)
+        #np.multiply(n, result, result)
+        #np.divide(h, result, result)
+        #np.exp(result, result)
+        #np.multiply(1.e-6, result, stored_value)
+        #np.divide(es, a, result)
+        #with np.errstate(over='ignore'):
+        #    np.power(result, (1/n), result)
+        #np.multiply(result, stored_value,result)
+        #return result
+        return dys
+
+    @staticmethod
+    def __calc_depth_from_brittle_yield_strength(bs, bys):
+        depth = bys/(bs*1.e3*1.e-6)
+        return depth
+
+    @staticmethod
+    def calc_temperature_from_ductile_yield_strength(es, n, a, h, r, dys):
+        #temp = 1/(np.log(dys/(((es/a)**(1/n))*1.e-6))*((n*r)/h))
+        temp = h/(n*r*np.log(dys/(1.e-6*(es/a)**(1/n))))
+        return temp - 273.15
 
     @staticmethod
     def __calc_eet_attached(attached_ths):
@@ -941,7 +951,8 @@ class MechanicModel(object):
         self.depth_from_topo = self.__get_depth_from_topo()
         self.bys_t, self.bys_c = self.__get_brittle_yield_strength()
         self.yse_t, self.yse_c = self.__set_yield_strength_envelope()
-        self.eet, self.eet_calc_data = self.__set_eet(self.yse_t)
+        #self.eet, self.eet_calc_data = self.__set_eet(self.yse_t)
+        self.eet, self.eet_calc_data = self.__set_eet_2()
 
     def __get_rheologic_vars_from_model(self, rock_id):
         rock = RheologicModel.objects.get(name=rock_id)
@@ -1078,6 +1089,95 @@ class MechanicModel(object):
         }
         return eet, eet_calc_data
 
+    def get_layer_elastic_tuple(self, bys_depth, dys_depth, layer):
+        if layer == 'uc':
+            top_boundary = self.geo_model.get_topo()
+            bottom_boundary = self.geo_model.get_icd()
+        elif layer == 'lc':
+            top_boundary = self.geo_model.get_icd()
+            bottom_boundary = self.geo_model.get_moho()
+        elif layer == 'lm':
+            top_boundary = self.geo_model.get_moho()
+            bottom_boundary = self.geo_model.get_slab_lab()
+        top_elastic = np.minimum(top_boundary, bys_depth)
+        bottom_elastic = np.maximum(bottom_boundary, dys_depth)
+        thickness = top_elastic - bottom_elastic
+        top_elastic[thickness < 0] = np.nan
+        bottom_elastic[thickness < 0] = np.nan
+        thickness[thickness < 0] = 0
+        return np.stack((top_elastic, bottom_elastic, thickness), axis=2)
+
+    def __set_eet_2(self):
+        # Get depth at which bys reaches 200
+        bs_t = self.vars.bs_t
+        bs_c = self.vars.bs_c
+        bys_depth_t = self.__calc_depth_from_brittle_yield_strength(bs_t, 200)
+        bys_depth_c = self.__calc_depth_from_brittle_yield_strength(bs_c, -200)
+        bys_depth_t = self.geo_model.get_topo() - bys_depth_t
+        bys_depth_c = self.geo_model.get_topo() - bys_depth_c
+        # Get temperature at which dys reaches 200
+        e = self.vars.e
+        r = self.vars.r
+        uc = self.vars.cs
+        lc = self.vars.ci
+        lm = self.vars.ml
+        temp_uc = self.calc_temperature_from_ductile_yield_strength(
+            e, uc.n, uc.a, uc.h, r, 200)
+        temp_lc = self.calc_temperature_from_ductile_yield_strength(
+            e, lc.n, lc.a, lc.h, r, 200)
+        temp_lm = self.calc_temperature_from_ductile_yield_strength(
+            e, lm.n, lm.a, lm.h, r, 200)
+        dys_temp = np.array([temp_uc, temp_lc, temp_lm])
+        idxs = SpatialArray3D(self.cs.get_3D_indexes()[2], self.cs)
+        idxs = idxs.astype(np.float).mask_irrelevant()
+        top_idx = np.nan_to_num(idxs.extract_surface(self.geo_model.get_topo()))
+        top_idx = top_idx.astype(int)
+        bottom_idx = np.nan_to_num(idxs.extract_surface(self.geo_model.get_slab_lab()))
+        bottom_idx = bottom_idx.astype(int)
+        depth = self.cs.get_3D_grid()[2]
+        geotherm = self.thermal_model.get_geotherm()
+        dys_depth = np.empty((*self.cs.get_2D_shape(),3))
+        print(dys_depth.shape)
+        dys_depth[:,:] = np.nan
+        for i in np.arange(idxs.shape[0]):
+            for j in np.arange(idxs.shape[1]):
+                if np.isnan(idxs[i,j,0]) == False and top_idx[i,j] < bottom_idx[i,j]:
+                    dys_depth[i,j,:] = np.interp(np.array([temp_uc, temp_lc, temp_lm]),
+                        geotherm[i,j,top_idx[i,j]:bottom_idx[i,j]],
+                        depth[i,j,top_idx[i,j]:bottom_idx[i,j]],
+                        left=np.inf, right=-np.inf)
+        uc_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,0], 'uc')
+        lc_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,1], 'lc')
+        lm_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,2], 'lm')
+        share_moho = lc_tuple[:, :, 1] == lm_tuple[:, :, 0]
+        share_icd = uc_tuple[:, :, 1] == lc_tuple[:, :, 0]
+        layers_thickness = np.stack(
+            (uc_tuple[:,:,2], lc_tuple[:,:,2], lm_tuple[:,:,2]), axis=2)
+        coupled_ths, decoupled_ths = SpatialArray.divide_array_by_areas(
+            layers_thickness, share_moho)
+        decoupled_ths_2l, decoupled_ths_3l = SpatialArray.divide_array_by_areas(
+            decoupled_ths, share_icd)
+        decoupled_ths_2l[:,:,1] = decoupled_ths_2l[:,:,0] + decoupled_ths_2l[:,:,1]
+        decoupled_ths_2l[:,:,0] = np.nan
+        dcoupled_ths = SpatialArray.combine_arrays_by_areas(
+            decoupled_ths_2l, decoupled_ths_3l, share_icd)
+        eet_coupled = self.__calc_eet_attached(coupled_ths)
+        eet_decoupled = self.__calc_eet_detached(decoupled_ths)
+        eet = SpatialArray.combine_arrays_by_areas(
+            eet_coupled, eet_decoupled, share_moho)
+        eet_calc_data = {
+            'uc_tuple': uc_tuple,
+            'lc_tuple': lc_tuple,
+            'lm_tuple': lm_tuple,
+            'share_icd': SpatialArray2D(share_icd, self.cs),
+            'share_moho': SpatialArray2D(share_moho, self.cs),
+            'bys_depth_t': bys_depth_t,
+            'bys_depth_c': bys_depth_c,
+            'dys_depth': dys_depth,
+            'dys_temp': dys_temp
+        }
+        return eet, eet_calc_data
+
     def get_yse(self):
         return (SpatialArray3D(self.yse_t, self.cs),
                 SpatialArray3D(self.yse_c, self.cs))
@@ -1098,7 +1198,7 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     gm_d = d.get_gm_data()
     tm_d = d.get_tm_data()
     mm_d = d.get_mm_data()
-    cs = CoordinateSystem(cs_d, 0.2, 1)
+    cs = CoordinateSystem(cs_d, 0.2, 0.1, z_precision=1)
     gm = GeometricModel(gm_d, cs)
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)

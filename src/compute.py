@@ -1159,7 +1159,7 @@ class MechanicModel(object):
             decoupled_ths, share_icd)
         decoupled_ths_2l[:,:,1] = decoupled_ths_2l[:,:,0] + decoupled_ths_2l[:,:,1]
         decoupled_ths_2l[:,:,0] = np.nan
-        dcoupled_ths = SpatialArray.combine_arrays_by_areas(
+        decoupled_ths = SpatialArray.combine_arrays_by_areas(
             decoupled_ths_2l, decoupled_ths_3l, share_icd)
         eet_coupled = self.__calc_eet_attached(coupled_ths)
         eet_decoupled = self.__calc_eet_detached(decoupled_ths)

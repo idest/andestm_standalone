@@ -87,6 +87,10 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                         share_moho, title='Share Moho', save_dir=save_dir_maps,
                         name=name + '_share_moho'
                         )
+                    boolean_map(
+                        share_icd, title='Share Moho', save_dir=save_dir_maps,
+                        name=name + '_share_icd'
+                        )
                     eet_map(eet, colormap=eet_tassara_07,
                         save_dir=save_dir_tassara_07, name=name,
                         image='EET_invertidos/Tassara_07.png')

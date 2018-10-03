@@ -37,7 +37,7 @@ def eet_map(eet, colormap=jet_white_r, save_dir=None, name='eet_map',
     if save_dir:
         name = name + '.png'
         plt.savefig(save_dir + '%s' %(name))
-    plt.close() 
+    plt.close()
 
 
 def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
@@ -63,7 +63,7 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                 name = ('eet' + '__'
                     + rhe_data[str(uc_param)]['name'] + '__'
                     + rhe_data[str(lc_param)]['name'] + '__'
-                    + rhe_data[str(lm_param)]['name']) 
+                    + rhe_data[str(lm_param)]['name'])
                 names.append(name)
                 np.savetxt(save_dir_files + name + '.txt', eet)
                 if plot is True:
@@ -83,7 +83,7 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                         save_dir=save_dir_maps, name=name)
                     boolean_map(
                         share_moho, title='Share Moho', save_dir=save_dir_maps,
-                        name='Share_moho'
+                        name=name + '_share_moho'
                         )
                     eet_map(eet, colormap=eet_tassara_07,
                         save_dir=save_dir_tassara_07, name=name,

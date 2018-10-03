@@ -111,14 +111,8 @@ def boolean_map(
         fig, ax = plt.subplots()
     if map is None:
         map = base_map(topo=False)
-    #Pcolormesh
-    x_axis = array_2D.cs.get_x_axis()
-    y_axis = array_2D.cs.get_y_axis()
-    xx, yy = np.meshgrid(x_axis, y_axis)
-    array_2D_masked = np.ma.masked_where(array_2D == False, array_2D)
-    cmap = colors.ListedColormap([color])
-    cmap.set_bad(color='red')
-    ax.pcolormesh(array_2D_masked.T, alpha=alpha, cmap=cmap)
+    #Imshow
+    map.imshow(array_2D.T, cmap=plt.cm.gray, origin='upper')
     # Title
     if title is not None:
         ax.set_title(title)

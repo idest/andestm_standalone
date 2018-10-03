@@ -1198,7 +1198,7 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     gm_d = d.get_gm_data()
     tm_d = d.get_tm_data()
     mm_d = d.get_mm_data()
-    cs = CoordinateSystem(cs_d, 0.2, 0.1, z_precision=1)
+    cs = CoordinateSystem(cs_d, 0.2, 1)
     gm = GeometricModel(gm_d, cs)
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)

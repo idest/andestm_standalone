@@ -1146,9 +1146,9 @@ class MechanicModel(object):
                         geotherm[i,j,top_idx[i,j]:bottom_idx[i,j]],
                         depth[i,j,top_idx[i,j]:bottom_idx[i,j]],
                         left=np.inf, right=-np.inf)
-        uc_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,0], 'uc')
-        lc_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,1], 'lc')
-        lm_tuple = self.get_layer_elastic_tuple(bys_depth_t, dys_depth[:,:,2], 'lm')
+        uc_tuple = self.get_layer_elastic_tuple(bys_depth_c, dys_depth[:,:,0], 'uc')
+        lc_tuple = self.get_layer_elastic_tuple(bys_depth_c, dys_depth[:,:,1], 'lc')
+        lm_tuple = self.get_layer_elastic_tuple(bys_depth_c, dys_depth[:,:,2], 'lm')
         share_moho = lc_tuple[:, :, 1] == lm_tuple[:, :, 0]
         share_icd = uc_tuple[:, :, 1] == lc_tuple[:, :, 0]
         layers_thickness = np.stack(

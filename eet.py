@@ -2,6 +2,8 @@ import numpy as np
 import multiprocessing as mp
 import resource
 import sys
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from src.setup import input_setup, exec_setup, read_rheo

@@ -94,7 +94,9 @@ def get_diff_cmap(bins):
     return diff_cmap
 
 def get_elevation_diff_cmap(bins):
-    colors = [(0, 0.433, 0), (1, 1, 1), (0.314, 0, 0.472)]# Green->White->Purple
+    #colors = [(0, 0.433, 0), (1, 1, 1), (0.314, 0, 0.472)]# Green->White->Purple
+    #colors = [(0.157, 0, 0.709), (1, 1, 1), (0, 0.433, 0)]# Blue->White->Green
+    colors = [(0.098, 0.276, 0.709), (1, 1, 1), (0, 0.433, 0)]# Blue->White->Green
     n_bins = bins  # Discretizes the interpolation into bins
     cmap_name = 'diff'
     diff_cmap = mcolors.LinearSegmentedColormap.from_list(

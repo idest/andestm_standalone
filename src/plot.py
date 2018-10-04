@@ -112,7 +112,7 @@ def boolean_map(
     if map is None:
         map = base_map(topo=False)
     #Imshow
-    map.imshow(array_2D.T, cmap=plt.cm.gray, origin='upper')
+    map.imshow(array_2D.T, cmap=plt.cm.copper, origin='upper')
     # Title
     if title is not None:
         ax.set_title(title)
@@ -130,7 +130,7 @@ def boolean_map(
 def heatmap_map(
         array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
         save_dir=None, name='colormesh_map', return_width_ratio=False,
-        cbar_label=None, title=None):
+        cbar_label=None, title=None, labelpad=-40):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -156,7 +156,7 @@ def heatmap_map(
     plt.sca(ax)
     cbar = plt.colorbar(array_2D_heatmap, cax=cbar_ax)# pad=0.2)
     if cbar_label is not None:
-        cbar.set_label(cbar_label, rotation=90, labelpad=-40)
+        cbar.set_label(cbar_label, rotation=90, labelpad=labelpad)
     # Title
     if title is not None:
         ax.set_title(title)

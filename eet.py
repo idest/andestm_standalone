@@ -28,8 +28,8 @@ def eet_map(eet, colormap=jet_white_r, save_dir=None, name='eet_map',
     map1 = base_map(topo=False)
     wr1 = heatmap_map(
         eet, colormap=colormap, cbar_label='EET [km]', cbar_limits=[0,100],
-        title='Effective Elastic Thickness', map=map1, ax=ax1,
-        return_width_ratio=True)
+        title='Espesor Elástico Efectivo', map=map1, ax=ax1,
+        return_width_ratio=True, labelpad=-45)
     # Axis 2: EET invertido
     ax2 = fig.add_subplot(gs[0,1])
     img = plt.imread(image)
@@ -81,16 +81,16 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                     makedir(save_dir_pg_07_800)
                     heatmap_map(
                         eet, colormap=jet_white_r, cbar_label='EET [km]',
-                        cbar_limits=[0,100], title='Effective Elastic Thickness',
-                        save_dir=save_dir_maps, name=name)
+                        cbar_limits=[0,100], title='Espesor Elástico Efectivo',
+                        save_dir=save_dir_maps, name=name, labelpad=-45)
                     boolean_map(
-                        share_moho, title='Share Moho', save_dir=save_dir_maps,
+                        share_moho, title='Zona Acoplada', save_dir=save_dir_maps,
                         name=name + '_share_moho'
                         )
-                    boolean_map(
-                        share_icd, title='Share Moho', save_dir=save_dir_maps,
-                        name=name + '_share_icd'
-                        )
+                    #boolean_map(
+                    #    share_icd, title='Attached ICD', save_dir=save_dir_maps,
+                    #    name=name + '_share_icd'
+                    #    )
                     eet_map(eet, colormap=eet_tassara_07,
                         save_dir=save_dir_tassara_07, name=name,
                         image='EET_invertidos/Tassara_07.png')

@@ -1153,6 +1153,21 @@ class MechanicModel(object):
         share_icd = uc_tuple[:, :, 1] == lc_tuple[:, :, 0]
         layers_thickness = np.stack(
             (uc_tuple[:,:,2], lc_tuple[:,:,2], lm_tuple[:,:,2]), axis=2)
+
+        coupled_icd_ths, decoupled_icd_ths = SpatialArray.divide_array_by_areas(
+            layers_thickness, share_icd)
+        coupled_icd_ths[:,:,1] = coupled_icd_ths[:,:,0] + coupled_icd_ths[:,:,1]
+        coupled_icd_ths[:,:,0] = 0
+        layers_thickness = SpatialArray.combine_arrays_by_areas(
+            coupled_icd_ths, decoupled_icd_ths, share_icd)
+        coupled_moho_ths, decoupled_moho_ths = SpatialArray.divide_array_by_areas(
+            layers_thickness, share_moho)
+        coupled_moho_ths[:,:,2] = coupled_moho_ths[:,:,1] + coupled_moho_ths[:,:,2]
+        coupled_moho_ths[:,:,1] = 0
+        layers_thickness = SpatialArray.combine_arrays_by_areas(
+            coupled_moho_ths, decoupled_moho_ths, share_moho)
+        eet = self.__calc_eet_detached(layers_thickness)
+        """
         coupled_ths, decoupled_ths = SpatialArray.divide_array_by_areas(
             layers_thickness, share_moho)
         decoupled_ths_2l, decoupled_ths_3l = SpatialArray.divide_array_by_areas(
@@ -1165,6 +1180,7 @@ class MechanicModel(object):
         eet_decoupled = self.__calc_eet_detached(decoupled_ths)
         eet = SpatialArray.combine_arrays_by_areas(
             eet_coupled, eet_decoupled, share_moho)
+        """
         eet_calc_data = {
             'uc_tuple': uc_tuple,
             'lc_tuple': lc_tuple,

@@ -83,10 +83,12 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                         eet, colormap=jet_white_r, cbar_label='EET [km]',
                         cbar_limits=[0,100], title='Espesor Elástico Efectivo',
                         save_dir=save_dir_maps, name=name, labelpad=-45)
-                    boolean_map(
-                        share_moho, title='Zona Acoplada', save_dir=save_dir_maps,
-                        name=name + '_share_moho'
-                        )
+                    boolean_map(share_moho, share_icd, title='Zonas Acopladas',
+                        save_dir=save_dir_maps + 'ZA', name=name + '_za')
+                    boolean_map(share_moho, title='Share Moho', save_dir=save_dir_maps + 'ZA',
+                        name=name + '_za_moho', cmap_idx=0)
+                    boolean_map(share_icd, title='Share ICD', save_dir=save_dir_maps + 'ZA',
+                        name=name + '_za_icd', cmap_idx=1)
                     #boolean_map(
                     #    share_icd, title='Attached ICD', save_dir=save_dir_maps,
                     #    name=name + '_share_icd'

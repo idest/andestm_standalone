@@ -12,7 +12,7 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from src.utils import MidPointNorm, round_to_1, get_magnitude
 
-def base_latitude_profile(cs,gm,lat):
+def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
     # Axes configuration
     x_axis = cs.get_x_axis()
     z_axis = cs.get_z_axis()
@@ -31,13 +31,23 @@ def base_latitude_profile(cs,gm,lat):
     plt.plot(x_axis, gm.get_icd().cross_section(latitude=lat), 'w')
     plt.plot(x_axis, gm.get_moho().cross_section(latitude=lat), 'g')
     plt.plot(x_axis, gm.get_slab_lab().cross_section(latitude=lat), 'r')
+    if earthquakes is not None:
+        eq = earthquakes[
+            (earthquakes['Lat.'] >= lat - 0.1) &
+            (earthquakes['Lat.'] < lat + 0.1)]
+        plt.scatter(eq['Lon.'], -eq['Prof.'], color='k', s=eq['m1mag']**2.+20.,
+            zorder=1000)
+        print('lat:', lat, 'eq:', eq)
+    if sli is not None:
+        plt.scatter(sli['lon'], sli['depth'], color='r', zorder=1001, s=100)
     return fig
 
-def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t'):
+def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t',
+        earthquakes=None, sli=None):
     # Base
     cs = tm.get_coordinate_system()
     gm = tm.get_geometric_model()
-    fig = base_latitude_profile(cs, gm, lat)
+    fig = base_latitude_profile(cs, gm, lat, earthquakes=earthquakes, sli=sli)
     x_axis = cs.get_x_axis()
     z_axis = cs.get_z_axis()
     xx, zz = np.meshgrid(x_axis, z_axis)
@@ -54,20 +64,21 @@ def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t'):
     numlabels=6
     contour = plt.contour(xx, zz, temps_masked.T, numlabels, colors='k')
     plt.clabel(contour, fontsize=9, fmt='%.0f', rightside_up=True)
-    plt.title('Perfil Termal %s' %(lat))
+    plt.title('Perfil Termal %.1f' %(lat))
     if show is True:
         plt.show()
     if save_dir:
-        name = name + '_%s' %(lat) + '.png'
+        name = name + '_%.1f' %(lat) + '.png'
         fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
     plt.close()
     return
 
-def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m'):
+def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m',
+        earthquakes=None, sli=None):
     # Base
     cs = mm.get_coordinate_system()
     gm = mm.get_geometric_model()
-    fig = base_latitude_profile(cs, gm, lat)
+    fig = base_latitude_profile(cs, gm, lat, earthquakes=earthquakes, sli=sli)
     x_axis = cs.get_x_axis()
     z_axis = cs.get_z_axis()
     xx, zz = np.meshgrid(x_axis, z_axis)
@@ -80,11 +91,11 @@ def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m'):
     plt.clim(ys_min, ys_max)
     cbar = plt.colorbar(heatmap, aspect='20')
     cbar.set_label('Yield Strength', rotation=90, labelpad=-50)
-    plt.title('Perfil Mecanico %s' %(lat))
+    plt.title('Perfil Mecanico %.1f' %(lat))
     if show is True:
         plt.show()
     if save_dir:
-        name = name + '_%s' %(lat) + '.png'
+        name = name + '_%.1f' %(lat) + '.png'
         fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
     plt.close()
     return
@@ -104,15 +115,28 @@ def base_map(topo=True):
     return map
 
 def boolean_map(
-        array_2D, color='green', map=None, ax=None, alpha=1, save_dir=None,
-        name='boolean_map', return_width_ratio=False, title=None):
+        array_2D, array_2D_2=None, color='green', map=None, ax=None,
+        alpha=0.6, save_dir=None, name='boolean_map', return_width_ratio=False,
+        title=None, cmap_idx=0):
     #Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
     if map is None:
         map = base_map(topo=False)
     #Imshow
-    map.imshow(array_2D.T, cmap=plt.cm.copper, origin='upper')
+    map.drawlsmask(land_color='0.0', ocean_color='0.0', resolution='l')
+    """
+    cmap = plt.cm.copper
+    cmap_colors = cmap(np.arange(cmap.N))
+    cmap_colors[:, -1] = np.linspace(0, 1, cmap.N)
+    cmap = colors.ListedColormap(cmap_colors)
+    """
+    cmap1 = colors.ListedColormap([[1,1,1,0],[0.75,0.75,0,0.5]])
+    cmap2 = colors.ListedColormap([[1,1,1,0],[0,0.75,0.75,0.5]])
+    cmaps = [cmap1,cmap2]
+    map.imshow(array_2D.T, cmap=cmaps[cmap_idx], origin='upper')
+    if array_2D_2 is not None:
+        map.imshow(array_2D_2.T, cmap=cmap2, origin='upper')#, alpha=alpha)
     # Title
     if title is not None:
         ax.set_title(title)

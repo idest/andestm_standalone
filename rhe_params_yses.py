@@ -50,9 +50,9 @@ if __name__ == '__main__':
     lc_yield_temps_exact_dic = {}
     lm_yield_temps_exact_dic = {}
     for key, value in rhe_data.items():
-        if key in set(['6','22','29']):
+        #if key in set(['6','22','29']):
         #if key in set(map(str,np.arange(2,30,2))):
-        #if key:
+        if key:
             dys = model.mm.calc_ductile_yield_strength(m_input.e, value.n,
                 value.A, value.H, m_input.R, geotherm_1D)
             dys_list.append({'name': value.name, 'value': dys})
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     ax.set_title('YSEs')
     ax.plot(bys_1D, z_axis_2, 'k')
     colors = categorical_cmap(3, [len(uc_params),len(lc_params),len(lm_params)],
-        desaturated_first=False)(np.linspace(0,1,len(dys_list)))
+        desaturated_first=True)(np.linspace(0,1,len(dys_list)))
     colors_iterator = iter(colors)
     for i, dys in enumerate(dys_list):
         #print(dys)

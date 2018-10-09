@@ -1,13 +1,16 @@
 import numpy as np
 from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
-from src.compute import compute
+from src.compute import compute, SpatialArray2D
 from src.rmse import rmse
 from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    heatmap_map, data_map, diff_map, multi_map, data_scatter_plot)
 from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
 from src.utils import makedir
 from src.colormaps import jet_white_r
+from pandas import read_excel
+eq1 = read_excel("earthquakes/CSN.xlsx", sheet_name="Sheet1")
+eq2 = read_excel("earthquakes/CSN.xlsx", sheet_name="Sheet2")
 
 
 def termomecanico(t_input, m_input):
@@ -92,12 +95,20 @@ if __name__ == '__main__':
                 ishf_models, ishf_labels, save_dir=scatter_dir)
 
     #Latitude profiles
-    for lat in np.arange(exec_input.tmi, exec_input.tmx, -exec_input.tdelta):
+    sli_idx_array = model.gm.slab_lab_int_index
+    sli_lon_array = model.cs.get_x_axis()[sli_idx_array]
+    sli_depth_array = model.gm.slab_lab_int_depth
+    #for lat in np.arange(exec_input.tmi, exec_input.tmx, -exec_input.tdelta):
+    for idx, lat in enumerate(model.cs.get_y_axis()[:-1]):
+        sli_lon = sli_lon_array[idx]
+        sli_depth = sli_depth_array[idx]
         if exec_input.xt2:
             save_dir = direTer + 'Perfiles/'
             makedir(save_dir)
-            thermal_latitude_profile(model.tm, lat, save_dir, name='t')
+            thermal_latitude_profile(model.tm, lat, save_dir, name='t',
+                earthquakes=eq1, sli={'lon': sli_lon, 'depth': sli_depth})
         if exec_input.xm2:
             save_dir = direMec + 'Perfiles/'
             makedir(save_dir)
-            mechanic_latitude_profile(model.mm, lat, save_dir, name='m')
+            mechanic_latitude_profile(model.mm, lat, save_dir, name='m',
+                earthquakes=eq1, sli={'lon': sli_lon, 'depth': sli_depth})

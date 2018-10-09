@@ -51,7 +51,7 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
     save_dir_files = save_dir + 'Archivos/'
     makedir(save_dir_maps)
     makedir(save_dir_files)
-    rhe_data = read_rheo('data/Rhe_Param_ordenado.dat')
+    rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     eets = []
     names = []
     for lm_param in lm_params:
@@ -135,17 +135,17 @@ if __name__ == '__main__':
     save_dir = direMec + 'EETs/'
     makedir(save_dir)
     #Corteza Inferior
-    uc_params = [9]
-    lc_params = [11, 28, 12, 19, 13, 20, 14, 15, 16, 17, 18, 21]
-    lm_params = [22]
+    uc_params = [6]
+    lc_params = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    lm_params = [30]
     #Corteza Superior
-    #uc_params = [1, 9, 10, 5, 4, 2, 3, 6, 7, 8]
-    #lc_params = [28]
-    #lm_params = [22]
+    #uc_params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    #lc_params = [12]
+    #lm_params = [30]
     #Manto Litosferico
-    #uc_params=[9]
-    #lc_params=[28]
-    #lm_params=[26,22,23,24,25,27,29]
+    #uc_params=[6]
+    #lc_params=[12]
+    #lm_params=[23,24,25,26,27,28,29,30]
 
     eets, names = eet_exploration(uc_params, lc_params, lm_params, save_dir, True)
     eet_deviation(eets, names, save_dir)

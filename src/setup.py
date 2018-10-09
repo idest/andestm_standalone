@@ -99,7 +99,7 @@ def data_setup():
     gm_data = np.loadtxt('data/Modelo.dat')
     areas = np.loadtxt('data/areas.dat')
     trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
-    rhe_data = read_rheo('data/Rhe_Param.dat')
+    rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     return gm_data, areas, trench_age, rhe_data
 
 def input_setup():

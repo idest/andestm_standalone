@@ -14,4 +14,5 @@
          6  Cs       Modelo reologico de la corteza superior
         12  Ci       Modelo reologico de la corteza inferior
         30  Ml       Modelo reologico del manto litosférico
+        23  Mla      Modelo reologico del manto litosférico en el antearco
        200  s_max    Maximo Stress Disponible

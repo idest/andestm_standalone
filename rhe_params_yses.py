@@ -50,14 +50,15 @@ if __name__ == '__main__':
     lc_yield_temps_exact_dic = {}
     lm_yield_temps_exact_dic = {}
     for key, value in rhe_data.items():
-        #if key in set(['6','22','29']):
+        if key in set(['6','22','23','30']):
         #if key in set(map(str,np.arange(2,30,2))):
-        if key:
+        #if key:
             dys = model.mm.calc_ductile_yield_strength(m_input.e, value.n,
                 value.A, value.H, m_input.R, geotherm_1D)
             dys_list.append({'name': value.name, 'value': dys})
             yield_temp_exact = model.mm.calc_temperature_from_ductile_yield_strength(
                 model.mm.vars.e, value.n, value.A, value.H, model.mm.vars.r, 200)
+            print(value.name, yield_temp_exact)
             yield_depth_at_temp = np.interp(
                 yield_temp_exact, geotherm_1D, z_axis)
             yield_depths_at_temp.append(yield_depth_at_temp)
@@ -86,20 +87,22 @@ if __name__ == '__main__':
     #print(lm_yield_temps_exact_dic)
     fig = plt.figure(figsize=(12,7))
     min_z = z_axis[np.nanargmax(geotherm_1D)]
+    max_z = 5
     major_z_ticks = np.arange(0, min_z+1, -25)
     minor_z_ticks = np.arange(5, min_z+1, -5)
     gs = gridspec.GridSpec(1,3)
     ax = fig.add_subplot(gs[0,1:])
-    ax.set_xlim(-2000,2000)
+    #ax.set_xlim(-2000,2000)
+    ax.set_xlim(-10,10)
     #ax.set_ylim(-180,20)
-    ax.set_ylim(min_z,5)
+    ax.set_ylim(min_z,max_z)
     ax.xaxis.set_minor_locator(AutoMinorLocator(5))
     ax.set_yticks(major_z_ticks)
     ax.set_yticks(minor_z_ticks, minor=True)
     ax.set_title('YSEs')
     ax.plot(bys_1D, z_axis_2, 'k')
     colors = categorical_cmap(3, [len(uc_params),len(lc_params),len(lm_params)],
-        desaturated_first=True)(np.linspace(0,1,len(dys_list)))
+        desaturated_first=False)(np.linspace(0,1,len(dys_list)))
     colors_iterator = iter(colors)
     for i, dys in enumerate(dys_list):
         #print(dys)
@@ -112,7 +115,7 @@ if __name__ == '__main__':
     ax2 = fig.add_subplot(gs[0,0])
     ax2.set_xlim(0,1300)
     #ax2.set_ylim(-180,20)
-    ax2.set_ylim(z_axis[np.nanargmax(geotherm_1D)],5)
+    ax2.set_ylim(min_z,max_z)
     ax2.xaxis.set_minor_locator(AutoMinorLocator(4))
     ax2.set_yticks(major_z_ticks)
     ax2.set_yticks(minor_z_ticks, minor=True)

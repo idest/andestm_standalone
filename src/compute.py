@@ -568,6 +568,8 @@ class GeometricModel(object):
 
     def set_layer_property(self, cs, ci, ml):
         r = np.ones(self.geo_model_3D.shape) * np.nan
+        if isinstance(cs, np.ndarray) and np.ndim(cs)==1:
+            r = np.repeat(r[:,:,:,np.newaxis], len(cs), axis=3)
         r[self.geo_model_3D == 1] = cs
         r[self.geo_model_3D == 2] = ci
         r[self.geo_model_3D == 3] = ml
@@ -982,7 +984,8 @@ class MechanicModel(object):
             's_max': m_input['s_max'],
             'cs': self.__get_rheologic_vars(m_input['Cs'], rhe_data),
             'ci': self.__get_rheologic_vars(m_input['Ci'], rhe_data),
-            'ml': self.__get_rheologic_vars(m_input['Ml'], rhe_data)
+            'ml': self.__get_rheologic_vars(m_input['Ml'], rhe_data),
+            'mla': self.__get_rheologic_vars(m_input['Mla'], rhe_data)
         }
         return m_vars
 
@@ -1014,11 +1017,32 @@ class MechanicModel(object):
         cs = self.vars.cs
         ci = self.vars.ci
         ml = self.vars.ml
+        mla = self.vars.mla
         # TODO: find a way to not store these next 3D arrays in memory
+        """
         n = self.geo_model.set_layer_property(cs.n, ci.n, ml.n)
         a = self.geo_model.set_layer_property(cs.a, ci.a, ml.a)
         h = self.geo_model.set_layer_property(cs.h, ci.h, ml.h)
-
+        #Antearco
+        n = self.geo_model.set_layer_property(cs.n, ci.n, mla.n)
+        a = self.geo_model.set_layer_property(cs.a, ci.a, mla.a)
+        h = self.geo_model.set_layer_property(cs.h, ci.h, mla.h)
+        """
+        # 4-Dimensional Array
+        rheo_array_backarc = self.geo_model.set_layer_property(
+            np.array([cs.n, cs.a, cs.h]),
+            np.array([ci.n, ci.a, ci.h]),
+            np.array([ml.n, ml.a, ml.h]))
+        rheo_array_forearc = self.geo_model.set_layer_property(
+            np.array([cs.n, cs.a, cs.h]),
+            np.array([ci.n, ci.a, ci.h]),
+            np.array([mla.n, mla.a, mla.h]))
+        rheo_array = SpatialArray.combine_arrays_by_areas(
+            rheo_array_backarc, rheo_array_forearc,
+            self.geo_model.get_slab_lab_int_area().astype(bool))
+        n = rheo_array[:,:,:,0]
+        a = rheo_array[:,:,:,1]
+        h = rheo_array[:,:,:,2]
         dys = self.calc_ductile_yield_strength(e, n, a, h, r, temp)
         return dys
 

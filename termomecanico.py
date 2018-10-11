@@ -9,9 +9,9 @@ from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_erro
 from src.utils import makedir
 from src.colormaps import jet_white_r
 from pandas import read_excel
-eq1 = read_excel("earthquakes/CSN.xlsx", sheet_name="Sheet1")
-eq2 = read_excel("earthquakes/CSN.xlsx", sheet_name="Sheet2")
 
+eq1 = read_excel("data/earthquakes/CSN.xlsx", sheet_name="Sheet1")
+eq2 = read_excel("data/earthquakes/CSN.xlsx", sheet_name="Sheet2")
 
 def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data = data_setup()

@@ -1,7 +1,7 @@
 from pandas import read_excel, ExcelWriter
 
-eq1 = read_excel("earthquakes/CSN_2000-2012_CAT.xlsx", sheet_name="Hoja1")
-eq2 = read_excel("earthquakes/CSN_2013-2018_CAT.xlsx", sheet_name="Hoja1")
+eq1 = read_excel("CSN_2000-2012_CAT.xlsx", sheet_name="Hoja1")
+eq2 = read_excel("CSN_2013-2018_CAT.xlsx", sheet_name="Hoja1")
 
 mask1_lon = eq1['Lon.']<-1000
 mask1_lat = eq1['Lat.']<-1000

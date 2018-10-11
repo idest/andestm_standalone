@@ -95,16 +95,16 @@ def eet_exploration(uc_params, lc_params, lm_params, save_dir, plot=False):
                     #    )
                     eet_map(eet, colormap=eet_tassara_07,
                         save_dir=save_dir_tassara_07, name=name,
-                        image='EET_invertidos/Tassara_07.png')
+                        image='data/Te_Grillas/Imgs/Tassara_07.png')
                     eet_map(eet, colormap=eet_pg_07,
                         save_dir=save_dir_pg_07_400 + '', name=name,
-                        image='EET_invertidos/PG_07_400.png')
+                        image='data/Te_Grillas/Imgs/PG_07_400.png')
                     eet_map(eet, colormap=eet_pg_07,
                         save_dir=save_dir_pg_07_600 + '', name=name,
-                        image='EET_invertidos/PG_07_600.png')
+                        image='data/Te_Grillas/Imgs/PG_07_600.png')
                     eet_map(eet, colormap=eet_pg_07,
                         save_dir=save_dir_pg_07_800 + '', name=name,
-                        image='EET_invertidos/PG_07_800.png')
+                        image='data/Te_Grillas/Imgs/PG_07_800.png')
                 mem()
     return eets, names
 

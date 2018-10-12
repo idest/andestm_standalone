@@ -8,11 +8,12 @@ from matplotlib.patches import Rectangle
 from utils import module_from_file
 from scipy.io import netcdf
 
-colormaps = module_from_file('src', '../../src/colormaps.py')
+colormaps = module_from_file('src', 'src/colormaps.py')
 eet_pg_07 = colormaps.eet_pg_07
 
 # Grilla EET Perez-Gussinye et al., 2007
-te_pg = netcdf.netcdf_file('Perez-Gussinye/Te_400.grd', mmap=False)
+te_pg = netcdf.netcdf_file('data/Te_invertido/Perez-Gussinye/Te_400.grd',
+    mmap=False)
 
 # Axes
 x_axis = te_pg.variables['x'][:]
@@ -36,8 +37,10 @@ eet_interpolator = RectBivariateSpline(x_axis, y_axis[::-1], eet_grid[::-1].T)
 eet_interpolated = eet_interpolator(x_axis_model, y_axis_model[::-1])
 eet_interpolated = eet_interpolated[:,::-1].T
 
-np.savetxt('Te_PG_07_400.txt', eet_interpolated.T)
-eet_interpolated = np.loadtxt('Te_PG_07_400.txt').T
+np.savetxt(
+    'data/Te_invertido/Interpolados/Te_PG_07_400.txt', eet_interpolated.T)
+eet_interpolated = np.loadtxt(
+    'data/Te_invertido/Interpolados/Te_PG_07_400.txt').T
 
 # Plot
 #fig, ax = plt.subplots()

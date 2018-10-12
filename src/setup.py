@@ -5,7 +5,8 @@
 import numpy as np
 import os
 import shutil
-from src.utils import DotDict
+#from src.utils import DotDict
+from box import Box
 
 #Leer archivo de instrucciones
 def readVars(name):
@@ -37,7 +38,7 @@ def readVars(name):
 
     # Retorna la matriz con todas las variables
 
-    return DotDict(dic)
+    return Box(dic)
 
 def makeDirs(temcaso, meccaso):
 
@@ -84,7 +85,7 @@ def read_rheo(name):
 
             id_rh, name, h, n, a, ref = line.split()
 
-            dic[id_rh] = DotDict({'name': name, 'H': float(h), 'n': float(n), 'A': float(a), 'ref': ref})
+            dic[id_rh] = Box({'name': name, 'H': float(h), 'n': float(n), 'A': float(a), 'ref': ref})
 
         # Leer siguiente linea
         line = f.readline()
@@ -93,7 +94,7 @@ def read_rheo(name):
 
     # Retorna la matriz con todas las variables
 
-    return DotDict(dic)
+    return Box(dic)
 
 def data_setup():
     gm_data = np.loadtxt('data/Modelo.dat')

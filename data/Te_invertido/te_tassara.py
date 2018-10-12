@@ -6,11 +6,11 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.patches import Rectangle
 from utils import module_from_file
-colormaps = module_from_file('src', '../../src/colormaps.py')
+colormaps = module_from_file('src', 'src/colormaps.py')
 eet_tassara_07 = colormaps.eet_tassara_07
 
 # Grilla EET Tassara et al., 2007
-te_tassara = np.loadtxt('Tassara/te.SA.xyz')
+te_tassara = np.loadtxt('data/Te_invertido/Tassara/te.SA.xyz')
 x_values = te_tassara[:,0]
 y_values = te_tassara[:,1]
 eet = te_tassara[:,2]
@@ -51,8 +51,10 @@ eet_interpolator = RectBivariateSpline(x_axis, y_axis[::-1], eet_grid[::-1].T)
 eet_interpolated = eet_interpolator(x_axis_model, y_axis_model[::-1])
 eet_interpolated = eet_interpolated[:,::-1].T
 
-np.savetxt('Te_Tassara_07.txt', eet_interpolated.T)
-eet_interpolated = np.loadtxt('Te_Tassara_07.txt').T
+np.savetxt(
+    'data/Te_invertido/Interpolados/Te_Tassara_07.txt', eet_interpolated.T)
+eet_interpolated = np.loadtxt(
+    'data/Te_invertido/Interpolados/Te_Tassara_07.txt').T
 
 # Plot
 #fig, ax = plt.subplots()

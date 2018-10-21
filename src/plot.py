@@ -34,7 +34,9 @@ def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
     if earthquakes is not None:
         eq = earthquakes[
             (earthquakes['Lat.'] >= lat - 0.1) &
-            (earthquakes['Lat.'] < lat + 0.1)]
+            (earthquakes['Lat.'] < lat + 0.1) &
+            (earthquakes['ISA'] == True) & 
+            (earthquakes['OSB'] == True)]
         plt.scatter(eq['Lon.'], -eq['Prof.'], color='k', s=eq['m1mag']**2.+20.,
             zorder=1000)
         print('lat:', lat, 'eq:', eq)

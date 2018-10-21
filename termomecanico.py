@@ -10,8 +10,7 @@ from src.utils import makedir
 from src.colormaps import jet_white_r
 from pandas import read_excel
 
-eq1 = read_excel("data/earthquakes/CSN.xlsx", sheet_name="Sheet1")
-eq2 = read_excel("data/earthquakes/CSN.xlsx", sheet_name="Sheet2")
+eqs = read_excel("data/earthquakes/CSN_2000_2018_SA.xlsx", sheet_name="Sheet1")
 
 def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data = data_setup()
@@ -106,9 +105,9 @@ if __name__ == '__main__':
             save_dir = direTer + 'Perfiles/'
             makedir(save_dir)
             thermal_latitude_profile(model.tm, lat, save_dir, name='t',
-                earthquakes=eq1, sli={'lon': sli_lon, 'depth': sli_depth})
+                earthquakes=eqs, sli={'lon': sli_lon, 'depth': sli_depth})
         if exec_input.xm2:
             save_dir = direMec + 'Perfiles/'
             makedir(save_dir)
             mechanic_latitude_profile(model.mm, lat, save_dir, name='m',
-                earthquakes=eq1, sli={'lon': sli_lon, 'depth': sli_depth})
+                earthquakes=eqs, sli={'lon': sli_lon, 'depth': sli_depth})

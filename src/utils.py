@@ -93,4 +93,16 @@ import os
 
 def makedir(dire):
     if not os.path.exists(dire):
-        os.makedirs(dire)
+        try:
+            os.makedirs(dire)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+
+def makedir_from_filename(filename):
+    if not os.path.exists(os.path.dirname(filename)):
+        try:
+            os.makedirs(os.path.dirname(filename))
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise

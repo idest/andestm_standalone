@@ -4,10 +4,11 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from src.utils import makedir_from_filename
 from matplotlib import cm
 import matplotlib.colors as colors
 from matplotlib.colors import Normalize
-from src.colormaps import jet_white_r, get_diff_cmap
+from src.colormaps import jet_white_r, get_diff_cmap, get_elevation_diff_cmap
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from src.utils import MidPointNorm, round_to_1, get_magnitude
@@ -33,18 +34,17 @@ def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
     plt.plot(x_axis, gm.get_slab_lab().cross_section(latitude=lat), 'r')
     if earthquakes is not None:
         eq = earthquakes[
-            (earthquakes['Lat.'] >= lat - 0.1) &
-            (earthquakes['Lat.'] < lat + 0.1) &
-            (earthquakes['ISA'] == True) & 
-            (earthquakes['OSB'] == True)]
-        plt.scatter(eq['Lon.'], -eq['Prof.'], color='k', s=eq['m1mag']**2.+20.,
-            zorder=1000)
+            (earthquakes['latitude'] >= lat - 0.1) &
+            (earthquakes['latitude'] < lat + 0.1)]
+        plt.scatter(
+            eq['longitude'], -eq['depth'], color=eq['color'],
+            s=eq['mag']**2.+20., zorder=1000)
         print('lat:', lat, 'eq:', eq)
     if sli is not None:
         plt.scatter(sli['lon'], sli['depth'], color='r', zorder=1001, s=100)
     return fig
 
-def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t',
+def thermal_latitude_profile(tm, lat, show=False, filename=None,
         earthquakes=None, sli=None):
     # Base
     cs = tm.get_coordinate_system()
@@ -69,13 +69,14 @@ def thermal_latitude_profile(tm, lat, save_dir=None, show=False, name='t',
     plt.title('Perfil Termal %.1f' %(lat))
     if show is True:
         plt.show()
-    if save_dir:
-        name = name + '_%.1f' %(lat) + '.png'
-        fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '_%.1f' %(lat) + '.png'
+        fig.savefig(filename)#, dpi='figure', format='pdf')
     plt.close()
     return
 
-def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m',
+def mechanic_latitude_profile(mm, lat, show=False, filename=None,
         earthquakes=None, sli=None):
     # Base
     cs = mm.get_coordinate_system()
@@ -96,9 +97,10 @@ def mechanic_latitude_profile(mm, lat, save_dir=None, show=False, name='m',
     plt.title('Perfil Mecanico %.1f' %(lat))
     if show is True:
         plt.show()
-    if save_dir:
-        name = name + '_%.1f' %(lat) + '.png'
-        fig.savefig(save_dir + name)#, dpi='figure', format='pdf')
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '_%.1f' %(lat) + '.png'
+        fig.savefig(filename)#, dpi='figure', format='pdf')
     plt.close()
     return
 
@@ -118,7 +120,7 @@ def base_map(topo=True):
 
 def boolean_map(
         array_2D, array_2D_2=None, color='green', map=None, ax=None,
-        alpha=0.6, save_dir=None, name='boolean_map', return_width_ratio=False,
+        alpha=0.6, filename=None, return_width_ratio=False,
         title=None, cmap_idx=0):
     #Axes and map setup
     if ax is None:
@@ -143,10 +145,10 @@ def boolean_map(
     if title is not None:
         ax.set_title(title)
     #Options
-    if save_dir:
-        name = name + '.png'
-        plt.savefig(
-            save_dir + '%s' %(name), bbox_inches='tight')
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
+        plt.savefig(filename, bbox_inches='tight')
             #dpi='figure', format='pdf')
         plt.close()
     if return_width_ratio:
@@ -155,13 +157,20 @@ def boolean_map(
 
 def heatmap_map(
         array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
-        save_dir=None, name='colormesh_map', return_width_ratio=False,
-        cbar_label=None, title=None, labelpad=-40):
+        filename=None, return_width_ratio=False,
+        cbar_label=None, title=None, labelpad=-40, earthquakes=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
     if map is None:
         map = base_map(topo=False)
+    # Earthquakes
+    if earthquakes is not None:
+        eqs_lon = earthquakes['longitude']
+        eqs_lat = earthquakes['latitude']
+        scatter = map.scatter(
+            eqs_lon, eqs_lat, 1., c=earthquakes['color'], latlon=True,
+            zorder=1000)
     # Pcolormesh
     x_axis = array_2D.cs.get_x_axis()
     y_axis = array_2D.cs.get_y_axis()
@@ -188,15 +197,68 @@ def heatmap_map(
         ax.set_title(title)
     # Options
     #plt.tight_layout()
-    if save_dir:
-        name = name + '.png'
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
         plt.savefig(
-            save_dir + '%s' %(name), bbox_inches='tight')
+            filename, bbox_inches='tight')
             #dpi='figure', format='pdf')
         plt.close()
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12
         return width_ratio
+
+def diff_map(array_1, array_2, diff, sd=None,
+        colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+        cbar_label=None, cbar_label_diff=None,
+        cbar_limits=None, cbar_limits_diff=None,
+        title_1='Matriz 1', title_2='Matriz 2', title_3='Dif. M1 - M2',
+        filename=None, labelpad=-45, labelpad_diff=-45):
+    fig = plt.figure(figsize=(12,6))
+    gs = gridspec.GridSpec(1,3)
+    if cbar_limits is None:
+        cbar_max = max(np.nanmax(array_1), np.nanmax(array_2))
+        cbar_min = min(np.nanmin(array_1), np.nanmin(array_2))
+        cbar_limits = [cbar_min, cbar_max]
+    if cbar_limits_diff is None:
+        cbar_max_abs = max(np.nanmax(diff), abs(np.nanmin(diff)))
+        cbar_limits_diff = [-cbar_max_abs, cbar_max_abs]
+    # Axis 1: array_1
+    ax1 = fig.add_subplot(gs[0,0])
+    map1 = base_map(topo=False)
+    wr1 = heatmap_map(
+        array_1, colormap=colormap, cbar_label=cbar_label,
+        cbar_limits=cbar_limits,
+        title=title_1, map=map1, ax=ax1,
+        return_width_ratio=True, labelpad=labelpad)
+    # Axis 2: array_2 
+    ax2 = fig.add_subplot(gs[0,1])
+    map2 = base_map(topo=False)
+    wr2 = heatmap_map(
+        array_2, colormap=colormap, cbar_label=cbar_label,
+        cbar_limits=cbar_limits,
+        title=title_2, map=map2, ax=ax2,
+        return_width_ratio=True, labelpad=labelpad)
+    ax2.set_yticks([])
+    # Axis 3: Diff: EET equivalente - EET efectivo
+    ax3 = fig.add_subplot(gs[0,2])
+    map3 = base_map(topo=False)
+    if sd is not None:
+        sd_string = ' {:.2f}'.format(sd)
+    else:
+        sd_string = ''
+    wr3 = heatmap_map(
+        diff, colormap=colormap_diff, cbar_label=cbar_label_diff,
+        cbar_limits=cbar_limits_diff,
+        title=title_3 + sd_string,
+        map=map3, ax=ax3, return_width_ratio=True, labelpad=labelpad_diff)
+    ax3.set_yticks([])
+    plt.tight_layout()
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
+        plt.savefig(filename)
+    plt.close()
 
 def get_map_scatter_function(data_coords, data_types, map):
     # Coords
@@ -232,11 +294,11 @@ def get_map_scatter_function(data_coords, data_types, map):
         return m_scatter, scatter
     return map_scatter
 
-def data_map(
+def data_scatter_map(
         data, cbar_limits=None, data_coords=None, data_types=None,
         map=None, ax=None, cbar=True, legend=True,
         rmse=None, return_width_ratio=False,
-        save_dir=None, name='data_map'):
+        filename=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -270,20 +332,22 @@ def data_map(
         legend = ax.legend(bbox_to_anchor=(0.5, 0.0), loc='upper center',
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
-    if save_dir:
-        name = name + '.png'
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
         plt.savefig(
-            save_dir + '%s' %(name),
+            filename,
             bbox_extra_artists=extra_artists, bbox_inches='tight')
             #dpi='figure', format='pdf')
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12
         return width_ratio
 
-def diff_map(
+def diff_scatter_map(
         diff, data_coords=None, data_types=None, map=None, ax=None,
         rmse=None, legend=True, return_width_ratio=False,
-        save_dir=None, name='diff_map', e_prom=None, sigmas=None, moda=None):
+        filename=None,
+        e_prom=None, sigmas=None, moda=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -340,32 +404,33 @@ def diff_map(
     ax.set_title('Model minus Data')
     # Options
     extra_artists=[]
+    if moda is not None:
+        # MODA
+        moda_text = plt.figtext(
+            0.4, 0.03, 'MODA: %0.2f' %(moda),
+            fontweight='bold')
+        extra_artists.append(moda_text)
     if e_prom is not None:
         # MAE
         e_prom_text = plt.figtext(
-            0.4,0.03, 'ME: %0.2f' %(e_prom),
+            0.4, 0, 'ME: %0.2f' %(e_prom),
             fontweight='bold')
         extra_artists.append(e_prom_text)
     if rmse is not None:
         # RMSE
         rmse_text = plt.figtext(
-            0.4, 0, 'RMSE: %0.2f' %(rmse),
+            0.4, -0.03, 'RMSE: %0.2f' %(rmse),
             fontweight='bold')
         extra_artists.append(rmse_text)
-    if moda is not None:
-        # MODA
-        moda_text = plt.figtext(
-            0.4, 0.06, 'MODA: %0.2f' %(moda),
-            fontweight='bold')
-        extra_artists.append(moda_text)
     if legend is True:
-        legend = ax.legend(bbox_to_anchor=(0.5, 0.0), loc='upper center',
+        legend = ax.legend(bbox_to_anchor=(0.5, -0.03), loc='upper center',
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
-    if save_dir:
-        name = name + '.png'
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
         plt.savefig(
-            save_dir + '%s' %(name),
+            filename,
             bbox_extra_artists=extra_artists, bbox_inches='tight')
             #dpi='figure', format='pdf')
     if return_width_ratio:
@@ -374,7 +439,7 @@ def diff_map(
 
 def multi_map(
         shf=None, data=None, diff=None, data_coords=None, data_types=None,
-        rmse=None, topo=True, save_dir=None, name='multi_map',
+        rmse=None, topo=True, filename=None,
         e_prom=None, sigmas=None):
     # Gridspec
     fig = plt.figure(figsize=(9,6))
@@ -387,7 +452,7 @@ def multi_map(
         shf, cbar_limits=cbar_limits, colormap='afmhot',
         cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
         map=map1, ax=ax1, return_width_ratio=True)
-    data_map(
+    data_scatter_map(
         data, cbar_limits=cbar_limits,
         data_coords=data_coords,
         data_types=data_types,
@@ -396,13 +461,12 @@ def multi_map(
     # Axis 2: Diff
     ax2 = fig.add_subplot(gs[0,1])
     map2 = base_map(topo=False)
-    wr2 = diff_map(
+    wr2 = diff_scatter_map(
         diff,
         data_coords=data_coords,
         data_types=data_types,
         map=map2, ax=ax2,
         legend=False,  return_width_ratio=True,
-        save_dir=None, name='diff_map',
         sigmas=sigmas)
     ax2.set_yticks([])
     # Aspect
@@ -426,15 +490,16 @@ def multi_map(
         ncol=4, bbox_transform=fig.transFigure)
     extra_artists.append(legend)
     # Options
-    if save_dir:
-        name = name + '.png'
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
         plt.savefig(
-            save_dir + '%s' %(name),
+            filename,
             bbox_extra_artists=(extra_artists), bbox_inches='tight')
             #dpi='figure', format='pdf')
     plt.close()
 
-def rmse_plot(vnames, vaxes, rmses, save_dir=None):
+def rmse_plot(vnames, vaxes, rmses, filename=None):
     # x axis
     x_name = vnames[0]
     x_axis = vaxes[0]
@@ -452,15 +517,22 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         v = np.linspace(vmin, vmax, 100)
         #plt.contourf(
         #    x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
-        plt.pcolormesh(
-            x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
+        #plt.pcolormesh(
+        #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
+        x_step = x_axis[1] - x_axis[0]
+        y_step = y_axis[1] - y_axis[0]
+        plt.imshow(rmses.T, origin='lower', aspect='auto',
+            norm=colors.PowerNorm(gamma=1./2.),
+            extent=[
+                x_axis[0] - x_step/2, x_axis[-1] + x_step/2,
+                y_axis[0] - y_step/2, y_axis[-1] + y_step/2])
         #xx, yy = np.meshgrid(x_axis, y_axis)
         #xx = xx.flatten()
         #yy = yy.flatten()
         #rmses_f = rmses.T.flatten()
         #plt.scatter(xx, yy, c=rmses_f, cmap='rainbow')
         plt.colorbar()
-        name = 'RMSE_2D'
+        name = filename + '_2D'
     else:
         index = np.arange(len(x_axis))
         plt.plot(index, rmses, '-r', linewidth=1.)
@@ -470,14 +542,15 @@ def rmse_plot(vnames, vaxes, rmses, save_dir=None):
         plt.xticks(index, x_axis)
         plt.ylabel('RMSE')
         plt.grid(True)
-        name = 'RMSE'
+        name = filename 
     plt.tight_layout()
-    if save_dir is not None:
-        name = name + '.png'
-        plt.savefig(save_dir + '%s' %(name))#,dpi='figure', format='pdf')
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
+        plt.savefig(filename)#,dpi='figure', format='pdf')
 
 def data_scatter_plot(
-        data, data_error, data_types, ishf_models, ishf_labels, save_dir=None):
+        data, data_error, data_types, ishf_models, ishf_labels, filename=None):
     fig, axes = plt.subplots(4)
     markers = np.array(['o', '^', 'p', 's'])
     titles = np.array(['ODP', 'LBH', 'GQ', 'GP'])
@@ -505,9 +578,10 @@ def data_scatter_plot(
         loc='center left', bbox_to_anchor=(1,0.5),
         bbox_transform=fig.transFigure)
     extra_artists.append(legend)
-    if save_dir is not None:
-        name = 'scatter.pdf'
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.pdf'
         plt.savefig(
-            save_dir + '%s' %(name),
+            filename,
             bbox_extra_artists=(extra_artists), bbox_inches='tight',
             dpi='figure', format='pdf')

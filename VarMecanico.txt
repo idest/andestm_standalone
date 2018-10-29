@@ -7,6 +7,8 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  ------   -----------
+     False  slm      Considerar manto litosférico serpentinizado en antearco
+#    -----  ------   -----------
      20.e3  Bs_t     Constante de tension de Byerlee (MPa)
     -55.e3  Bs_c     Constante de compresion de Byerlee (MPa)
      1e-15  e        Strain rate (s-1)

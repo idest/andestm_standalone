@@ -101,7 +101,8 @@ def data_setup():
     areas = np.loadtxt('data/areas.dat')
     trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
     rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
-    return gm_data, areas, trench_age, rhe_data
+    coast = np.loadtxt('data/coast.dat')
+    return gm_data, areas, trench_age, rhe_data, coast
 
 def input_setup():
     t_input = readVars('VarTermal.txt')

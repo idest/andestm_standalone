@@ -52,9 +52,9 @@ eet_interpolated = eet_interpolator(x_axis_model, y_axis_model[::-1])
 eet_interpolated = eet_interpolated[:,::-1].T
 
 np.savetxt(
-    'data/Te_invertido/Interpolados/Te_Tassara_07.txt', eet_interpolated.T)
+    'data/Te_invertido/Interpolados/Te_Tassara.txt', eet_interpolated.T)
 eet_interpolated = np.loadtxt(
-    'data/Te_invertido/Interpolados/Te_Tassara_07.txt').T
+    'data/Te_invertido/Interpolados/Te_Tassara.txt').T
 
 # Plot
 #fig, ax = plt.subplots()

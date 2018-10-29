@@ -49,6 +49,7 @@ def vars_rmse(var_names, var_ranges, var_type='thermal'):
         var_name_2 = get_var_name(var_names[1])
         var_axis_2 = get_var_axis(var_ranges[1])
     rmses = []
+    i = 0
     for var_1 in var_axis_1:
         for vn in var_name_1:
             t_input[vn] = var_1
@@ -59,6 +60,8 @@ def vars_rmse(var_names, var_ranges, var_type='thermal'):
                 for vn in var_name_2:
                     t_input[vn] = var_2
                 #mem()
+                i += 1
+                print(i)
                 rmses.append(get_model_rmse(t_input, m_input))
     if var_name_2 is not None:
         rmses = np.array(rmses).reshape(len(var_axis_1), len(var_axis_2))
@@ -102,7 +105,7 @@ if __name__ == '__main__':
         np.savetxt(save_dir + 'vars_ranges.txt', vranges)
         #np.savetxt(save_dir + 'vars_axes.txt', vaxes)#, dtype='object')
         # Plot
-        rmse_plot(vnames, vaxes, rmses, save_dir)
+        rmse_plot(vnames, vaxes, rmses, filename=save_dir + 'RMSE')
 
     else:
         # Load and Plot
@@ -113,5 +116,5 @@ if __name__ == '__main__':
         vnames = np.loadtxt(save_dir + 'vars_names.txt', dtype='str', ndmin=2)
         # Add dummy member to avoid avoid getting too many indices for array
         # when there is only one member present and we use vnames[0]
-        rmse_plot(vnames, vaxes, rmses, save_dir)
+        rmse_plot(vnames, vaxes, rmses, filename=save_dir + 'RMSE')
         #print("Use: python vars.py var_name '[start, end, step]'")

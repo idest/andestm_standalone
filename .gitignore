@@ -3,11 +3,13 @@
 Output/*
 *.swp
 .idea/
-data/Modelo.dat
+data/Modelo*
 data/Te_invertido/Tassara/
 data/Te_invertido/Perez-Gussinye/
 data/Te_invertido/Interpolados/
 data/earthquakes/CSN*
+data/earthquakes/USGS*
+data/earthquakes/earthquakes_bkp/
 data2/
 datos_Q/
 vtk_files/

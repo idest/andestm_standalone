@@ -18,9 +18,10 @@ data = compute.Data(*setup.data_setup(), *setup.input_setup())
 cs = compute.CoordinateSystem(data.get_cs_data(), 0.2, 1)
 gm = compute.GeometricModel(data.get_gm_data(), cs)
 
-#eq1 = pd.read_excel('data/earthquakes/CSN.xlsx', sheet_name='Sheet1')
-#eq2 = pd.read_excel('data/earthquakes/CSN.xlsx', sheet_name='Sheet2')
-eqs = pd.read_excel('data/earthquakes/CSN_2000_2018.xlsx', sheet_name='Sheet1')
+#Earthquakes CSN
+#eqs_csn = pd.read_excel('data/earthquakes/CSN_2000_2018.xlsx', sheet_name='Sheet1')
+#Earthquakes USGS
+eqs_usgs = pd.read_csv('data/earthquakes/USGS_1900_2018.csv')
 
 eqs_new = pd.DataFrame()
 
@@ -66,26 +67,41 @@ for idx, lat in enumerate(cs.get_y_axis()[:-1]):
     line_y_points = np.append(line_y_points, line_last_y)
     line_x_points = np.append(line_x_points, line_last_x)
     line = LineString(zip(line_x_points, line_y_points))
-    #lineBuffer15 = line.buffer(15, cap_style=1, mitre_limit=100)
-    lineBuffer20 = line.buffer(20, cap_style=1, mitre_limit=100)
-    patch2 = PolygonPatch(lineBuffer20, fc='green')
+    lineBuffer = line.buffer(20, cap_style=1, mitre_limit=100)
+    patch2 = PolygonPatch(lineBuffer, fc='green')
 
-    # Earthquakes
-    eq = eqs[
-        (eqs['Lat.'] >= lat - 0.1 ) &
-        (eqs['Lat.'] < lat + 0.1)]
-    eq['x'] = eq['Lon.'].apply(lambda lon: abs(first_lon - utm(lon,lat)[0]))
+    # Earthquakes CSN
+    #eq = eqs_csn[
+    #    (eqs_csn['Lat.'] >= lat - 0.1 ) &
+    #    (eqs_csn['Lat.'] < lat + 0.1)]
+    #eq['x'] = eq['Lon.'].apply(lambda lon: abs(first_lon - utm(lon,lat)[0]))
+    #eq['ISA'] = False
+    #eq['OSB'] = True
+    #print(lat)
+    #for i in np.arange(len(eq.index)):
+    #    p = Point(eq['x'].iloc[i], -eq['Prof.'].iloc[i])
+    #    #print(polygon.contains(p))
+    #    # Inside South America
+    #    eq['ISA'].iloc[i] = polygon.contains(p)
+    #    # Outside Slab Buffer
+    #    eq['OSB'].iloc[i] = not lineBuffer.contains(p)
+    #eqs_new = eqs_new.append(eq)
+
+    #Earthquakes USGS
+    eq = eqs_usgs[
+        (eqs_usgs['latitude'] >= lat - 0.1) &
+        (eqs_usgs['latitude'] < lat + 0.1)]
+    eq['x'] = eq['longitude'].apply(lambda lon: abs(first_lon - utm(lon,lat)[0]))
     eq['ISA'] = False
     eq['OSB'] = True
     print(lat)
     for i in np.arange(len(eq.index)):
-        p = Point(eq['x'].iloc[i], -eq['Prof.'].iloc[i])
+        p = Point(eq['x'].iloc[i], -eq['depth'].iloc[i])
         #print(polygon.contains(p))
         # Inside South America
         eq['ISA'].iloc[i] = polygon.contains(p)
         # Outside Slab Buffer
-        eq['OSB'].iloc[i] = not lineBuffer20.contains(p)
-    eq.drop(columns=['x'])
+        eq['OSB'].iloc[i] = not lineBuffer.contains(p)
     eqs_new = eqs_new.append(eq)
 
 """
@@ -99,11 +115,16 @@ for idx, lat in enumerate(cs.get_y_axis()[:-1]):
         ax.add_patch(patch)
         ax.add_patch(patch2)
         eq['color'] = 'red'
-        #eq['color'] = eq['color'].where(eq['ip'] == True, other='black')
-        #ax.scatter(eq['x'], -eq['Prof.'], color=eq['color'], s=eq['m1mag']**2.+20.,
-        #    zorder=-1000)
-        ax.scatter(eq['x'], -eq['Prof.'], color=eq['color'], s=1.,
-            zorder=1000)
+        #eq['color'] = eq['color'].where(eq['ISA'] == True, other='black')
+        # Earthquakes CSN
+        depth = -eq['Prof.']
+        mag = eq['m1mag']
+        # Earthquakes USGS
+        #depth = -eq['depth']
+        #mag = eq['mag']
+        #ax.scatter(
+        #    eq['x'], depth, color=eq['color'], s=mag**2.+20., zorder=-1000)
+        ax.scatter(eq['x'], depth, color=eq['color'], s=1., zorder=1000)
         print(lat)
         plt.show()
         #break
@@ -118,7 +139,11 @@ for idx, lat in enumerate(cs.get_y_axis()[:-1]):
     #print(topo)
 """
 
-writer = pd.ExcelWriter('data/earthquakes/CSN_2000_2018_SA.xlsx')
+# Earthquakes CSN
+#writer = pd.ExcelWriter('data/earthquakes/CSN_2000_2018_C.xlsx')
+# Earthquakes USGS
+writer = pd.ExcelWriter('data/earthquakes/USGS_1900_2018_C.xlsx')
+eqs_new.drop(columns=['x'])
 eqs_new = eqs_new.sort_index()
 eqs_new.to_excel(writer, 'Sheet1')
 writer.save()

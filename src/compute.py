@@ -397,6 +397,18 @@ class SpatialArray2D(SpatialArray):
             cross_section = self
         return cross_section
 
+    def extract_point(self, latitude=None, longitude=None):
+        if self.ndim != 2:
+            dims = self.ndim
+            error = ("Array with 2 dimensions expected,",
+                     " array with {} dimensions recieved").format(dims)
+            raise ValueError(error)
+        else:
+            lat_index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
+            lon_index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
+            point = self[lon_index, lat_index]
+        return point
+
     def divide_by_areas(self, areas):
         array_1, array_2 = super().divide_array_by_areas(self, areas)
         return array_1, array_2

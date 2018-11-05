@@ -4,15 +4,18 @@ import resource
 import sys
 import functools
 import matplotlib
+matplotlib.rcParams['mathtext.default'] = 'regular'
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.colors as mcolors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import compress
 from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
 from src.utils import makedir, makedir_from_filename
 from src.plot import heatmap_map, base_map, boolean_map, diff_map
-from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap
+from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
 
 # print memory usage
@@ -55,6 +58,7 @@ def rheo_exploration(
         flm_params = [m_input['Mla']]
     rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     results = {}
+    i=0
     for flm_param in flm_params:
         m_input['Mla'] = flm_param
         if m_input['slm'] is True:
@@ -73,7 +77,9 @@ def rheo_exploration(
                         + rhe_data[str(lm_param)]['name'] + flm_string)
                     results[name] = results_function(t_input, m_input, name)
                     mem()
-    print(results)
+                    i+=1
+                    print(i)
+                    print(results)
     return results
 
 def applied_stress_exploration(
@@ -85,10 +91,11 @@ def applied_stress_exploration(
     else:
         dir_name = ''
     results = {}
-    for s_max in np.linspace(100, 200, 3, endpoint=True):
+    for s_max in np.linspace(100, 200, 5, endpoint=True):
         m_input['s_max'] = s_max
-        name = dir_name + 's_max_' + str(s_max)
+        name = dir_name + 's_max_{:.0f}'.format(s_max)
         results[name] = results_function(t_input, m_input, name)
+    return results
 
 def thermal_exploration(
         results_function, t_input=None, m_input=None, dir_name=None):
@@ -113,28 +120,113 @@ def thermal_exploration(
     ###### Modelo Inicial
     initial_vars()
     name = dir_name + 'h_2.2e-6__k_3.5__delta_10__t_30'
-    print(name)
-    print(t_input)
+    #print(name)
+    #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### K Variable
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
     t_input['k_ml'] = 3.5
     name = dir_name + 'h_2.2e-6__k_var__delta_10__t_30'
-    print(name)
-    print(t_input)
+    #print(name)
+    #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### Delta Variable
     initial_vars()
     t_input['delta_icd'] = True
-    name = dir_name + 'h_2.2e-6__k_3.5__delta_var__t_30'
-    print(name)
-    print(t_input)
+    name = dir_name + 'h_2.2e-6__k_3.5__delta_icd__t_30'
+    #print(name)
+    #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     return results
 
+def thermal_H_exploration(
+        results_function, t_input=None, m_input=None, dir_name=None):
+    if t_input is None and m_input is None:
+        t_input, m_input = input_setup()
+    if dir_name is not None:
+        dir_name = dir_name + '/'
+    else:
+        dir_name = ''
+    results = {}
+    def initial_vars():
+        t_input['k_cs'] = 3.5
+        t_input['k_ci'] = 3.5
+        t_input['k_ml'] = 3.5
+        t_input['H_cs'] = 2.2e-6
+        t_input['H_ci'] = 2.2e-6
+        t_input['H_ml'] = 2.2e-6
+        t_input['delta_icd'] = False
+        t_input['t_lat'] = False
+        t_input['delta'] = 10
+        t_input['t'] = 30
+    initial_vars()
+    for h in np.linspace(0, 5.e-6, 6):
+        t_input['H_cs'] = h 
+        t_input['H_ci'] = h 
+        t_input['H_ml'] = h 
+        name = dir_name + 'h_{:.2E}'.format(h)
+        results[name] = results_function(t_input, m_input, name)
+    return results
+
+def thermal_K_exploration(
+        results_function, t_input=None, m_input=None, dir_name=None):
+    if t_input is None and m_input is None:
+        t_input, m_input = input_setup()
+    if dir_name is not None:
+        dir_name = dir_name + '/'
+    else:
+        dir_name = ''
+    results = {}
+    def initial_vars():
+        t_input['k_cs'] = 3.5
+        t_input['k_ci'] = 3.5
+        t_input['k_ml'] = 3.5
+        t_input['H_cs'] = 2.2e-6
+        t_input['H_ci'] = 2.2e-6
+        t_input['H_ml'] = 2.2e-6
+        t_input['delta_icd'] = False
+        t_input['t_lat'] = False
+        t_input['delta'] = 10
+        t_input['t'] = 30
+    initial_vars()
+    for k in np.linspace(1,5,5):
+        t_input['k_cs'] = k
+        t_input['k_ci'] = k
+        t_input['k_ml'] = k
+        name = dir_name + 'k_{:.2E}'.format(k)
+        results[name] = results_function(t_input, m_input, name)
+    return results
+
+def thermal_delta_exploration(
+        results_function, t_input=None, m_input=None, dir_name=None):
+    if t_input is None and m_input is None:
+        t_input, m_input = input_setup()
+    if dir_name is not None:
+        dir_name = dir_name + '/'
+    else:
+        dir_name = ''
+    results = {}
+    def initial_vars():
+        t_input['k_cs'] = 3.5
+        t_input['k_ci'] = 3.5
+        t_input['k_ml'] = 3.5
+        t_input['H_cs'] = 2.2e-6
+        t_input['H_ci'] = 2.2e-6
+        t_input['H_ml'] = 2.2e-6
+        t_input['delta_icd'] = False
+        t_input['t_lat'] = False
+        t_input['delta'] = 10
+        t_input['t'] = 30
+    initial_vars()
+    for delta in np.linspace(5,15,6):
+        t_input['delta'] = delta 
+        name = dir_name + 'delta_{:.0f}'.format(delta)
+        results[name] = results_function(t_input, m_input, name)
+    return results
+
 def eet_equivalent_vs_effective_results(
-        eet_effective_list, save_dir='Teq_vs_Tef', plot=False):
+        eet_effective_dict, save_dir='Teq_vs_Tef', plot=False):
     save_dir_maps = save_dir + 'Mapas/'
     save_dir_files = save_dir + 'Archivos/'
     def results(t_input, m_input, name):
@@ -146,7 +238,8 @@ def eet_equivalent_vs_effective_results(
         lc_array = np.ones(data['eet'].cs.get_2D_shape()) * lc
         uc_array = SpatialArray2D(uc_array, data['eet'].cs).mask_irrelevant_eet()
         lc_array = SpatialArray2D(lc_array, data['eet'].cs).mask_irrelevant_eet()
-        for eet_effective in eet_effective_list:
+        for key, eet_effective in zip(
+                eet_effective_dict.keys(), eet_effective_dict.values()):
             Tef = SpatialArray2D(
                 np.loadtxt(eet_effective['file']),
                 data['eet'].cs).mask_irrelevant_eet()
@@ -166,8 +259,8 @@ def eet_equivalent_vs_effective_results(
                     title_3='Diff. (EET Eq. - EET ef.)',
                     labelpad=-48, labelpad_diff=-56,
                     filename=save_dir_maps + eet_effective['dir'] + name)
-            diffs[eet_effective['id']] = eet_diff
-        return {'diffs': diffs, 'uc': uc_array, 'lc': lc_array}
+            diffs[key] = eet_diff
+        return {'diffs': diffs, 'eet': data['eet'], 'uc': uc_array, 'lc': lc_array}
     return results
 
 
@@ -207,7 +300,7 @@ def get_eet_data(model):
     'share_icd': model.mm.eet_calc_data['share_icd'],
     'share_moho': model.mm.eet_calc_data['share_moho']}
 
-def eet_results(eet_effective_list=None, save_dir='EET', plot=False):
+def eet_results(eet_effective_dict=None, save_dir='EET', plot=False):
     save_dir_maps = save_dir + 'Mapas/'
     save_dir_files = save_dir + 'Archivos/'
     def results(t_input, m_input, name):
@@ -223,9 +316,9 @@ def eet_results(eet_effective_list=None, save_dir='EET', plot=False):
             plot_coupled_zones(
                 data['share_moho'], data['share_icd'],
                 filename=save_dir_maps + 'CZ/' + name)
-            if eet_effective_list:
+            if eet_effective_dict:
                 plot_eet_equivalent_vs_effective(
-                    eet_effective_list, data['eet'],
+                    eet_effective_dict, data['eet'],
                     save_dir=save_dir_maps, name=name)
         return data['eet']
     return results
@@ -249,14 +342,14 @@ def ist_results(save_dir='IST', plot=False):
         return data['ist']
     return results
 
-def plot_eet_equivalent_vs_effective(eet_effective_list, eet_eq,
+def plot_eet_equivalent_vs_effective(eet_effective_dict, eet_eq,
         save_dir='EET', name='eet_diff'):
-    for eet_effective in eet_effective_list:
+    for eet_effective in eet_effective_dict.values():
         eet_eff = SpatialArray2D(np.loadtxt(eet_effective['file']), eet_eq.cs)
         eet_diff = eet_eq - eet_eff
         sd = calc_deviation(eet_eq, eet_eff)
         diff_map(eet_eq, eet_eff, eet_diff, sd=sd,
-            colormap=eet_effective['colormap'],
+            colormap=jet_white_r,
             colormap_diff = get_elevation_diff_cmap(100),
             cbar_limits=[0,100], cbar_limits_diff=[-100,100],
             cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
@@ -321,6 +414,106 @@ def get_model_data(t_input, m_input, data_function):
     proc.join()
     return data 
 
+def get_rheology_mosaic(
+        eet_effective_dict, eets, eets_diffs,
+        uc_rheos=None, lc_rheos=None, lm_rheos=None,
+        Tef_keys=None, extended_plot=True, save_dir='Rheo_mosaics'):
+    if uc_rheos is None and lc_rheos is NOne and lm_rheos is None:
+        raise ValueError("At least one list of rheologies must be provided.")
+    if Tef_keys is None:
+        Tef_keys: ['Te_Tassara', 'Te_PG_400', 'Te_PG_600', 'Te_PG_800']
+    rheos = {}
+    if uc_rheos is not None:
+        uc_array = np.dstack(tuple(uc_rheos))
+        rheos['uc'] = {'array': uc_array}
+    if lc_rheos is not None:
+        lc_array = np.dstack(tuple(lc_rheos))
+        rheos['lc'] = {'array': lc_array}
+    if lm_rheos is not None:
+        lm_array = np.dstack(tuple(lm_rheos))
+        rheos['lm'] = {'array': lm_array}
+    save_dir_maps = save_dir + 'Mapas/Mosaics/'
+    save_dir_files = save_dir + 'Archivos/Mosaics/'
+    eets_array = np.dstack(tuple(eets))
+    for Tef_key in Tef_keys:
+        eets_diff = [eet_diffs[Tef_key] for eet_diffs in eets_diffs]
+        Tef = np.loadtxt(eet_effective_dict[Tef_key]['file'])
+        Tef = SpatialArray2D(Tef, eets[0].cs).mask_irrelevant_eet()
+        eets_diff_array = np.dstack(tuple(eets_diff))
+        eets_diff_array_m = np.ma.array(
+            eets_diff_array, mask=np.isnan(eets_diff_array))
+        k = np.nanargmin(abs(eets_diff_array_m), axis=2)
+        m,n = k.shape
+        i,j = np.ogrid[:m,:n]
+        for rheo in rheos.values():
+            rheo_fit = rheo['array'][i, j, k]
+            rheo_fit = SpatialArray2D(rheo_fit, eets[0].cs).mask_irrelevant_eet()
+            rheo['fit'] = rheo_fit
+        eet_fit = eets_array[i, j, k]
+        eet_fit = SpatialArray2D(eet_fit, eets[0].cs).mask_irrelevant_eet()
+        diffs_fit = eets_diff_array[i,j,k]
+        diffs_fit = SpatialArray2D(diffs_fit, eets[0].cs).mask_irrelevant_eet()
+        for rheo_key, rheo in zip(rheos.keys(), rheos.values()):
+            filename_rheo = save_dir_files + Tef_key + '_' + rheo_key + '.txt'
+            makedir_from_filename(filename_rheo)
+            np.savetxt(filename_rheo, rheo['fit'])
+        filename_eet = save_dir_files + Tef_key + '_eet' + '.txt'
+        makedir_from_filename(filename_eet)
+        np.savetxt(filename_eet, eet_fit)
+        #nans = np.sum(diffs_array, axis=2)
+        #uc_fit[np.isnan(nans)] = np.nan
+        #eet_fit[np.isnan(nans)] = np.nan
+        #diffs_fit[np.isnan(nans)] = np.nan
+        #colors = categorical_cmap(1, len(uc_params)+2,
+        #    desaturated_first=True)
+        ### Plot
+        titles_rheo = [rheo_key + ' mosaic' for rheo_key in rheos.keys()]
+        filenames_rheo = [
+            save_dir_maps+Tef_key+'_'+rheo_key
+            for rheo_key in rheos.keys()]
+        filename_diff = save_dir_maps+'/'+Tef_key
+        if extended_plot is True:
+            fig = plt.figure(figsize=(len(rheos)*4+12,6))
+            gs = gridspec.GridSpec(1,len(rheos)+3)
+            axs_rheo = [fig.add_subplot(gs[0,n]) for n in range(len(rheos))]
+            axs_teq_vs_tef = [
+                fig.add_subplot(gs[0,len(rheos)+n]) for n in np.arange(3)]
+            filenames_rheo=[None]*len(rheos)
+            filename_diff = None
+        else:
+            axs_rheo = [None]*len(rheos)
+            axs_teq_vs_tef = None
+        for i, rheo in enumerate(rheos.values()):
+            u = np.unique(rheo['fit'][~np.isnan(rheo['fit'])])
+            bounds = np.concatenate(
+                ([min(u)-1], u[:-1]+np.diff(u)/2., [max(u)+1]))
+            ncolors = len(bounds) - 1
+            norm = mcolors.BoundaryNorm(bounds, ncolors)
+            cmap = plt.cm.get_cmap('viridis', ncolors)
+            cbar_ticks = bounds[:-1]+np.diff(bounds)/2.
+            cbar_tick_labels = [
+                rhe_data[str(int(round(val)))]['name'] for val in u]
+            heatmap_map(
+                rheo['fit'], colormap=cmap, cbar_limits=[None, None], norm=norm,
+                cbar_ticks=cbar_ticks, cbar_tick_labels=cbar_tick_labels,
+                ax=axs_rheo[i], filename=filenames_rheo[i],
+                title=titles_rheo[i])
+        eet_diff = eet_fit - Tef
+        sd = calc_deviation(eet_fit, Tef)
+        diff_map(
+            eet_fit, Tef, eet_diff, sd=sd,
+            colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+            cbar_limits=[0,100], cbar_limits_diff=[-100,100],
+            cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+            title_1='Espesor Elástico Equivalente',
+            title_2='Espesor Elástico Efectivo',
+            title_3='Diff. (EET eq. - EET ef.)',
+            axs=axs_teq_vs_tef, labelpad=-48, labelpad_diff=-56,
+            filename=filename_diff)
+        if extended_plot is True:
+            plt.tight_layout()
+            plt.show()
+
 if __name__ == '__main__':
     exec_input, direTer, direMec = exec_setup()
     t_input, m_input = input_setup()
@@ -331,56 +524,399 @@ if __name__ == '__main__':
     uc_params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     lm_params = [23,24,25,26,27,28,29,30]
     flm_params = [23]
+    rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     #### EET efectivos
-    eet_effective_list = [
-        {'id':'Te_Tassara',
-         'file': 'data/Te_invertido/Interpolados/Te_Tassara.txt',
-         'dir': 'Tassara_07/',
-         'colormap': eet_tassara_07},
-        {'id': 'Te_PG_400',
-         'file': 'data/Te_invertido/Interpolados/Te_PG_400.txt',
-         'dir': 'Perez_Gussinye_07/400/',
-         'colormap': eet_pg_07},
-        {'id': 'Te_PG_600',
-         'file': 'data/Te_invertido/Interpolados/Te_PG_600.txt',
-         'dir': 'Perez_Gussinye_07/600/',
-         'colormap': eet_pg_07},
-        {'id': 'Te_PG_800',
-         'file': 'data/Te_invertido/Interpolados/Te_PG_800.txt',
-         'dir': 'Perez_Gussinye_07/800/',
-         'colormap': eet_pg_07}]
-    #### EET Rheo
+    eet_effective_dict = { 
+        'Te_Tassara': {
+             'file': 'data/Te_invertido/Interpolados/Te_Tassara.txt',
+             'dir': 'Tassara_07/',
+             'colormap': eet_tassara_07},
+        'Te_PG_400': {
+             'file': 'data/Te_invertido/Interpolados/Te_PG_400.txt',
+             'dir': 'Perez_Gussinye_07/400/',
+             'colormap': eet_pg_07},
+        'Te_PG_600': {
+             'file': 'data/Te_invertido/Interpolados/Te_PG_600.txt',
+             'dir': 'Perez_Gussinye_07/600/',
+             'colormap': eet_pg_07},
+        'Te_PG_800': {
+             'file': 'data/Te_invertido/Interpolados/Te_PG_800.txt',
+             'dir': 'Perez_Gussinye_07/800/',
+             'colormap': eet_pg_07}}
+
+    #### EET Rheo ###########################################################
     #eets = rheo_exploration(
     #    eet_results(save_dir=save_dir + 'Rheo/EET/', plot=True))
     #eets_names = list(eets.keys())
     #eets_values = list(eets.values())
     #eet_deviation_from_prom(eets_values, eets_names, save_dir)
-    #### EET Rheo -> Applied Stress
+
+    #### EET Rheo -> Applied Stress ########################################
     #eets = rheo_exploration(
     #        functools.partial(applied_stress_exploration,
     #            eet_results(
     #                save_dir=save_dir + 'Applied_Stress/EET/', plot=True)))
-    #### EET Rheo -> Thermal
-    #eets = rheo_exploration(
-    #        functools.partial(thermal_exploration,
-    #            eet_results(
-    #                save_dir=save_dir + 'Thermal/EET/', plot=True)))
-    ### EET Rheo LC -> EET Rheo UC
-    #eets = rheo_exploration(
+
+    ### EET Rheo -> Thermal CASOS ##########################################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            functools.partial(thermal_exploration,
+    #                eet_results(
+    #                    save_dir=save_dir + 'Thermal_casos/EET/', plot=True)),
+    #                uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets_i = [
+    #    list(nested_result.values())[0]
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #eets_k_var = [
+    #    list(nested_result.values())[1]
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #eets_delta_icd = [
+    #    list(nested_result.values())[2]
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #eet_i_prom = sum(eets_i)/len(eets_i)
+    #eet_k_var_prom = sum(eets_k_var)/len(eets_k_var)
+    #eet_delta_icd_prom = sum(eets_delta_icd)/len(eets_delta_icd)
+    #sd_k_var = calc_deviation(eet_i_prom, eet_k_var_prom)
+    #sd_delta_icd = calc_deviation(eet_i_prom, eet_delta_icd_prom)
+    #save_dir_maps = save_dir + 'Thermal_casos/EET/Mapas/'
+    #save_dir_files = save_dir + 'Thermal_casos/EET/Archivos/'
+    #diff_map(
+    #    eet_i_prom, eet_k_var_prom, eet_i_prom - eet_k_var_prom, sd=sd_k_var,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=None,
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico Modelo Simple',
+    #    title_2='Espesor Elástico (Kcs:3.0, Kci:2.5, Kml:3.5)',
+    #    title_3='Diff. (EET simple - EET K variable)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    filename=save_dir_maps + 'diff_k_var')
+    #makedir_from_filename(save_dir_files + 'prom_k_var')
+    #np.savetxt(save_dir_files + 'prom_k_var', eet_k_var_prom)
+    #diff_map(
+    #    eet_i_prom, eet_delta_icd_prom, eet_i_prom - eet_delta_icd_prom,
+    #    sd=sd_delta_icd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=[-20,20],
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico Modelo Simple',
+    #    title_2='Espesor Elástico (delta = ICD)',
+    #    title_3='Diff. (EET simple - EET delta = ICD)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    filename=save_dir_maps + 'diff_delta_icd')
+    #makedir_from_filename(save_dir_files + 'prom_delta_icd')
+    #np.savetxt(save_dir_files + 'prom_delta_icd', eet_delta_icd_prom)
+
+    ### EET Rheo -> Thermal H ##############################################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            functools.partial(thermal_H_exploration,
+    #                eet_results(
+    #                    save_dir=save_dir + 'Thermal_H/EET/', plot=True)),
+    #                uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets = []
+    #eet_proms = []
+    #medias_eet_prom = []
+    #for i in range(6):
+    #    eets_i = [
+    #        list(nested_result.values())[i]
+    #        for result in results.values()
+    #        for nested_result in result.values()]
+    #    eets.append(eets_i)
+    #    eet_prom = sum(eets_i)/len(eets_i)
+    #    eet_proms.append(eet_prom)
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #sd = calc_deviation(eet_proms[-1], eet_proms[0])
+    #save_dir_maps = save_dir + 'Thermal_H/EET/Mapas/'
+    #save_dir_files = save_dir + 'Thermal_H/EET/Archivos/'
+    #fig = plt.figure(figsize=(12,8))
+    #gs = gridspec.GridSpec(4,3)
+    #axs = [fig.add_subplot(gs[:3,n]) for n in range(3)]
+    #diff_map(
+    #    eet_proms[0], eet_proms[-1], eet_proms[-1] - eet_proms[0], sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=None,
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1=r'Espesor Elástico (H: 0 W/$m^3$)',
+    #    title_2=r'Espesor Elástico (H: 5.0*10^-6 W/$m^3$)',
+    #    title_3='Diff. (EET H alto - EET H=0)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    axs=axs)#, filename=save_dir_maps + 'diff_h')
+    #makedir_from_filename(save_dir_files + 'prom_h_0')
+    #makedir_from_filename(save_dir_files + 'prom_h_alto')
+    #np.savetxt(save_dir_files + 'prom_h_0', eet_proms[0])
+    #np.savetxt(save_dir_files + 'prom_h_alto', eet_proms[-1])
+    #ax = fig.add_subplot(gs[3,:]) 
+    #index = np.linspace(0, 5.e-6, 6)
+    #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
+    #ax.bar(index, medias_eet_prom, alpha=.4, width=1.e-6, edgecolor='k')
+    #diff = max(medias_eet_prom) - min(medias_eet_prom)
+    #ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    #ax.set_xlim(index[0]-(1.e-6)/2, index[-1]+(1.e-6)/2)
+    #ax.set_ylim(min(medias_eet_prom)-0.2*diff, max(medias_eet_prom)+0.2*diff)
+    #ax.set_ylabel('Media del Espesor Elástico')
+    #ax.set_xlabel(r'H [W/$m^3$]')
+    #ax.grid(True)
+    #makedir_from_filename(save_dir_maps + 'diff_h')
+    #plt.tight_layout()
+    #plt.savefig(save_dir_maps + 'diff_h.png')
+    #plt.close()
+
+    #### EET Rheo -> Thermal K ##############################################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            functools.partial(thermal_K_exploration,
+    #                eet_results(
+    #                    save_dir=save_dir + 'Thermal_K/EET/', plot=True)),
+    #                uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets = []
+    #eet_proms = []
+    #medias_eet_prom = []
+    #for i in range(5):
+    #    eets_i = [
+    #        list(nested_result.values())[i]
+    #        for result in results.values()
+    #        for nested_result in result.values()]
+    #    eets.append(eets_i)
+    #    eet_prom = sum(eets_i)/len(eets_i)
+    #    eet_proms.append(eet_prom)
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #sd = calc_deviation(eet_proms[-1], eet_proms[0])
+    #save_dir_maps = save_dir + 'Thermal_K/EET/Mapas/'
+    #save_dir_files = save_dir + 'Thermal_K/EET/Archivos/'
+    #fig = plt.figure(figsize=(12,8))
+    #gs = gridspec.GridSpec(4,3)
+    #axs = [fig.add_subplot(gs[:3,n]) for n in range(3)]
+    #diff_map(
+    #    eet_proms[0], eet_proms[-1], eet_proms[-1] - eet_proms[0], sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=None,
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico (K: 1.0 W/mK)',
+    #    title_2='Espesor Elástico (K: 5.0 W/mK)',
+    #    title_3='Diff. (EET K alto - EET K bajo)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    axs=axs)
+    #makedir_from_filename(save_dir_files + 'prom_k_bajo')
+    #makedir_from_filename(save_dir_files + 'prom_k_alto')
+    #np.savetxt(save_dir_files + 'prom_k_bajo', eet_proms[0])
+    #np.savetxt(save_dir_files + 'prom_k_alto', eet_proms[-1])
+    #ax = fig.add_subplot(gs[3,:]) 
+    #index = np.linspace(1, 5, 5)
+    #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
+    #ax.bar(index, medias_eet_prom, alpha=.4, width=1, edgecolor='k')
+    #diff = max(medias_eet_prom) - min(medias_eet_prom)
+    ##ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    #ax.set_xlim(index[0]-0.5, index[-1]+0.5)
+    #ax.set_ylim(min(medias_eet_prom)-0.2*diff, max(medias_eet_prom)+0.2*diff)
+    #ax.set_ylabel('Media del Espesor Elástico')
+    #ax.set_xlabel('K [W/mK]')
+    #ax.grid(True)
+    #makedir_from_filename(save_dir_maps + 'diff_k')
+    #plt.tight_layout()
+    #plt.savefig(save_dir_maps + 'diff_k.png')
+    #plt.close()
+
+    #### EET Rheo -> Thermal Delta ##########################################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            functools.partial(thermal_delta_exploration,
+    #                eet_results(
+    #                    save_dir=save_dir + 'Thermal_delta/EET/', plot=True)),
+    #                uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets = []
+    #eet_proms = []
+    #medias_eet_prom = []
+    #for i in range(6):
+    #    eets_i = [
+    #        list(nested_result.values())[i]
+    #        for result in results.values()
+    #        for nested_result in result.values()]
+    #    eets.append(eets_i)
+    #    eet_prom = sum(eets_i)/len(eets_i)
+    #    eet_proms.append(eet_prom)
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #sd = calc_deviation(eet_proms[-1], eet_proms[0])
+    #save_dir_maps = save_dir + 'Thermal_delta/EET/Mapas/'
+    #save_dir_files = save_dir + 'Thermal_delta/EET/Archivos/'
+    #fig = plt.figure(figsize=(12,8))
+    #gs = gridspec.GridSpec(4,3)
+    #axs = [fig.add_subplot(gs[:3,n]) for n in range(3)]
+    #diff_map(
+    #    eet_proms[0], eet_proms[-1], eet_proms[-1] - eet_proms[0], sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=None,
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico (delta: 5 km.)',
+    #    title_2='Espesor Elástico (delta: 15 km.)',
+    #    title_3='Diff. (EET delta alto - EET delta bajo)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    axs=axs)
+    #makedir_from_filename(save_dir_files + 'prom_delta_bajo')
+    #makedir_from_filename(save_dir_files + 'prom_delta_alto')
+    #np.savetxt(save_dir_files + 'prom_delta_bajo', eet_proms[0])
+    #np.savetxt(save_dir_files + 'prom_delta_alto', eet_proms[-1])
+    #ax = fig.add_subplot(gs[3,:]) 
+    #index = np.linspace(5, 15, 6)
+    #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
+    #ax.bar(index, medias_eet_prom, alpha=.4, width=2, edgecolor='k')
+    #diff = max(medias_eet_prom) - min(medias_eet_prom)
+    ##ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    #ax.set_xticks(index)
+    #ax.set_xlim(index[0]-1, index[-1]+1)
+    #ax.set_ylim(min(medias_eet_prom)-0.2*diff, max(medias_eet_prom)+0.2*diff)
+    #ax.set_ylabel('Media del Espesor Elástico')
+    #ax.set_xlabel('delta [km]')
+    #ax.grid(True)
+    #makedir_from_filename(save_dir_maps + 'diff_delta')
+    #plt.tight_layout()
+    #plt.savefig(save_dir_maps + 'diff_delta.png')
+    #plt.close()
+
+    #### EET Rheo -> Applied Stress #########################################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            functools.partial(applied_stress_exploration,
+    #                eet_results(
+    #                    save_dir=save_dir + 'Applied_stress/EET/', plot=True)),
+    #                uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets = []
+    #eet_proms = []
+    #medias_eet_prom = []
+    #for i in range(5):
+    #    eets_i = [
+    #        list(nested_result.values())[i]
+    #        for result in results.values()
+    #        for nested_result in result.values()]
+    #    eets.append(eets_i)
+    #    eet_prom = sum(eets_i)/len(eets_i)
+    #    eet_proms.append(eet_prom)
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #sd = calc_deviation(eet_proms[-1], eet_proms[0])
+    #save_dir_maps = save_dir + 'Applied_stress/EET/Mapas/'
+    #save_dir_files = save_dir + 'Applied_stress/EET/Archivos/'
+    #fig = plt.figure(figsize=(12,8))
+    #gs = gridspec.GridSpec(4,3)
+    #axs = [fig.add_subplot(gs[:3,n]) for n in range(3)]
+    #diff_map(
+    #    eet_proms[0], eet_proms[-1], eet_proms[-1] - eet_proms[0], sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=None,
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico (Stress aplicado: 100 MPa)',
+    #    title_2='Espesor Elástico (Stress aplicado: 200 MPa)',
+    #    title_3='Diff. (EET stress alto - EET stress bajo)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    axs=axs)
+    #makedir_from_filename(save_dir_files + 'prom_applied_stress_bajo')
+    #makedir_from_filename(save_dir_files + 'prom_applied_stress_alto')
+    #np.savetxt(save_dir_files + 'prom_applied_stress_bajo', eet_proms[0])
+    #np.savetxt(save_dir_files + 'prom_applied_stress_alto', eet_proms[-1])
+    #ax = fig.add_subplot(gs[3,:]) 
+    #index = np.linspace(100, 200, 5)
+    #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
+    #ax.bar(index, medias_eet_prom, alpha=.4, width=25, edgecolor='k')
+    #diff = max(medias_eet_prom) - min(medias_eet_prom)
+    ##ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    #ax.set_xticks(index)
+    #ax.set_xlim(index[0]-12.5, index[-1]+12.5)
+    #ax.set_ylim(min(medias_eet_prom)-0.2*diff, max(medias_eet_prom)+0.2*diff)
+    #ax.set_ylabel('Media del Espesor Elástico')
+    #ax.set_xlabel('Stress aplicado [MPa]')
+    #ax.grid(True)
+    #makedir_from_filename(save_dir_maps + 'diff_applied_stress')
+    #plt.tight_layout()
+    #plt.savefig(save_dir_maps + 'diff_applied_stress.png')
+    #plt.close()
+
+    ### EET Rheo -> Variabilidad corteza superior ##########################
+    #results = rheo_exploration(
     #        functools.partial(rheo_exploration,
     #            eet_results(
-    #                save_dir=save_dir + 'Rheo/EET/', plot=True),
-    #            uc_params=uc_params),
-    #       lc_params=lc_params)
-    ### EET Wrong
+    #                save_dir=save_dir + 'Variability_UC/EET/', plot=True),
+    #            uc_params=[1,10]),
+    #        lc_params=lc_params)
+    #eets_quartzite = [
+    #    list(result.values())[0]
+    #    for result in results.values()]
+    #eets_carrara_m = [
+    #    list(result.values())[1]
+    #    for result in results.values()]
+    #eet_prom_quartzite = sum(eets_quartzite)/len(eets_quartzite)
+    #eet_prom_carrara_m = sum(eets_carrara_m)/len(eets_carrara_m)
+    #sd = calc_deviation(eet_prom_carrara_m, eet_prom_quartzite)
+    #save_dir_maps = save_dir + 'Variability_UC/EET/Mapas/'
+    #save_dir_files = save_dir + 'Variability_UC/EET/Archivos/'
+    #diff_map(
+    #    eet_prom_quartzite, eet_prom_carrara_m,
+    #    eet_prom_carrara_m - eet_prom_quartzite, sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=[-50,50],
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico Cs: Quartzite',
+    #    title_2='Espesor Elástico Cs: Carrara Marble',
+    #    title_3='Diff. (EET Carrara Marble - EET Quartzite)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    filename=save_dir_maps + 'uc_var.png')
+    #makedir_from_filename(save_dir_files + 'eet_prom_quartzite')
+    #makedir_from_filename(save_dir_files + 'eet_prom_carrara_marble')
+    #np.savetxt(save_dir_files + 'eet_prom_quartzite', eet_prom_quartzite)
+    #np.savetxt(save_dir_files + 'eet_prom_carrara_marble', eet_prom_carrara_m)
+
+    #### EET Rheo -> Variabilidad corteza inferior ##########################
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            eet_results(
+    #                save_dir=save_dir + 'Variability_LC/EET/', plot=True),
+    #            lc_params=[11,22]),
+    #        uc_params=uc_params)
+    #eets_qz_diorite = [
+    #    list(result.values())[0]
+    #    for result in results.values()]
+    #eets_cpxnite_w = [
+    #    list(result.values())[1]
+    #    for result in results.values()]
+    #eet_prom_qz_diorite = sum(eets_qz_diorite)/len(eets_qz_diorite)
+    #eet_prom_cpxnite_w = sum(eets_cpxnite_w)/len(eets_cpxnite_w)
+    #sd = calc_deviation(eet_prom_cpxnite_w, eet_prom_qz_diorite)
+    #save_dir_maps = save_dir + 'Variability_LC/EET/Mapas/'
+    #save_dir_files = save_dir + 'Variability_LC/EET/Archivos/'
+    #diff_map(
+    #    eet_prom_qz_diorite, eet_prom_cpxnite_w,
+    #    eet_prom_cpxnite_w - eet_prom_qz_diorite, sd=sd,
+    #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),
+    #    cbar_limits=[0,100], cbar_limits_diff=[-50,50],
+    #    cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+    #    title_1='Espesor Elástico Ci: Qz. Diorite',
+    #    title_2='Espesor Elástico Ci: Clinopyroxenite Wet',
+    #    title_3='Diff. (EET Cpxnite - EET Qz.D.)',
+    #    labelpad=-48, labelpad_diff=-56,
+    #    filename=save_dir_maps + 'lc_var.png')
+    #makedir_from_filename(save_dir_files + 'eet_prom_qz_diorite')
+    #makedir_from_filename(save_dir_files + 'eet_prom_cpxnite_w')
+    #np.savetxt(save_dir_files + 'eet_prom_qz_diorite', eet_prom_qz_diorite)
+    #np.savetxt(save_dir_files + 'eet_prom_cpxnite_w', eet_prom_cpxnite_w)
+
+
+    ### EET Wrong ############################################################
     #eets = rheo_exploration(
     #            functools.partial(rheo_exploration,
     #                eet_wrong_results(
     #                    save_dir = save_dir + 'EET_wrong/', plot=True),
-    #                uc_params=uc_params),
-    #            lc_params=lc_params)
-    #eets_right = [uc['eet'] for lc in list(eets.values()) for uc in list(lc.values())]
-    #eets_wrong = [uc['eet_wrong'] for lc in list(eets.values()) for uc in list(lc.values())]
+    #                lc_params=lc_params),
+    #            uc_params=uc_params)
+    #eets_right = [
+    #    uc['eet'] for lc in list(eets.values()) for uc in list(lc.values())]
+    #eets_wrong = [
+    #    uc['eet_wrong'] for lc in list(eets.values())
+    #    for uc in list(lc.values())]
     #eets_right_prom = sum(eets_right)/len(eets_right)
     #eets_wrong_prom = sum(eets_wrong)/len(eets_wrong)
     #eets_diff = eets_right_prom - eets_wrong_prom
@@ -396,41 +932,50 @@ if __name__ == '__main__':
     #    title_3='Diff. (EET corregido - EET previo)',
     #    labelpad=-48, labelpad_diff=-56,
     #    filename=save_dir + 'EET_wrong/Prom')
-    ### EET eq. vs EET ef.
-    #eets = rheo_exploration(
-    #           eet_equivalent_vs_effective_results(Tef, save_dir = save_dir + 'Teq_vs_Tef/', plot=True))
-    results = rheo_exploration(
-                eet_equivalent_vs_effective_results(
-                    eet_effective_list, save_dir = save_dir + 'Teq_vs_Tef/',
-                    plot=True),
-                uc_params=uc_params)
-    uc_rheos = [result['uc'] for result in list(results.values())]
-    #print(results.values())
-    diffs_tassara_07 = [
-        result['diffs']['Te_Tassara'] for result in list(results.values())]
-    uc_array = np.dstack(tuple(uc_rheos))
-    diffs_array = np.dstack(tuple(diffs_tassara_07))
-    diffs_array_m = np.ma.array(diffs_array, mask=np.isnan(diffs_array))
-    k = np.nanargmin(abs(diffs_array_m), axis=2)
-    m,n = k.shape
-    i,j = np.ogrid[:m,:n]
-    uc_fit = uc_array[i,j,k]
-    nans = np.sum(diffs_array, axis=2)
-    uc_fit[np.isnan(nans)] = 0 
-    print(np.unique(uc_fit[~np.isnan(uc_fit)]))
-    fig = plt.figure()
-    plt.imshow(uc_fit.T, vmin=0, vmax=10)
-    plt.show()
 
-    # Integrated Strength
+    ### EET eq. vs EET ef. / Mosaics #########################################
+    #results = rheo_exploration(
+    #            eet_equivalent_vs_effective_results(
+    #                eet_effective_dict, save_dir = save_dir + 'Teq_vs_Tef/',
+    #                plot=True),
+    #            uc_params=uc_params)
+    #eets = [result['eet'] for result in list(results.values())]
+    #eets_diffs = [result['diffs'] for result in list(results.values())]
+    #uc_rheos = [result['uc'] for result in list(results.values())]
+    #results = rheo_exploration(
+    #    functools.partial(rheo_exploration,
+    #        eet_equivalent_vs_effective_results(
+    #            eet_effective_dict, save_dir=save_dir + 'Teq_vs_Tef/lc_uc/',
+    #            plot=True),
+    #        uc_params=uc_params),
+    #    lc_params=lc_params)
+    #eets = [
+    #    nested_result['eet']
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #eets_diffs = [
+    #    nested_result['diffs']
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #uc_rheos = [
+    #    nested_result['uc']
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #lc_rheos = [
+    #    nested_result['lc']
+    #    for result in results.values()
+    #    for nested_result in result.values()]
+    #get_rheology_mosaic(
+    #    eet_effective_dict, eets, eets_diffs,
+    #    uc_rheos=uc_rheos, lc_rheos=lc_rheos, lm_rheos=None,
+    #    Tef_keys=['Te_Tassara', 'Te_PG_400', 'Te_PG_600', 'Te_PG_800'],
+    #    save_dir=save_dir + 'Teq_vs_Tef/lc_uc/',
+    #    extended_plot=False)
+    #eets_prom = SpatialArray2D(
+    #    sum(eets)/len(eets), eets[0].cs).mask_irrelevant_eet()
+    #plot_eet_equivalent_vs_effective(eet_effective_dict, eets_prom,
+    #    save_dir='Teq_vs_Tef/lc_uc/Mapas/', name='prom_diff')
+
+    ## Integrated Strength ################################################
     #ist = rheo_exploration(
     #    ist_results(save_dir=save_dir + 'Rheo/IST/', plot=True))
-
-    """
-    if len(flm_params) == 2:
-        for i in np.arange(len(eets_flm)):
-            flm_dir = save_dir + 'Mapas/FLM/'
-            makedir(flm_dir)
-            eet_diff_map(eets_no_flm[i], eets_flm[i], colormap=jet_white_r,
-                save_dir=flm_dir, name=eets_names[i*2])
-    """

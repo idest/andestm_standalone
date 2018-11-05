@@ -22,8 +22,8 @@ if __name__ == '__main__':
     bys_t = model.mm.bys_t
     bys_c = model.mm.bys_c
     #geotherm_1D = geotherm[90,0,:]
-    lat = -30.
-    lon = -70.
+    lat = -22.2
+    lon = -64.4
     depth_from_topo = model.mm.depth_from_topo.point_depth_profile(latitude=lat,longitude=lon)
     topo_index = np.where(depth_from_topo == 0)[0]
     topo_depth = model.cs.get_z_axis()[topo_index]
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     #print(lc_yield_temps_exact_dic)
     #print(lm_yield_temps_interp_dic)
     #print(lm_yield_temps_exact_dic)
-    fig = plt.figure(figsize=(12,7))
+    fig = plt.figure(figsize=(12,7)) #12,7
     min_z = z_axis[np.nanargmax(geotherm_1D)]
     max_z = 5
     major_z_ticks = np.arange(0, min_z+1, -25)

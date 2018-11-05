@@ -88,10 +88,12 @@ if __name__ == '__main__':
             model.mm.get_eet(), colormap=jet_white_r, cbar_label='EET [km]',
             cbar_limits=[0,100], title='Effective Elastic Thickness',
             filename=maps_dir_mec + 'eet', earthquakes=eqs)
+        integrated_strength_gpa = model.mm.get_integrated_strength()/-1000.
         heatmap_map(
-            model.mm.get_integrated_strength(), colormap=jet_white,
-            cbar_label='Integrated Strength [Mpa]', title='Integrated Strength',
-            filename=maps_dir_mec + 'i_strength', earthquakes=eqs)
+            integrated_strength_gpa, colormap=jet_white_r,
+            cbar_label='Integrated Strength [Gpa]', title='Integrated Strength',
+            filename=maps_dir_mec + 'i_strength', labelpad=-45,
+            cbar_limits=[0,200], earthquakes=eqs)
 
     # Data and Models Scatter Plot
     if exec_input.xt3:

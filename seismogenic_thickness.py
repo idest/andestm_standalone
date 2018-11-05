@@ -15,114 +15,194 @@ cs = CoordinateSystem(data.get_cs_data(), 0.2, 1)
 x_axis = cs.get_x_axis()
 y_axis = cs.get_y_axis()
 
-# Earthquakes CSN
-eqs_csn = pd.read_excel('data/earthquakes/CSN_2000_2018_C_SB30.xlsx')
-eqs_csn_ISA = eqs_csn[(eqs_csn['ISA'] == True)].copy()
-eqs_csn_ISA_OSB = eqs_csn[(eqs_csn['ISA'] == True) & (eqs_csn['OSB'] == True)].copy()
-# Earthquakes USGS
-#eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30.xlsx')
-#eqs_usgs_ISA = eqs_usgs[(eqs_usgs['ISA'] == True)].copy()
-#eqs_usgs_ISA_OSB = eqs_usgs[(eqs_usgs['ISA'] == True) & (eqs_usgs['OSB'] == True)].copy()
-## Earthquakes CSN & USGS
-#eqs = pd.concat([eqs_usgs, eqs_csn], ignore_index=True)
-#eqs_ISA = eqs[(eqs['ISA'] == True)].copy()
-#eqs_ISA_OSB = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)].copy()
-
-
-#eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30.xlsx')
+###############################################################################
+#/////////////////////////////////////////////////////////////////////////////#
+#################### READ AND WRITE FILE WITH LON LAT BINS ####################
+#/////////////////////////////////////////////////////////////////////////////#
+###############################################################################
+#-----------------------------------------------------------------------------#
+########################## Define Lot Lat Bins ################################
+#-----------------------------------------------------------------------------#
 lat_bins = np.append(y_axis[::-1]-0.1, y_axis[0]+0.1)
 lat_labels = y_axis[::-1]
 lon_bins = np.append(x_axis-0.1, x_axis[-1]+0.1)
 lon_labels = x_axis
-
-def get_seismogenic_thickness(eqs):
+def get_lon_lat_bins(eqs, lat_bins, lon_bins, lat_labels, lon_labels):
     lat_bin = pd.cut(eqs['latitude'].values, lat_bins, labels=lat_labels)
     lon_bin = pd.cut(eqs['longitude'].values, lon_bins, labels=lon_labels)
     eqs['latitude_bin'] = lat_bin
     eqs['longitude_bin'] = lon_bin
+    return eqs
+#-----------------------------------------------------------------------------#
+########################## Earthquakes CSN ####################################
+#-----------------------------------------------------------------------------#
+#eqs_csn = pd.read_excel('data/earthquakes/CSN_2000_2018_C_SB30.xlsx')
+#eqs_csn = get_lon_lat_bins(eqs_csn, lat_bins, lon_bins, lat_labels, lon_labels)
+#writer = pd.ExcelWriter('data/earthquakes/CSN_2000_2018_C_SB30_BINS.xlsx')
+#eqs_csn.to_excel(writer, 'Sheet1')
+#writer.save()
+#-----------------------------------------------------------------------------#
+######################### Earthquakes USGS ####################################
+#-----------------------------------------------------------------------------#
+#eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30.xlsx')
+#eqs_usgs = get_lon_lat_bins(eqs_usgs, lat_bins, lon_bins, lat_labels, lon_labels)
+#writer = pd.ExcelWriter('data/earthquakes/USGS_1900_2018_C_SB30_BINS.xlsx')
+#eqs_csn.to_excel(writer, 'Sheet1')
+#writer.save()
+###############################################################################
 
+
+print('Reading and processing seismogenic thickness')
+###############################################################################
+#/////////////////////////////////////////////////////////////////////////////#
+######################### GET SEISMOGENIC THICKNESS ###########################
+#/////////////////////////////////////////////////////////////////////////////#
+###############################################################################
+#-----------------------------------------------------------------------------#
+######################## Define Seismogenic Thickness #########################
+#-----------------------------------------------------------------------------#
+def get_seismogenic_thickness(eqs):
     seismogenic_ths = np.zeros((len(x_axis), len(y_axis)))*np.nan
     for lon_idx,lon in enumerate(x_axis):
         for lat_idx,lat in enumerate(y_axis):
+            #current_bin_eqs = eqs[
+            #        (eqs['longitude_bin'] == lon) &
+            #        (eqs['latitude_bin'] == lat)]
             current_bin_eqs = eqs[
-                    (eqs['longitude_bin'] == lon) &
-                    (eqs['latitude_bin'] == lat)]
+                    (np.isclose(eqs['longitude_bin'], lon)) &
+                    (np.isclose(eqs['latitude_bin'], lat))]
             seismogenic_ths[lon_idx, lat_idx] = current_bin_eqs['depth'].max()
     return SpatialArray2D(seismogenic_ths, cs)
+#-----------------------------------------------------------------------------#
+########################## Earthquakes CSN ####################################
+#-----------------------------------------------------------------------------#
+eqs_csn = pd.read_excel('data/earthquakes/CSN_2000_2018_C_SB30_BINS.xlsx',
+   usecols=[7,8,9,10,22,23,24,25])
+########### ALL
+st_csn = get_seismogenic_thickness(eqs_csn)
+############ ISA
+eqs_csn_ISA = eqs_csn[(eqs_csn['ISA'] == True)].copy()
+st_csn_ISA = get_seismogenic_thickness(eqs_csn_ISA) 
+############ ISA & OSB
+eqs_csn_ISA_OSB = eqs_csn[
+    (eqs_csn['ISA'] == True) & (eqs_csn['OSB'] == True)].copy()
+st_csn_ISA_OSB = get_seismogenic_thickness(eqs_csn_ISA_OSB)
+############ ISA <50 km
+eqs_csn_ISA_LT50 = eqs_csn[
+    (eqs_csn['ISA'] == True) & (eqs_csn['depth'] <= 50.)].copy()
+st_csn_ISA_LT50 = get_seismogenic_thickness(eqs_csn_ISA_LT50) 
+############ ISA & OSB < 50 km
+eqs_csn_ISA_OSB_LT50 = eqs_csn[
+    (eqs_csn['ISA'] == True)& (eqs_csn['OSB'] == True)
+    & (eqs_csn['depth'] <= 50.)].copy()
+st_csn_ISA_OSB_LT50 = get_seismogenic_thickness(eqs_csn_ISA_OSB_LT50)
+#-----------------------------------------------------------------------------#
+######################### Earthquakes USGS ####################################
+#-----------------------------------------------------------------------------#
+#eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30_BINS.xlsx',
+#   usecols=[2,3,4,5,24,25,26,27])
+############ ALL
+#st_usgs = get_seismogenic_thickness(eqs_usgs)
+############ ISA
+#eqs_usgs_ISA = eqs_usgs[(eqs_usgs['ISA'] == True)].copy()
+#st_usgs_ISA = get_seismogenic_thickness(eqs_usgs_ISA) 
+############ ISA & OSB
+#eqs_usgs_ISA_OSB = eqs_usgs[
+#    (eqs_usgs['ISA'] == True) & (eqs_usgs['OSB'] == True)].copy()
+#st_usgs_ISA_OSB = get_seismogenic_thickness(eqs_usgs_ISA_OSB)
+#-----------------------------------------------------------------------------#
+###################### Earthquakes USGS & CSN #################################
+#-----------------------------------------------------------------------------#
+#eqs_csn = pd.read_excel('data/earthquakes/CSN_2000_2018_C_SB30_BINS.xlsx',
+#   usecols=[7,8,9,10,22,23,24,25])
+#eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30_BINS.xlsx',
+#   usecols=[2,3,4,5,24,25,26,27])
+#eqs = pd.concat([eqs_usgs, eqs_csn], ignore_index=True)
+############ ALL
+#st = get_seismogenic_thickness(eqs)
+############ ISA
+#eqs_ISA = eqs[(eqs['ISA'] == True)].copy()
+############ ISA & OSB
+#eqs_ISA_OSB = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)].copy()
+###############################################################################
 
-seismogenic_thickness_csn = get_seismogenic_thickness(eqs_csn)
-seismogenic_thickness_csn_ISA = get_seismogenic_thickness(eqs_csn_ISA) 
-seismogenic_thickness_csn_ISA_OSB = get_seismogenic_thickness(eqs_csn_ISA_OSB)
-#seismogenic_thickness_usgs = get_seismogenic_thickness(eqs_usgs)
-#seismogenic_thickness_usgs_ISA = get_seismogenic_thickness(eqs_usgs_ISA) 
-#seismogenic_thickness_usgs_ISA_OSB = get_seismogenic_thickness(eqs_usgs_ISA_OSB)
-#seismogenic_thickness = get_seismogenic_thickness(eqs)
-#seismogenic_thickness_ISA = get_seismogenic_thickness(eqs_ISA) 
-#seismogenic_thickness_ISA_OSB = get_seismogenic_thickness(eqs_ISA_OSB)
-#fig = plt.figure(figsize=(12,18))
-#gs = gridspec.GridSpec(3,3)
-#ax1 = fig.add_subplot(gs[0,0])
-#heatmap_map(
-#    seismogenic_thickness_csn, ax=ax1,
-#    title='Eqs. CSN ({:d})'.format(len(eqs_csn.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax2 = fig.add_subplot(gs[0,1])
-#heatmap_map(
-#    seismogenic_thickness_csn_ISA, ax=ax2,
-#    title='Eqs. CSN - ISA ({:d})'.format(len(eqs_csn_ISA.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax3 = fig.add_subplot(gs[0,2])
-#heatmap_map(
-#    seismogenic_thickness_csn_ISA_OSB, ax=ax3,
-#    title='Eqs. CSN - ISA - OSB (30 km.) ({:d})'.format(len(eqs_csn_ISA_OSB.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax4 = fig.add_subplot(gs[1,0])
-#heatmap_map(
-#    seismogenic_thickness_usgs, ax=ax4,
-#    title='Eqs. USGS ({:d})'.format(len(eqs_usgs.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax5 = fig.add_subplot(gs[1,1])
-#heatmap_map(
-#    seismogenic_thickness_usgs_ISA, ax=ax5,
-#    title='Eqs. USGS - ISA ({:d})'.format(len(eqs_usgs_ISA.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax6 = fig.add_subplot(gs[1,2])
-#heatmap_map(
-#    seismogenic_thickness_usgs_ISA_OSB, ax=ax6,
-#    title='Eqs. USGS - ISA - OSB (30 km.) ({:d})'.format(len(eqs_usgs_ISA_OSB.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax7 = fig.add_subplot(gs[2,0])
-#heatmap_map(
-#    seismogenic_thickness, ax=ax7,
-#    title='Eqs. USGS & CSN ({:d})'.format(len(eqs.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax8 = fig.add_subplot(gs[2,1])
-#heatmap_map(
-#    seismogenic_thickness_ISA, ax=ax8,
-#    title='Eqs. USGS & CSN - ISA ({:d})'.format(len(eqs_ISA.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-#ax9 = fig.add_subplot(gs[2,2])
-#heatmap_map(
-#    seismogenic_thickness_ISA_OSB, ax=ax9,
-#    title='Eqs. USGS & CSN - ISA - OSB (30 km.) ({:d})'.format(len(eqs_ISA_OSB.index)),
-#    colormap='viridis', cbar_limits=[0,400])
-model, _, _ = termomecanico(*input_setup())
-s1 = seismogenic_thickness_csn[~np.isnan(seismogenic_thickness_csn)]
-e1 = model.mm.get_eet()[~np.isnan(seismogenic_thickness_csn)]
-s2 = seismogenic_thickness_csn_ISA[~np.isnan(seismogenic_thickness_csn_ISA)]
-e2 = model.mm.get_eet()[~np.isnan(seismogenic_thickness_csn_ISA)]
-s3 = seismogenic_thickness_csn_ISA_OSB[~np.isnan(seismogenic_thickness_csn_ISA_OSB)]
-e3 = model.mm.get_eet()[~np.isnan(seismogenic_thickness_csn_ISA_OSB)]
-fig = plt.figure(figsize=(12,4))
-gs = gridspec.GridSpec(1,3)
-ax1 = fig.add_subplot(gs[0,0])
-ax1.scatter(s1,e1)
-ax2 = fig.add_subplot(gs[0,1])
-ax2.scatter(s2,e2)
-ax3 = fig.add_subplot(gs[0,2])
-ax3.scatter(s3,e3)
-plt.tight_layout()
+
+###############################################################################
+#/////////////////////////////////////////////////////////////////////////////#
+######################## DEFINE PLOTTING FUNCTIONS ############################
+#/////////////////////////////////////////////////////////////////////////////#
+###############################################################################
+def plot_seismogenic_thickness(
+        st_list, titles_list=None, quantity_list=None, cbar_limits=None):
+    fig = plt.figure(figsize=(len(st_list)*4,6))
+    gs = gridspec.GridSpec(1,len(st_list))
+    axs = [fig.add_subplot(gs[0,n]) for n in range(len(st_list))]
+    for idx, st in enumerate(st_list):
+        quantity_str = ''
+        if quantity_list:
+            quantity_str = ' ({:d})'.format(quantity_list[idx])
+        if titles_list:
+            title = titles_list[idx] + quantity_str
+        else:
+            title = str(idx)
+        heatmap_map(
+            st, ax=axs[idx], title=title, colormap='viridis',
+            cbar_limits=cbar_limits)
+    plt.tight_layout()
+    #plt.show()
+def plot_seismogenic_thickness_vs_eet_scatter(
+        st_list, eet_list, titles_list=None, quantity_list=None):
+    fig = plt.figure(figsize=(len(st_list)*4,4))
+    gs = gridspec.GridSpec(1,len(st_list))
+    axs = [fig.add_subplot(gs[0,n]) for n in range(len(st_list))]
+    for idx, (st, eet) in enumerate(zip(st_list, eet_list)):
+        s = st[~np.isnan(st)]
+        e = eet[~np.isnan(st)]
+        quantity_str = ''
+        if quantity_list:
+            quantity_str = ' ({:d})'.format(quantity_list[idx])
+        if titles_list:
+            title = titles_list[idx] + quantity_str
+        else:
+            title = str(idx)
+        axs[idx].scatter(s,e)
+        axs[idx].set_title(title)
+    plt.tight_layout()
+    #plt.show()
+
+###############################################################################
+#/////////////////////////////////////////////////////////////////////////////#
+######################## GET MODEL EET FOR COMPARISON #########################
+#/////////////////////////////////////////////////////////////////////////////#
+###############################################################################
+
+print('Running tasks')
+plot_seismogenic_thickness(
+    [st_csn_ISA,
+     st_csn_ISA_OSB,
+     st_csn_ISA_LT50,
+     st_csn_ISA_OSB_LT50],
+    ['CSN_ISA', 'CSN_ISA_OSB', 'CSN_ISA_LT50', 'CSN_ISA_OSB_LT50'],
+    [len(eqs_csn_ISA.index),
+     len(eqs_csn_ISA_OSB.index),
+     len(eqs_csn_ISA_LT50.index),
+     len(eqs_csn_ISA_OSB_LT50.index)])
+
+#model, _, _ = termomecanico(*input_setup())
+#eet = model.mm.get_eet()
+eet_T07 = np.loadtxt('data/Te_invertido/Interpolados/Te_Tassara.txt')
+eet_T07 = SpatialArray2D(eet_T07, cs).mask_irrelevant_eet()
+
+plot_seismogenic_thickness_vs_eet_scatter(
+    [st_csn_ISA,
+     st_csn_ISA_OSB,
+     st_csn_ISA_LT50,
+     st_csn_ISA_OSB_LT50],
+    [eet_T07, eet_T07, eet_T07, eet_T07],
+    ['CSN_ISA', 'CSN_ISA_OSB', 'CSN_ISA_LT50', 'CSN_ISA_OSB_LT50'],
+    [len(eqs_csn_ISA.index),
+     len(eqs_csn_ISA_OSB.index),
+     len(eqs_csn_ISA_LT50.index),
+     len(eqs_csn_ISA_OSB_LT50.index)])
 plt.show()
-
-
-#print('d')
+#model, _, _ = termomecanico(*input_setup())

@@ -158,7 +158,8 @@ def boolean_map(
 def heatmap_map(
         array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
         filename=None, return_width_ratio=False,
-        cbar_label=None, title=None, labelpad=-40, earthquakes=None):
+        cbar_label=None, title=None, labelpad=-40, earthquakes=None,
+        cbar_ticks=None, cbar_tick_labels=None, norm=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -182,14 +183,31 @@ def heatmap_map(
     kwargs = {}
     if colormap is not None:
         kwargs['cmap'] = colormap
+    plt.sca(ax)
     array_2D_heatmap = map.pcolormesh(
         xx, yy, array_2D_masked.T, shading='gouraud', alpha=alpha,
-        vmin=cbar_min, vmax=cbar_max, **kwargs)
+        vmin=cbar_min, vmax=cbar_max, norm=norm, **kwargs)
+    # Format Coord (Interactive Plot)
+    def format_coord(x,y):
+        cs = array_2D.cs
+        lon = cs.round_to_step(x, step=0.2, prec=1)
+        lat = cs.round_to_step(y, step=0.2, prec=1)
+        if (lon > cs.data.min_lon and lon < cs.data.max_lon
+                and lat > cs.data.min_lat and lat < cs.data.max_lat):
+            z = array_2D.extract_point(latitude=lat, longitude=lon)
+            return 'x={:2.1f}, y={:2.1f}, z={:1.4f}'.format(lon, lat, z)
+        else:
+            return 'x={:2.1f}, y={:2.1f}'.format(lon, lat)
+    ax.format_coord = format_coord
     # Colorbar
     divider = make_axes_locatable(ax)
     cbar_ax = divider.append_axes('right', '5%', pad='12%')
     plt.sca(ax)
-    cbar = plt.colorbar(array_2D_heatmap, cax=cbar_ax)# pad=0.2)
+    cbar = plt.colorbar(
+        array_2D_heatmap, ticks=cbar_ticks, cax=cbar_ax)
+    if cbar_tick_labels is not None:
+        cbar.ax.set_yticklabels(cbar_tick_labels)
+    # pad=0.2)
     if cbar_label is not None:
         cbar.set_label(cbar_label, rotation=90, labelpad=labelpad)
     # Title
@@ -213,9 +231,16 @@ def diff_map(array_1, array_2, diff, sd=None,
         cbar_label=None, cbar_label_diff=None,
         cbar_limits=None, cbar_limits_diff=None,
         title_1='Matriz 1', title_2='Matriz 2', title_3='Dif. M1 - M2',
-        filename=None, labelpad=-45, labelpad_diff=-45):
-    fig = plt.figure(figsize=(12,6))
-    gs = gridspec.GridSpec(1,3)
+        axs=None, filename=None, labelpad=-45, labelpad_diff=-45):
+    # Axes and map setup
+    if axs is None:
+        fig = plt.figure(figsize=(12,6))
+        nc = 3
+        gs = gridspec.GridSpec(1,nc)
+        axs = [fig.add_subplot(gs[0,n]) for n in np.arange(nc)]
+        #axs = plt.subplots(1,3,figsize=(12,6))
+    #fig = plt.figure(figsize=(12,6))
+    #gs = gridspec.GridSpec(1,3)
     if cbar_limits is None:
         cbar_max = max(np.nanmax(array_1), np.nanmax(array_2))
         cbar_min = min(np.nanmin(array_1), np.nanmin(array_2))
@@ -224,7 +249,9 @@ def diff_map(array_1, array_2, diff, sd=None,
         cbar_max_abs = max(np.nanmax(diff), abs(np.nanmin(diff)))
         cbar_limits_diff = [-cbar_max_abs, cbar_max_abs]
     # Axis 1: array_1
-    ax1 = fig.add_subplot(gs[0,0])
+    #ax1 = fig.add_subplot(gs[0,0])
+    ax1 = axs[0]
+    plt.sca(ax1)
     map1 = base_map(topo=False)
     wr1 = heatmap_map(
         array_1, colormap=colormap, cbar_label=cbar_label,
@@ -232,7 +259,9 @@ def diff_map(array_1, array_2, diff, sd=None,
         title=title_1, map=map1, ax=ax1,
         return_width_ratio=True, labelpad=labelpad)
     # Axis 2: array_2 
-    ax2 = fig.add_subplot(gs[0,1])
+    #ax2 = fig.add_subplot(gs[0,1])
+    ax2 = axs[1]
+    plt.sca(ax2)
     map2 = base_map(topo=False)
     wr2 = heatmap_map(
         array_2, colormap=colormap, cbar_label=cbar_label,
@@ -241,10 +270,12 @@ def diff_map(array_1, array_2, diff, sd=None,
         return_width_ratio=True, labelpad=labelpad)
     ax2.set_yticks([])
     # Axis 3: Diff: EET equivalente - EET efectivo
-    ax3 = fig.add_subplot(gs[0,2])
+    #ax3 = fig.add_subplot(gs[0,2])
+    ax3 = axs[2]
+    plt.sca(ax3)
     map3 = base_map(topo=False)
     if sd is not None:
-        sd_string = ' {:.2f}'.format(sd)
+        sd_string = ' D.E.: {:.2f}'.format(sd)
     else:
         sd_string = ''
     wr3 = heatmap_map(
@@ -258,7 +289,7 @@ def diff_map(array_1, array_2, diff, sd=None,
         makedir_from_filename(filename)
         filename = filename + '.png'
         plt.savefig(filename)
-    plt.close()
+        plt.close()
 
 def get_map_scatter_function(data_coords, data_types, map):
     # Coords

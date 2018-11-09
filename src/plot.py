@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 from matplotlib.colors import Normalize
 from src.colormaps import jet_white_r, get_diff_cmap, get_elevation_diff_cmap
 from mpl_toolkits.basemap import Basemap
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from src.utils import MidPointNorm, round_to_1, get_magnitude
 
 def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
@@ -170,7 +170,7 @@ def heatmap_map(
         eqs_lon = earthquakes['longitude']
         eqs_lat = earthquakes['latitude']
         scatter = map.scatter(
-            eqs_lon, eqs_lat, 1., c=earthquakes['color'], latlon=True,
+            eqs_lon, eqs_lat, .5, c=earthquakes['color'], latlon=True,
             zorder=1000)
     # Pcolormesh
     x_axis = array_2D.cs.get_x_axis()

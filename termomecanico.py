@@ -34,14 +34,16 @@ if __name__ == '__main__':
         if exec_input.eqs == 1 or exec_input.eqs == 3:
             eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30.xlsx",
                     sheet_name="Sheet1")
-            eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            #eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            eqs = eqs[(eqs['ISA'] == True)]
             eqs['color'] = 'black'
             eqs_csn = eqs
         if exec_input.eqs == 2 or exec_input.eqs == 3:
             eqs = pd.read_excel("data/earthquakes/USGS_1900_2018_C_SB30.xlsx",
                     sheet_name="Sheet1")
             eqs['color'] = 'black'
-            eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            #eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            eqs = eqs[(eqs['ISA'] == True)]
             eqs_usgs = eqs
         if exec_input.eqs == 3:
             eqs_csn['color'] = 'black'
@@ -79,8 +81,15 @@ if __name__ == '__main__':
         heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
         h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
         heatmap_map(h_prom, filename=maps_dir + 'h_prom_map')
-        labslab = model.gm.get_slab_lab()
-        heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='afmhot')
+        labslab = model.gm.get_slab_lab().mask_irrelevant()
+        moho = model.gm.get_moho().mask_irrelevant()
+        icd = model.gm.get_icd().mask_irrelevant()
+        topo = model.gm.get_topo()
+        heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='viridis')
+        heatmap_map(moho, filename=maps_dir + 'moho', colormap='viridis')
+        heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
+        heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
+
 
     if exec_input.xm1:
         maps_dir_mec = direMec + 'Mapas/'

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import multiprocessing as mp
 import resource
 import sys
@@ -13,8 +14,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import compress
 from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
-from src.utils import makedir, makedir_from_filename
-from src.plot import heatmap_map, base_map, boolean_map, diff_map
+from src.utils import makedir, makedir_from_filename, calc_deviation
+from src.plot import (heatmap_map, base_map, boolean_map, diff_map,
+    plot_eet_equivalent_vs_effective)
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
 
@@ -55,12 +57,12 @@ def rheo_exploration(
     if lm_params is None:
         lm_params = [m_input['Ml']]
     if flm_params is None:
-        flm_params = [m_input['Mla']]
+        flm_params = [m_input['Serp']]
     rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     results = {}
     i=0
     for flm_param in flm_params:
-        m_input['Mla'] = flm_param
+        m_input['Serp'] = flm_param
         if m_input['slm'] is True:
             flm_string = '__' + rhe_data[str(flm_param)]['name']
         else:
@@ -79,7 +81,7 @@ def rheo_exploration(
                     mem()
                     i+=1
                     print(i)
-                    print(results)
+                    #print(results)
     return results
 
 def applied_stress_exploration(
@@ -225,6 +227,49 @@ def thermal_delta_exploration(
         results[name] = results_function(t_input, m_input, name)
     return results
 
+def thermal_hot_and_cold_exploration(
+        results_function, t_input=None, m_input=None, dir_name=None):
+    if t_input is None and m_input is None:
+        t_input, m_input = input_setup()
+    if dir_name is not None:
+        dir_name = dir_name + '/'
+    else:
+        dir_name = ''
+    results = {}
+    def initial_vars():
+        t_input['k_cs'] = 3.5
+        t_input['k_ci'] = 3.5
+        t_input['k_ml'] = 3.5
+        t_input['H_cs'] = 2.2e-6
+        t_input['H_ci'] = 2.2e-6
+        t_input['H_ml'] = 2.2e-6
+        t_input['delta_icd'] = False
+        t_input['t_lat'] = True
+        t_input['delta'] = 10
+        #t_input['t'] = 30
+    initial_vars()
+    name = dir_name + 'normal'
+    results[name] = results_function(t_input, m_input, name)
+    name = dir_name + 'hot'
+    t_input['delta'] = 15
+    t_input['H_cs'] = 4.e-6
+    t_input['H_ci'] = 4.e-6
+    t_input['H_ml'] = 4.e-6
+    #t_input['k_cs'] = 3.
+    #t_input['k_ci'] = 3.
+    #t_input['k_ml'] = 3.
+    results[name] = results_function(t_input, m_input, name)
+    name = dir_name + 'cold'
+    t_input['delta'] = 5
+    t_input['H_cs'] = 1.e-7
+    t_input['H_ci'] = 1.e-7
+    t_input['H_ml'] = 1.e-7
+    #t_input['k_cs'] = 5.
+    #t_input['k_ci'] = 5.
+    #t_input['k_ml'] = 5.
+    results[name] = results_function(t_input, m_input, name)
+    return results
+
 def eet_equivalent_vs_effective_results(
         eet_effective_dict, save_dir='Teq_vs_Tef', plot=False):
     save_dir_maps = save_dir + 'Mapas/'
@@ -232,6 +277,12 @@ def eet_equivalent_vs_effective_results(
     def results(t_input, m_input, name):
         diffs = {}
         data = get_model_data(t_input, m_input, get_eet_data)
+        filename_eet = save_dir_files + name + '.txt'
+        makedir_from_filename(filename_eet)
+        np.savetxt(filename_eet, data['eet'])
+        #filename_eet_ft = save_dir_files + 'from_trench/' + name + '.txt'
+        #makedir_from_filename(filename_eet_ft)
+        #np.savetxt(filename_eet_ft, data['eet_from_trench'])
         uc = m_input['Cs']
         lc = m_input['Ci']
         uc_array = np.ones(data['eet'].cs.get_2D_shape()) * uc
@@ -246,7 +297,8 @@ def eet_equivalent_vs_effective_results(
             eet_diff = data['eet'] - Tef
             makedir_from_filename(save_dir_files + eet_effective['dir'] + name)
             np.savetxt(
-                save_dir_files + eet_effective['dir'] + name + '.txt', eet_diff)
+                save_dir_files + eet_effective['dir'] + name + '_diff.txt',
+                eet_diff)
             sd = calc_deviation(data['eet'], Tef)
             if plot is True:
                 diff_map(data['eet'], Tef, eet_diff, sd=sd,
@@ -263,6 +315,33 @@ def eet_equivalent_vs_effective_results(
         return {'diffs': diffs, 'eet': data['eet'], 'uc': uc_array, 'lc': lc_array}
     return results
 
+def get_thermal_data(model):
+    return {'cs': model.cs,
+            'geotherm': model.tm.get_geotherm(),
+            'surface_heat_flow': model.tm.get_surface_heat_flow(
+                format='positive milliwatts')}
+
+def thermal_results(save_dir='Thermal', plot=False):
+    save_dir_maps = save_dir + 'Mapas/'
+    save_dir_files = save_dir + 'Archivos/'
+    makedir(save_dir_files)
+    def results(t_input, m_input, name):
+        data = get_model_data(t_input, m_input, get_thermal_data)
+        #x_grid, y_grid, z_grid = data['cs'].get_3D_grid(masked=False)
+        #df = pd.DataFrame(
+        #    {'lat': y_grid.flatten(),
+        #    'lon': x_grid.flatten(),
+        #    'depth': z_grid.flatten(),
+        #    'Temp': data['geotherm'].flatten()})
+        #df.to_csv(save_dir_files + name + '.csv', sep=',', na_rep='nan', index=False)
+        if plot is True:
+            heatmap_map(
+                data['surface_heat_flow'], colormap='afmhot',
+                cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
+                filename = save_dir_maps + name, cbar_limits=[30,110])
+        return {'geotherm': data['geotherm'],
+                'surface_heat_flow': data['surface_heat_flow']}
+    return results
 
 def get_eet_wrong_data(model):
     return {'eet': model.mm.get_eet(),
@@ -297,6 +376,7 @@ def eet_wrong_results(save_dir='EET_wrong', plot=False):
 
 def get_eet_data(model):
     return {'eet': model.mm.get_eet(),
+    #'eet_from_trench': model.mm.get_eet_from_trench(),
     'share_icd': model.mm.eet_calc_data['share_icd'],
     'share_moho': model.mm.eet_calc_data['share_moho']}
 
@@ -342,22 +422,23 @@ def ist_results(save_dir='IST', plot=False):
         return data['ist']
     return results
 
-def plot_eet_equivalent_vs_effective(eet_effective_dict, eet_eq,
-        save_dir='EET', name='eet_diff'):
-    for eet_effective in eet_effective_dict.values():
-        eet_eff = SpatialArray2D(np.loadtxt(eet_effective['file']), eet_eq.cs)
-        eet_diff = eet_eq - eet_eff
-        sd = calc_deviation(eet_eq, eet_eff)
-        diff_map(eet_eq, eet_eff, eet_diff, sd=sd,
-            colormap=jet_white_r,
-            colormap_diff = get_elevation_diff_cmap(100),
-            cbar_limits=[0,100], cbar_limits_diff=[-100,100],
-            cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
-            title_1='Espesor Elástico Equivalente',
-            title_2='Espesor Elástico Efectivo',
-            title_3='Diff. (EET eq. - EET ef.)',
-            labelpad=-48, labelpad_diff=-56,
-            filename=save_dir + eet_effective['dir'] + name)
+#def plot_eet_equivalent_vs_effective(eet_effective_dict, eet_eq,
+#        save_dir='EET', name='eet_diff'):
+#    for eet_effective in eet_effective_dict.values():
+#        eet_eff = SpatialArray2D(
+#            np.loadtxt(eet_effective['file']), eet_eq.cs).mask_irrelevant_eet()
+#        eet_diff = eet_eq - eet_eff
+#        sd = calc_deviation(eet_eq, eet_eff)
+#        diff_map(eet_eq, eet_eff, eet_diff, sd=sd,
+#            colormap=jet_white_r,
+#            colormap_diff = get_elevation_diff_cmap(100),
+#            cbar_limits=[0,100], cbar_limits_diff=[-100,100],
+#            cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+#            title_1='Espesor Elástico Equivalente',
+#            title_2='Espesor Elástico Efectivo',
+#            title_3='Diff. (EET eq. - EET ef.)',
+#            labelpad=-48, labelpad_diff=-56,
+#            filename=save_dir + eet_effective['dir'] + name)
 
 def plot_coupled_zones(share_moho, share_icd, filename='cz'):
     boolean_map(share_moho, share_icd, title='Zonas Acopladas',
@@ -395,10 +476,10 @@ def eet_deviation_from_prom(eets, names, save_dir):
     #deviations = dict(zip(names_o, devs_o))
     #print(deviations)
 
-def calc_deviation(eet1, eet2):
-    eet_sd = np.nansum(abs(eet1 - eet2))/eet1.size
-    eet_sd = float(eet_sd)
-    return eet_sd
+#def calc_deviation(eet1, eet2):
+#    eet_sd = np.nansum(abs(eet1 - eet2))/eet1.size
+#    eet_sd = float(eet_sd)
+#    return eet_sd
 
 def get_model_data(t_input, m_input, data_function):
     out_q = mp.Queue()
@@ -519,6 +600,8 @@ if __name__ == '__main__':
     t_input, m_input = input_setup()
     save_dir = direMec + 'Exploration/'
     makedir(save_dir)
+    save_dir_thermal = direTer + 'Exploration/'
+    makedir(save_dir_thermal)
     #### Reologias
     lc_params = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
     uc_params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -526,7 +609,7 @@ if __name__ == '__main__':
     flm_params = [23]
     rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
     #### EET efectivos
-    eet_effective_dict = { 
+    eet_effective_dict = {
         'Te_Tassara': {
              'file': 'data/Te_invertido/Interpolados/Te_Tassara.txt',
              'dir': 'Tassara_07/',
@@ -550,6 +633,12 @@ if __name__ == '__main__':
     #eets_names = list(eets.keys())
     #eets_values = list(eets.values())
     #eet_deviation_from_prom(eets_values, eets_names, save_dir)
+    results = rheo_exploration(
+            functools.partial(rheo_exploration,
+                eet_results(
+                    save_dir=save_dir + 'EETs/', plot=True),
+                lc_params=lc_params),
+            uc_params=uc_params)
 
     #### EET Rheo -> Applied Stress ########################################
     #eets = rheo_exploration(
@@ -870,7 +959,7 @@ if __name__ == '__main__':
     #np.savetxt(save_dir_files + 'eet_prom_quartzite', eet_prom_quartzite)
     #np.savetxt(save_dir_files + 'eet_prom_carrara_marble', eet_prom_carrara_m)
 
-    #### EET Rheo -> Variabilidad corteza inferior ##########################
+    ### EET Rheo -> Variabilidad corteza inferior ##########################
     #results = rheo_exploration(
     #        functools.partial(rheo_exploration,
     #            eet_results(
@@ -933,7 +1022,7 @@ if __name__ == '__main__':
     #    labelpad=-48, labelpad_diff=-56,
     #    filename=save_dir + 'EET_wrong/Prom')
 
-    ### EET eq. vs EET ef. / Mosaics #########################################
+    ## EET eq. vs EET ef. / Mosaics #########################################
     #results = rheo_exploration(
     #            eet_equivalent_vs_effective_results(
     #                eet_effective_dict, save_dir = save_dir + 'Teq_vs_Tef/',
@@ -973,9 +1062,42 @@ if __name__ == '__main__':
     #    extended_plot=False)
     #eets_prom = SpatialArray2D(
     #    sum(eets)/len(eets), eets[0].cs).mask_irrelevant_eet()
+    #eets_prom_filename = save_dir + 'Teq_vs_Tef/lc_uc/Archivos/prom.txt'
+    #makedir_from_filename(eets_prom_filename)
+    #np.savetxt(eets_prom_filename, eets_prom)
     #plot_eet_equivalent_vs_effective(eet_effective_dict, eets_prom,
-    #    save_dir='Teq_vs_Tef/lc_uc/Mapas/', name='prom_diff')
+    #    save_dir=save_dir + 'Teq_vs_Tef/lc_uc/Mapas/', name='prom_diff')
 
     ## Integrated Strength ################################################
     #ist = rheo_exploration(
     #    ist_results(save_dir=save_dir + 'Rheo/IST/', plot=True))
+
+    ### Hot and Cold Geotherm
+    #results = thermal_hot_and_cold_exploration(
+    #        thermal_results(save_dir = save_dir_thermal + 'Thermal/', plot=True))
+    #normal_gt = results['normal']['geotherm']
+    #hot_gt = results['hot']['geotherm']
+    #cold_gt = results['cold']['geotherm']
+    #x_grid, y_grid, z_grid = normal_gt.cs.get_3D_grid(masked=False)
+    #df = pd.DataFrame(
+    #    {'lat': y_grid.flatten(),
+    #    'lon': x_grid.flatten(),
+    #    'depth': z_grid.flatten(),
+    #    'Temp1': normal_gt.flatten(),
+    #    'Temp2': hot_gt.flatten(),
+    #    'Temp3': cold_gt.flatten()})
+    #model, _, _ = termomecanico(*input_setup())
+    #moho_hot = hot_gt.extract_surface(model.gm.get_moho()) 
+    #moho_cold = cold_gt.extract_surface(model.gm.get_moho()) 
+    #moho_diff = moho_hot - moho_cold
+    #diff_map(moho_cold, moho_hot, moho_diff, sd=None,
+    #    colormap='coolwarm',
+    #    colormap_diff = 'coolwarm',
+    #    cbar_limits=[0, 1300], cbar_limits_diff=None,
+    #    cbar_label='Temperatura [ºC]', cbar_label_diff='Dif. Temperatura [ºC]',
+    #    title_1='Temperatura Moho Modelo Frío',
+    #    title_2='Temperatura Moho Modelo Caliente',
+    #    title_3='Diff. (Modelo Caliente - Modelo frío)',
+    #    labelpad=-48, labelpad_diff=-56),
+    #    filename=save_dir_thermal + 'Thermal/dif_moho.png')
+    #df.to_csv(save_dir_thermal + 'Thermal/Table.txt', sep=' ', na_rep='nan', index=False)

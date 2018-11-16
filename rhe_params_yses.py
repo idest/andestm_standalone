@@ -90,7 +90,8 @@ if __name__ == '__main__':
     major_z_ticks = np.arange(0, min_z+1, -25)
     minor_z_ticks = np.arange(5, min_z+1, -5)
     gs = gridspec.GridSpec(1,3)
-    ax = fig.add_subplot(gs[0,1:])
+    ax = fig.add_subplot(gs[:,:])
+    #ax = fig.add_subplot(gs[0,1:])
     ax.set_xlim(-2000,2000)
     #ax.set_xlim(-10,10)
     #ax.set_ylim(-180,20)
@@ -111,6 +112,7 @@ if __name__ == '__main__':
     ax.axvline(x=-200, color='r', linestyle='dashed')
     ax.axhline(y=topo_depth, color='k')
     ax.axvline(x=0, color='k')
+    """
     ax2 = fig.add_subplot(gs[0,0])
     ax2.set_xlim(0,1300)
     #ax2.set_ylim(-180,20)
@@ -138,10 +140,11 @@ if __name__ == '__main__':
             #    color=color, linestyle='dashed')
             ax2.plot([yield_temp, yield_temp], [yield_depth, -200], 
                 color=color, linestyle='dashed')
+    """
     legend = ax.legend(loc=2, bbox_to_anchor=(1.05, 1.00))
     suptitle = fig.suptitle('Lat: {}, Lon: {}'.format(lat,lon))
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     #plt.tight_layout(pad=7)
     extra_artists = [suptitle, legend]
     plt.savefig(direMec + '/rhe_params.png', bbox_extra_artists=extra_artists,
-        bbox_inches='tight')
+        bbox_inches='tight', transparent=True)

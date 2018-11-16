@@ -1,17 +1,20 @@
 import numpy as np
+import pandas as pd
 import math
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from src.utils import makedir_from_filename
+from src.utils import makedir_from_filename, calc_deviation
 from matplotlib import cm
 import matplotlib.colors as colors
 from matplotlib.colors import Normalize
-from src.colormaps import jet_white_r, get_diff_cmap, get_elevation_diff_cmap
+from src.colormaps import (
+    jet_white_r, get_diff_cmap, get_elevation_diff_cmap, jet_white_r_2)
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from src.utils import MidPointNorm, round_to_1, get_magnitude
+from src.compute import SpatialArray2D
 
 def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
     # Axes configuration
@@ -36,10 +39,25 @@ def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
         eq = earthquakes[
             (earthquakes['latitude'] >= lat - 0.1) &
             (earthquakes['latitude'] < lat + 0.1)]
-        plt.scatter(
-            eq['longitude'], -eq['depth'], color=eq['color'],
-            s=eq['mag']**2.+20., zorder=1000)
-        print('lat:', lat, 'eq:', eq)
+        bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
+        sizes = [15*2**n for n in range(len(bins)-1)]
+        print(sizes)
+        labels = [
+            'Mb < 5.5',
+            '5.5 < Mb < 6.5',
+            '6.5 < Mb < 7.0',
+            '7.0 < Mb < 7.5',
+            'Mb > 7.5']
+        eq['size'] = pd.cut(eq['mag'].values, bins, labels=sizes)
+        for i, size in enumerate(sizes):
+            # current size eqs
+            cs_eq = eq[np.isclose(eq['size'], size)]
+            plt.scatter(
+                cs_eq['longitude'], -cs_eq['depth'], color='orange',
+                edgecolors='black', s=size,
+                zorder=1000, label=labels[i])
+        print('lat:', lat)#, 'eq:', eq)
+        plt.legend()
     if sli is not None:
         plt.scatter(sli['lon'], sli['depth'], color='r', zorder=1001, s=100)
     return fig
@@ -49,7 +67,7 @@ def thermal_latitude_profile(tm, lat, show=False, filename=None,
     # Base
     cs = tm.get_coordinate_system()
     gm = tm.get_geometric_model()
-    fig = base_latitude_profile(cs, gm, lat, earthquakes=earthquakes, sli=sli)
+    fig = base_latitude_profile(cs, gm, lat, sli=sli)
     x_axis = cs.get_x_axis()
     z_axis = cs.get_z_axis()
     xx, zz = np.meshgrid(x_axis, z_axis)
@@ -72,7 +90,7 @@ def thermal_latitude_profile(tm, lat, show=False, filename=None,
     if filename:
         makedir_from_filename(filename)
         filename = filename + '_%.1f' %(lat) + '.png'
-        fig.savefig(filename)#, dpi='figure', format='pdf')
+        fig.savefig(filename, transparent=True)#, dpi='figure', format='pdf')
     plt.close()
     return
 
@@ -86,9 +104,9 @@ def mechanic_latitude_profile(mm, lat, show=False, filename=None,
     z_axis = cs.get_z_axis()
     xx, zz = np.meshgrid(x_axis, z_axis)
     # Heatmap
-    meca = mm.get_yse()[0].cross_section(latitude=lat)
+    meca = -mm.get_yse()[1].cross_section(latitude=lat)
     meca_masked = np.ma.masked_invalid(meca)
-    heatmap = plt.pcolormesh(xx, zz, meca_masked.T, cmap=jet_white_r,
+    heatmap = plt.pcolormesh(xx, zz, meca_masked.T, cmap=jet_white_r_2,
         shading='gouraud')
     ys_min, ys_max = 0, 200
     plt.clim(ys_min, ys_max)
@@ -100,11 +118,36 @@ def mechanic_latitude_profile(mm, lat, show=False, filename=None,
     if filename:
         makedir_from_filename(filename)
         filename = filename + '_%.1f' %(lat) + '.png'
-        fig.savefig(filename)#, dpi='figure', format='pdf')
+        fig.savefig(filename, transparent=True)#, dpi='figure', format='pdf')
     plt.close()
     return
 
-def base_map(topo=True):
+def elastic_thickness_latitude_profile(mm, lat, show=False, filename=None,
+        earthquakes=None, sli=None):
+    #Base
+    cs = mm.get_coordinate_system()
+    gm = mm.get_geometric_model()
+    fig = base_latitude_profile(cs, gm, lat, earthquakes=earthquakes, sli=sli)
+    x_axis = cs.get_x_axis()
+    z_axis = cs.get_z_axis()
+    xx, zz = np.meshgrid(x_axis, z_axis)
+    # Thickness
+    topo = mm.get_geometric_model().get_topo().cross_section(latitude=lat)
+    eet = mm.get_eet_from_trench().cross_section(latitude=lat)
+    eet_depth = topo - eet
+    plt.plot(x_axis, eet_depth, 'black')
+    ax = plt.gca()
+    ax.fill_between(x_axis, topo, eet_depth, interpolate=True, color='grey')
+    plt.title('Perfil Espesor Elástico %.1f' %(lat))
+    if show is True:
+        plt.show()
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '_%.1f' %(lat) + '.png'
+        fig.savefig(filename, transparent=True)#, dpi='figure', format='pdf')
+    plt.close()
+
+def base_map(topo=True, draw_land=True):
     map = Basemap(
         llcrnrlon= -80, llcrnrlat= -45,
         urcrnrlon= -60.0, urcrnrlat= -10.0,
@@ -115,7 +158,9 @@ def base_map(topo=True):
     if topo is True:
         map.etopo()
     map.drawcoastlines(linewidth=0.5)
-    map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
+    if draw_land is True:
+        pass
+        #map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
     return map
 
 def boolean_map(
@@ -155,16 +200,83 @@ def boolean_map(
         width_ratio = 1 + 0.05 + 0.12
         return width_ratio
 
-def heatmap_map(
-        array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
-        filename=None, return_width_ratio=False,
-        cbar_label=None, title=None, labelpad=-40, earthquakes=None,
-        cbar_ticks=None, cbar_tick_labels=None, norm=None):
+def earthquake_map(earthquakes, map=None, ax=None, filename=None,
+        return_width_ratio=False, title=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
     if map is None:
-        map = base_map(topo=False)
+        map = base_map(topo=False, draw_land=False)
+    # Earthquakes
+    extra_artists = []
+    if earthquakes is not None:
+        eqs = earthquakes
+        bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
+        sizes = [2*2**n for n in range(len(bins)-1)]
+        print(sizes)
+        labels = [
+            'Mb < 5.5',
+            '5.5 < Mb < 6.5',
+            '6.5 < Mb < 7.0',
+            '7.0 < Mb < 7.5',
+            'Mb > 7.5']
+        eqs['size'] = pd.cut(eqs['mag'].values, bins, labels=sizes)
+        for i, size in enumerate(sizes):
+            # current size eqs
+            cs_eqs = eqs[np.isclose(eqs['size'], size)]
+            scatter = map.scatter(
+                cs_eqs['longitude'], cs_eqs['latitude'], s=size,
+                facecolor=(1.0,1.0,1.0,0.5), edgecolors=cs_eqs['color'],
+                latlon=True, zorder=1000, label=labels[i])
+        legend = plt.legend(
+            loc='center left', bbox_to_anchor=(0.7,0.8),
+            bbox_transform=fig.transFigure, prop={'size': 6})
+        extra_artists.append(legend)
+    # Title
+    if title is not None:
+        ax.set_title(title)
+    # Options
+    #plt.tight_layout()
+    if filename:
+        makedir_from_filename(filename)
+        filename = filename + '.png'
+        plt.savefig(
+            filename, bbox_inches='tight', transparent=True, dpi=900,
+            bbox_extra_artists=(extra_artists))
+            #dpi='figure', format='pdf')
+        plt.close()
+    if return_width_ratio:
+        width_ratio = 1 + 0.05 + 0.12
+        return width_ratio
+
+def plot_eet_equivalent_vs_effective(eet_effective_dict, eet_eq,
+        save_dir='EET', name='eet_diff'):
+    for eet_effective in eet_effective_dict.values():
+        eet_eff = SpatialArray2D(
+            np.loadtxt(eet_effective['file']), eet_eq.cs).mask_irrelevant_eet()
+        eet_diff = eet_eq - eet_eff
+        sd = calc_deviation(eet_eq, eet_eff)
+        diff_map(eet_eq, eet_eff, eet_diff, sd=sd,
+            colormap=jet_white_r,
+            colormap_diff = get_elevation_diff_cmap(100),
+            cbar_limits=[0,100], cbar_limits_diff=[-100,100],
+            cbar_label='EET [km.]', cbar_label_diff='Dif. EET [km.]',
+            title_1='Espesor Elástico Equivalente',
+            title_2='Espesor Elástico Efectivo',
+            title_3='Diff. (EET eq. - EET ef.)',
+            labelpad=-48, labelpad_diff=-56,
+            filename=save_dir + eet_effective['dir'] + name)
+
+def heatmap_map(
+        array_2D, colormap=None, cbar_limits=None, map=None, ax=None, alpha=1,
+        filename=None, return_width_ratio=False,
+        cbar_label=None, title=None, labelpad=-40, earthquakes=None,
+        cbar_ticks=None, cbar_tick_labels=None, norm=None, draw_land=True):
+    # Axes and map setup
+    if ax is None:
+        fig, ax = plt.subplots()
+    if map is None:
+        map = base_map(topo=False, draw_land=draw_land)
     # Earthquakes
     if earthquakes is not None:
         eqs_lon = earthquakes['longitude']
@@ -219,7 +331,7 @@ def heatmap_map(
         makedir_from_filename(filename)
         filename = filename + '.png'
         plt.savefig(
-            filename, bbox_inches='tight')
+            filename, bbox_inches='tight', transparent=True)
             #dpi='figure', format='pdf')
         plt.close()
     if return_width_ratio:
@@ -288,7 +400,7 @@ def diff_map(array_1, array_2, diff, sd=None,
     if filename:
         makedir_from_filename(filename)
         filename = filename + '.png'
-        plt.savefig(filename)
+        plt.savefig(filename, transparent=True)
         plt.close()
 
 def get_map_scatter_function(data_coords, data_types, map):
@@ -526,7 +638,7 @@ def multi_map(
         filename = filename + '.png'
         plt.savefig(
             filename,
-            bbox_extra_artists=(extra_artists), bbox_inches='tight')
+            bbox_extra_artists=(extra_artists), bbox_inches='tight', transparent=True)
             #dpi='figure', format='pdf')
     plt.close()
 

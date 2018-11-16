@@ -113,6 +113,15 @@ jet_white = make_colormap(
 
 jet_white_r = reverse_colourmap(jet_white)
 
+jet_white_2 = make_colormap(
+    [c('darkblue'), c('cyan'), 0.33,
+     c('cyan'), c('orange'), 0.66,
+     c('orange'), c('red'), 0.85,
+     c('red'), c('white'), 0.9,
+     c('white')])
+
+jet_white_r_2 = reverse_colourmap(jet_white_2)
+
 eet_tassara_07_printed = make_colormap(
     [c('crimson'), c('gold'),0.15,
      c('gold'), c('forestgreen'), 0.25,

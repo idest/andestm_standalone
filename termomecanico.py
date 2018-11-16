@@ -5,11 +5,14 @@ from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
 from src.rmse import rmse
 from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
+                   elastic_thickness_latitude_profile,
                    heatmap_map, data_scatter_map, diff_scatter_map,
-                   multi_map, data_scatter_plot)
+                   multi_map, data_scatter_plot, earthquake_map,
+                   plot_eet_equivalent_vs_effective)
 from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
 from src.utils import makedir
-from src.colormaps import jet_white_r, jet_white
+from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
+    eet_tassara_07, eet_pg_07)
 
 
 def termomecanico(t_input, m_input):
@@ -32,7 +35,7 @@ if __name__ == '__main__':
     #Earthquakes CSN
     if exec_input.eqs != 0:
         if exec_input.eqs == 1 or exec_input.eqs == 3:
-            eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30.xlsx",
+            eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30_+8.8.xlsx",
                     sheet_name="Sheet1")
             #eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
             eqs = eqs[(eqs['ISA'] == True)]
@@ -90,19 +93,39 @@ if __name__ == '__main__':
         heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
         heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
 
-
     if exec_input.xm1:
         maps_dir_mec = direMec + 'Mapas/'
         heatmap_map(
             model.mm.get_eet(), colormap=jet_white_r, cbar_label='EET [km]',
             cbar_limits=[0,100], title='Effective Elastic Thickness',
-            filename=maps_dir_mec + 'eet', earthquakes=eqs)
+            filename=maps_dir_mec + 'eet', earthquakes=None, draw_land=False,
+            labelpad=-45)
         integrated_strength_gpa = model.mm.get_integrated_strength()/-1000.
         heatmap_map(
             integrated_strength_gpa, colormap=jet_white_r,
             cbar_label='Integrated Strength [Gpa]', title='Integrated Strength',
             filename=maps_dir_mec + 'i_strength', labelpad=-45,
-            cbar_limits=[0,200], earthquakes=eqs)
+            cbar_limits=[0,200], earthquakes=None, draw_land=False)
+        earthquake_map(eqs, title='Sismos', filename=maps_dir_mec + 'eqs')
+        #eet_effective_dict = {
+        #    'Te_Tassara': {
+        #         'file': 'data/Te_invertido/Interpolados/Te_Tassara.txt',
+        #         'dir': 'Tassara_07/',
+        #         'colormap': eet_tassara_07},
+        #    'Te_PG_400': {
+        #         'file': 'data/Te_invertido/Interpolados/Te_PG_400.txt',
+        #         'dir': 'Perez_Gussinye_07/400/',
+        #         'colormap': eet_pg_07},
+        #    'Te_PG_600': {
+        #         'file': 'data/Te_invertido/Interpolados/Te_PG_600.txt',
+        #         'dir': 'Perez_Gussinye_07/600/',
+        #         'colormap': eet_pg_07},
+        #    'Te_PG_800': {
+        #         'file': 'data/Te_invertido/Interpolados/Te_PG_800.txt',
+        #         'dir': 'Perez_Gussinye_07/800/',
+        #         'colormap': eet_pg_07}}
+        #plot_eet_equivalent_vs_effective(eet_effective_dict, model.mm.get_eet(),
+        #        save_dir=maps_dir_mec+'Teq_vs_Tef/', name='diff')
 
     # Data and Models Scatter Plot
     if exec_input.xt3:
@@ -136,5 +159,9 @@ if __name__ == '__main__':
                 earthquakes=eqs, sli={'lon': sli_lon, 'depth': sli_depth})
         if exec_input.xm2:
             save_dir = direMec + 'Perfiles/'
+            #eqs = eqs[eqs['mag'] >= 4.0]
             mechanic_latitude_profile(model.mm, lat, filename=save_dir + 'm',
                 earthquakes=eqs, sli={'lon': sli_lon, 'depth': sli_depth})
+            elastic_thickness_latitude_profile(model.mm, lat,
+                filename=save_dir + '/eet/eet', earthquakes=eqs,
+                sli={'lon': sli_lon, 'depth': sli_depth})

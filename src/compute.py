@@ -240,11 +240,20 @@ class CoordinateSystem(object):
                                           self).mask_irrelevant())
         return grid_2D
 
-    def get_3D_grid(self):
+    #def get_3D_grid(self):
+    #    grid_3D = []
+    #    for n in range(len(self.grid_3D)):
+    #        grid_3D.append(SpatialArray3D(self.grid_3D[n],
+    #                                      self).mask_irrelevant())
+    #    return grid_3D
+
+    def get_3D_grid(self, masked=True):
         grid_3D = []
         for n in range(len(self.grid_3D)):
-            grid_3D.append(SpatialArray3D(self.grid_3D[n],
-                                          self).mask_irrelevant())
+            n_grid = SpatialArray3D(self.grid_3D[n], self)
+            if masked is True:
+                n_grid = n_grid.mask_irrelevant()
+            grid_3D.append(n_grid)
         return grid_3D
 
     #def get_2D_indexes(self):
@@ -1045,6 +1054,28 @@ class MechanicModel(object):
         }
         return DotMap(rock_dic)
 
+    def __get_polyphase_rheologic_vars(self, f1, id_rh_1, id_rh_2, rhe_data):
+        # Based on Tullis et al., 1991
+        f2 = 1 - f1
+        rock_1 = rhe_data[str(id_rh_1)]
+        n1 = rock_1.n
+        a1 = rock_1.A
+        h1 = rock_1.H
+        rock_2 = rhe_data[str(id_rh_2)]
+        n2 = rock_2.n
+        a2 = rock_2.A
+        h2 = rock_2.H
+        n = 10**(f1*np.log10(n1)+f2*np.log10(n2))
+        a = 10**((np.log10(a2)*(n-n1)-np.log10(a1)*(n-n2))/(n2-n1))
+        h = (h2*(n-n1) - h1*(n-n2))/(n2-n1)
+        rock_dic = {
+            'h': h,
+            'n': n,
+            'a': a
+        }
+        print(rock_dic)
+        return DotMap(rock_dic)
+
     def __set_variables(self, m_input, rhe_data):
         m_input = DotMap(m_input)
         m_vars = {
@@ -1057,7 +1088,8 @@ class MechanicModel(object):
             'cs': self.__get_rheologic_vars(m_input['Cs'], rhe_data),
             'ci': self.__get_rheologic_vars(m_input['Ci'], rhe_data),
             'ml': self.__get_rheologic_vars(m_input['Ml'], rhe_data),
-            'mla': self.__get_rheologic_vars(m_input['Mla'], rhe_data)
+            'mla': self.__get_polyphase_rheologic_vars(
+                m_input['spct'], m_input['Serp'], m_input['Ml'], rhe_data)
         }
         return m_vars
 
@@ -1355,6 +1387,9 @@ class MechanicModel(object):
     def get_eet(self):
         return SpatialArray2D(self.eet, self.cs).mask_irrelevant_eet()
 
+    def get_eet_from_trench(self):
+        return SpatialArray2D(self.eet, self.cs).mask_irrelevant()
+
     def get_eet_wrong(self):
         return SpatialArray2D(self.eet_wrong, self.cs).mask_irrelevant_eet()
 
@@ -1378,6 +1413,7 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, coast,
     tm_d = d.get_tm_data()
     mm_d = d.get_mm_data()
     cs = CoordinateSystem(cs_d, 0.2, 1)
+    #cs = CoordinateSystem(cs_d, 0.2, 0.1, 1)
     gm = GeometricModel(gm_d, cs)
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)

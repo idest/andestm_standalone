@@ -106,3 +106,10 @@ def makedir_from_filename(filename):
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
+
+import numpy as np
+
+def calc_deviation(array1, array2):
+    sd = np.nansum(abs(array1 - array2))/array1.size
+    sd = float(sd)
+    return sd

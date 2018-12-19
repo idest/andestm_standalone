@@ -16,9 +16,10 @@ from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
 from src.utils import makedir, makedir_from_filename, calc_deviation
 from src.plot import (heatmap_map, base_map, boolean_map, diff_map,
-    plot_eet_equivalent_vs_effective)
+    plot_eet_equivalent_vs_effective, multi_map)
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
+from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
 
 # print memory usage
 def mem():
@@ -109,34 +110,54 @@ def thermal_exploration(
         dir_name = ''
     results = {}
     def initial_vars():
-        t_input['k_cs'] = 3.5
-        t_input['k_ci'] = 3.5
-        t_input['k_ml'] = 3.5
-        t_input['H_cs'] = 2.2e-6
-        t_input['H_ci'] = 2.2e-6
-        t_input['H_ml'] = 2.2e-6
+        #k:3.5, h:2.2e-6
+        t_input['k_cs'] = 3.3
+        t_input['k_ci'] = 3.3
+        t_input['k_ml'] = 3.3
+        t_input['H_cs'] = 2.5e-6
+        t_input['H_ci'] = 2.5e-6
+        t_input['H_ml'] = 2.5e-6
         t_input['delta_icd'] = False
         t_input['t_lat'] = False
         t_input['delta'] = 10
         t_input['t'] = 30
     ###### Modelo Inicial
     initial_vars()
-    name = dir_name + 'h_2.2e-6__k_3.5__delta_10__t_30'
+    name = dir_name + 'h_2.5e-6__k_3.3__delta_10__t_30'
+    #print(name)
+    #print(t_input)
+    results[name] = results_function(t_input, m_input, name)
+    ###### t Variable
+    initial_vars()
+    t_input['t_lat'] = True
+    name = dir_name + 'h_2.5e-6__k_3.3__delta_10__t_var'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### K Variable
+    initial_vars()
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
     t_input['k_ml'] = 3.5
-    name = dir_name + 'h_2.2e-6__k_var__delta_10__t_30'
+    name = dir_name + 'h_2.5e-6__k_var__delta_10__t_30'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### Delta Variable
     initial_vars()
     t_input['delta_icd'] = True
-    name = dir_name + 'h_2.2e-6__k_3.5__delta_icd__t_30'
+    name = dir_name + 'h_2.5e-6__k_3.3__delta_icd__t_30'
+    #print(name)
+    #print(t_input)
+    results[name] = results_function(t_input, m_input, name)
+    ###### Modelo mas complejo
+    initial_vars()
+    t_input['t_lat'] = True
+    t_input['k_cs'] = 3.0
+    t_input['k_ci'] = 2.5
+    t_input['k_ml'] = 3.5
+    t_input['delta_icd'] = True
+    name = dir_name + 'h_2.5e-6__k_var__delta_icd__t_var'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
@@ -315,11 +336,16 @@ def eet_equivalent_vs_effective_results(
         return {'diffs': diffs, 'eet': data['eet'], 'uc': uc_array, 'lc': lc_array}
     return results
 
-def get_thermal_data(model):
+def get_thermal_data(model, model_rmse, ishf):
     return {'cs': model.cs,
             'geotherm': model.tm.get_geotherm(),
             'surface_heat_flow': model.tm.get_surface_heat_flow(
-                format='positive milliwatts')}
+                format='positive milliwatts'),
+            'rmse': model_rmse.rmse,
+            'diff': model_rmse.diff,
+            'e_prom': model_rmse.e_prom,
+            'sigmas': model_rmse.sigmas,
+            'moda': model_rmse.moda}
 
 def thermal_results(save_dir='Thermal', plot=False):
     save_dir_maps = save_dir + 'Mapas/'
@@ -335,15 +361,21 @@ def thermal_results(save_dir='Thermal', plot=False):
         #    'Temp': data['geotherm'].flatten()})
         #df.to_csv(save_dir_files + name + '.csv', sep=',', na_rep='nan', index=False)
         if plot is True:
-            heatmap_map(
-                data['surface_heat_flow'], colormap='afmhot',
-                cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
-                filename = save_dir_maps + name, cbar_limits=[30,110])
+            #heatmap_map(
+            #    data['surface_heat_flow'], colormap='afmhot',
+            #    cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
+            #    filename = save_dir_maps + name, cbar_limits=[30,110])
+            multi_map(
+                shf=data['surface_heat_flow'],
+                data=shf_data, diff=data['diff'], data_coords=shf_data_coords,
+                data_types=shf_data_types, rmse=data['rmse'],
+                e_prom=data['e_prom'], sigmas=data['sigmas'],
+                filename= save_dir_maps + name)
         return {'geotherm': data['geotherm'],
                 'surface_heat_flow': data['surface_heat_flow']}
     return results
 
-def get_eet_wrong_data(model):
+def get_eet_wrong_data(model, model_rmse, ishf):
     return {'eet': model.mm.get_eet(),
             'eet_wrong': model.mm.get_eet_wrong(),
             'share_icd': model.mm.eet_calc_data['share_icd'],
@@ -374,7 +406,7 @@ def eet_wrong_results(save_dir='EET_wrong', plot=False):
                 'eet_diff': eet_diff}
     return results
 
-def get_eet_data(model):
+def get_eet_data(model, model_rmse, ishf):
     return {'eet': model.mm.get_eet(),
     #'eet_from_trench': model.mm.get_eet_from_trench(),
     'share_icd': model.mm.eet_calc_data['share_icd'],
@@ -403,7 +435,7 @@ def eet_results(eet_effective_dict=None, save_dir='EET', plot=False):
         return data['eet']
     return results
 
-def get_ist_data(model):
+def get_ist_data(model, model_rmse, ishf):
     return {'ist': model.mm.get_integrated_strength()}
 
 def ist_results(save_dir='IST', plot=False):
@@ -484,8 +516,8 @@ def eet_deviation_from_prom(eets, names, save_dir):
 def get_model_data(t_input, m_input, data_function):
     out_q = mp.Queue()
     def mp_termomecanico(t_input, m_input, data_function, queue):
-        model, _, _ = termomecanico(t_input, m_input)
-        data = data_function(model)
+        model, model_rmse, ishf = termomecanico(t_input, m_input)
+        data = data_function(model, model_rmse, ishf)
         queue.put(data)
         return
     proc = mp.Process(
@@ -627,18 +659,23 @@ if __name__ == '__main__':
              'dir': 'Perez_Gussinye_07/800/',
              'colormap': eet_pg_07}}
 
+    #### Thermal Casos ######################################################
+    thermal_exploration(
+            thermal_results(
+                save_dir=save_dir_thermal + 'Thermal_casos/', plot=True))
+
     #### EET Rheo ###########################################################
     #eets = rheo_exploration(
     #    eet_results(save_dir=save_dir + 'Rheo/EET/', plot=True))
     #eets_names = list(eets.keys())
     #eets_values = list(eets.values())
     #eet_deviation_from_prom(eets_values, eets_names, save_dir)
-    results = rheo_exploration(
-            functools.partial(rheo_exploration,
-                eet_results(
-                    save_dir=save_dir + 'EETs/', plot=True),
-                lc_params=lc_params),
-            uc_params=uc_params)
+    #results = rheo_exploration(
+    #        functools.partial(rheo_exploration,
+    #            eet_results(
+    #                save_dir=save_dir + 'EETs/', plot=True),
+    #            lc_params=lc_params),
+    #        uc_params=uc_params)
 
     #### EET Rheo -> Applied Stress ########################################
     #eets = rheo_exploration(

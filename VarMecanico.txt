@@ -7,7 +7,7 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  ------   -----------
-     False  slm      Considerar manto litosférico serpentinizado en antearco
+      True  slm      Considerar manto litosférico serpentinizado en antearco
       0.65  spct     Porcentaje de serpentinitización en antearco
 #    -----  ------   -----------
      20.e3  Bs_t     Constante de tension de Byerlee (MPa)

@@ -9,13 +9,13 @@
 #    -----  -------  -----------
          0  graf     Graficar geometrias? 1: En png ; 2: En svg; 0 : No
          1  model    1 = heat_flow, 2 = yse, 3 = eet
-         1  eqs      Graficar sismos? 0: No, 1: CSN, 2: USGS, 3: CSN & USGS
+         0  eqs      Graficar sismos? 0: No, 1: CSN, 2: USGS, 3: CSN & USGS
 #------------------------------------------------------------------------------
 # Opciones para el modelo Termal
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '14'  temcaso  Numero de referencia para guardar el Modelo Termal
+      '19'  temcaso  Numero de referencia para guardar el Modelo Termal
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima
@@ -23,7 +23,7 @@
 #·········  ·······  ··························································
          1  xt1      Graficar mapas?
 #·········  ·······  ··························································
-         1  xt2      Graficar perfiles? 1: En png, 2: En svg a2, 0: No
+         0  xt2      Graficar perfiles? 1: En png, 2: En svg a2, 0: No
 #·········  ·······  ··························································
          1  xt3      Graficar surface heat flow data scatter?
 #------------------------------------------------------------------------------

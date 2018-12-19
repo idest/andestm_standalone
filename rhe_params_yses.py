@@ -49,7 +49,7 @@ if __name__ == '__main__':
     lc_yield_temps_exact_dic = {}
     lm_yield_temps_exact_dic = {}
     for key, value in rhe_data.items():
-        #if key in set(['6','22','23','30']):
+        #if key in set(['1','14','30']):
         #if key in set(map(str,np.arange(2,30,2))):
         if key:
             dys = model.mm.calc_ductile_yield_strength(m_input.e, value.n,
@@ -141,10 +141,11 @@ if __name__ == '__main__':
             ax2.plot([yield_temp, yield_temp], [yield_depth, -200], 
                 color=color, linestyle='dashed')
     """
-    legend = ax.legend(loc=2, bbox_to_anchor=(1.05, 1.00))
+    #legend = ax.legend(loc=2, bbox_to_anchor=(1.05, 1.00))
     suptitle = fig.suptitle('Lat: {}, Lon: {}'.format(lat,lon))
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     #plt.tight_layout(pad=7)
-    extra_artists = [suptitle, legend]
+    extra_artists = [suptitle]
+    #extra_artists = [suptitle, legend]
     plt.savefig(direMec + '/rhe_params.png', bbox_extra_artists=extra_artists,
         bbox_inches='tight', transparent=True)

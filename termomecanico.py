@@ -19,7 +19,7 @@ def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data, coast = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, coast, t_input, m_input)
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    model_rmse, ishf = rmse(shf, weigh_error=True, return_ishf=True)
+    model_rmse, ishf = rmse(shf, return_ishf=True)#, weigh_error=True)
     return model, model_rmse, ishf
 
 if __name__ == '__main__':
@@ -37,16 +37,16 @@ if __name__ == '__main__':
         if exec_input.eqs == 1 or exec_input.eqs == 3:
             eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30_+8.8.xlsx",
                     sheet_name="Sheet1")
-            #eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
-            eqs = eqs[(eqs['ISA'] == True)]
+            eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            #eqs = eqs[(eqs['ISA'] == True)]
             eqs['color'] = 'black'
             eqs_csn = eqs
         if exec_input.eqs == 2 or exec_input.eqs == 3:
             eqs = pd.read_excel("data/earthquakes/USGS_1900_2018_C_SB30.xlsx",
                     sheet_name="Sheet1")
             eqs['color'] = 'black'
-            #eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
-            eqs = eqs[(eqs['ISA'] == True)]
+            eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
+            #eqs = eqs[(eqs['ISA'] == True)]
             eqs_usgs = eqs
         if exec_input.eqs == 3:
             eqs_csn['color'] = 'black'
@@ -162,6 +162,6 @@ if __name__ == '__main__':
             #eqs = eqs[eqs['mag'] >= 4.0]
             mechanic_latitude_profile(model.mm, lat, filename=save_dir + 'm',
                 earthquakes=eqs, sli={'lon': sli_lon, 'depth': sli_depth})
-            elastic_thickness_latitude_profile(model.mm, lat,
-                filename=save_dir + '/eet/eet', earthquakes=eqs,
-                sli={'lon': sli_lon, 'depth': sli_depth})
+            #elastic_thickness_latitude_profile(model.mm, lat,
+            #    filename=save_dir + '/eet/eet', earthquakes=eqs,
+            #    sli={'lon': sli_lon, 'depth': sli_depth})

@@ -10,12 +10,15 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
         surface_heat_flow, dq.shf_data_x, dq.shf_data_y)
     #RMSE
     if weigh_error is True:
-        rmse, diff, data = calc_rmse_error(shf_interpolated, dq.shf_data,
-                                           dq.shf_data_min, dq.shf_data_max,
-                                           dq.shf_data_error)
+        rmse, diff = calc_rmse_weighted(
+            shf_interpolated, dq.shf_data, dq.shf_data_error)
+        #rmse, diff, data = calc_rmse_weighted_aggressive(
+        #   shf_interpolated, dq.shf_data,
+        #   dq.shf_data_min, dq.shf_data_max,
+        #   dq.shf_data_error)
         e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data)
         dic = {
-            'rmse': rmse, 'diff': diff, 'shf_data_weighted': data,
+            'rmse': rmse, 'diff': diff, #'shf_data_weighted': data,
             'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
@@ -29,11 +32,17 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
     return return_tuple
 
 def calc_rmse(model, data):
-    diff = model-data
+    diff = model - data
     rmse = np.sqrt((diff**2).mean())
     return rmse, diff
 
-def calc_rmse_error(model, data, data_min, data_max, data_error):
+def calc_rmse_weighted(model, data, data_error):
+    data_weight = 1 / data_error
+    diff = model - data
+    rmse = np.sqrt(sum((data_weight/sum(data_weight))*(diff**2)))
+    return rmse, diff
+
+def calc_rmse_weighted_aggressive(model, data, data_min, data_max, data_error):
     diff = model - data
     data_salida = np.zeros(len(diff))
     for i in range(len(diff)):

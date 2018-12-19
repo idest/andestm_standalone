@@ -11,8 +11,8 @@ shf_data_table = shf_data_table[shf_data_table[:,0] < -60.]
 shf_data_table = shf_data_table[shf_data_table[:,1] > -45.]
 shf_data_table = shf_data_table[shf_data_table[:,1] < -10.]
 
-# Usar solo datos con valores de surface heat flow < 120 mW/m2
-shf_data_table = shf_data_table[shf_data_table[:,2] <= 120]
+# Usar solo datos con valores de surface heat flow < 130 mW/m2
+shf_data_table = shf_data_table[shf_data_table[:,2] <= 130]
 
 # Formatear datos a W/m2
 #shf_data_table[:,2] = shf_data_table[:,2] * 1.e-3

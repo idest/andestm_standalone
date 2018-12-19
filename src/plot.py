@@ -16,7 +16,7 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from src.utils import MidPointNorm, round_to_1, get_magnitude
 from src.compute import SpatialArray2D
 
-def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
+def base_latitude_profile(cs, gm, lat, earthquakes=None, sli=None):
     # Axes configuration
     x_axis = cs.get_x_axis()
     z_axis = cs.get_z_axis()
@@ -39,25 +39,29 @@ def base_latitude_profile(cs,gm,lat,earthquakes=None, sli=None):
         eq = earthquakes[
             (earthquakes['latitude'] >= lat - 0.1) &
             (earthquakes['latitude'] < lat + 0.1)]
-        bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
-        sizes = [15*2**n for n in range(len(bins)-1)]
-        print(sizes)
-        labels = [
-            'Mb < 5.5',
-            '5.5 < Mb < 6.5',
-            '6.5 < Mb < 7.0',
-            '7.0 < Mb < 7.5',
-            'Mb > 7.5']
-        eq['size'] = pd.cut(eq['mag'].values, bins, labels=sizes)
-        for i, size in enumerate(sizes):
-            # current size eqs
-            cs_eq = eq[np.isclose(eq['size'], size)]
-            plt.scatter(
-                cs_eq['longitude'], -cs_eq['depth'], color='orange',
-                edgecolors='black', s=size,
-                zorder=1000, label=labels[i])
+        #bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
+        #sizes = [15*2**n for n in range(len(bins)-1)]
+        #print(sizes)
+        #labels = [
+        #    'Mb < 5.5',
+        #    '5.5 < Mb < 6.5',
+        #    '6.5 < Mb < 7.0',
+        #    '7.0 < Mb < 7.5',
+        #    'Mb > 7.5']
+        #eq['size'] = pd.cut(eq['mag'].values, bins, labels=sizes)
+        #for i, size in enumerate(sizes):
+        #    # current size eqs
+        #    cs_eq = eq[np.isclose(eq['size'], size)]
+        #    plt.scatter(
+        #        cs_eq['longitude'], -cs_eq['depth'], color='orange',
+        #        edgecolors='black', s=size,
+        #        zorder=1000, label=labels[i])
+        #plt.legend()
+        plt.scatter(
+            eq['longitude'], -eq['depth'], color='orange',
+            s=30, edgecolors='black', linewidth=0.2,
+            zorder=1000)
         print('lat:', lat)#, 'eq:', eq)
-        plt.legend()
     if sli is not None:
         plt.scatter(sli['lon'], sli['depth'], color='r', zorder=1001, s=100)
     return fig
@@ -211,27 +215,32 @@ def earthquake_map(earthquakes, map=None, ax=None, filename=None,
     extra_artists = []
     if earthquakes is not None:
         eqs = earthquakes
-        bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
-        sizes = [2*2**n for n in range(len(bins)-1)]
-        print(sizes)
-        labels = [
-            'Mb < 5.5',
-            '5.5 < Mb < 6.5',
-            '6.5 < Mb < 7.0',
-            '7.0 < Mb < 7.5',
-            'Mb > 7.5']
-        eqs['size'] = pd.cut(eqs['mag'].values, bins, labels=sizes)
-        for i, size in enumerate(sizes):
-            # current size eqs
-            cs_eqs = eqs[np.isclose(eqs['size'], size)]
-            scatter = map.scatter(
-                cs_eqs['longitude'], cs_eqs['latitude'], s=size,
-                facecolor=(1.0,1.0,1.0,0.5), edgecolors=cs_eqs['color'],
-                latlon=True, zorder=1000, label=labels[i])
-        legend = plt.legend(
-            loc='center left', bbox_to_anchor=(0.7,0.8),
-            bbox_transform=fig.transFigure, prop={'size': 6})
-        extra_artists.append(legend)
+        #bins = [1, 5.5, 6.5, 7.0, 7.5, 9.0]
+        #sizes = [2*2**n for n in range(len(bins)-1)]
+        #print(sizes)
+        #labels = [
+        #    'Mb < 5.5',
+        #    '5.5 < Mb < 6.5',
+        #    '6.5 < Mb < 7.0',
+        #    '7.0 < Mb < 7.5',
+        #    'Mb > 7.5']
+        #eqs['size'] = pd.cut(eqs['mag'].values, bins, labels=sizes)
+        #for i, size in enumerate(sizes):
+        #    # current size eqs
+        #    cs_eqs = eqs[np.isclose(eqs['size'], size)]
+        #    scatter = map.scatter(
+        #        cs_eqs['longitude'], cs_eqs['latitude'], s=size,
+        #        facecolor=(1.0,1.0,1.0,0.5), edgecolors=cs_eqs['color'],
+        #        latlon=True, zorder=1000, label=labels[i])
+        #legend = plt.legend(
+        #    loc='center left', bbox_to_anchor=(0.7,0.8),
+        #    bbox_transform=fig.transFigure, prop={'size': 6})
+        #extra_artists.append(legend)
+        scatter = map.scatter(
+            eqs['longitude'], eqs['latitude'], s=0.2,
+            facecolor=eqs['color'],
+            latlon=True, zorder=1000)
+
     # Title
     if title is not None:
         ax.set_title(title)
@@ -454,7 +463,8 @@ def data_scatter_map(
     map_scatter = get_map_scatter_function(data_coords, data_types, map)
     m_scatter, scatter = map_scatter(
         data, cmap='afmhot',
-        vmin=cbar_min, vmax=cbar_max)
+        vmin=cbar_min, vmax=cbar_max,
+        edgecolors='black', linewidths=0.5)
     # Colorbar
     if cbar is True:
         divider = make_axes_locatable(ax)
@@ -480,7 +490,7 @@ def data_scatter_map(
         filename = filename + '.png'
         plt.savefig(
             filename,
-            bbox_extra_artists=extra_artists, bbox_inches='tight')
+            bbox_extra_artists=extra_artists, bbox_inches='tight', transparent=True, dpi=900)
             #dpi='figure', format='pdf')
     if return_width_ratio:
         width_ratio = 1 + 0.05 + 0.12

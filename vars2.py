@@ -8,6 +8,7 @@ from termomecanico import termomecanico
 from src.plot import rmse_plot
 from src.utils import makedir
 from pathlib import Path
+import pickle
 
 # print memory usage
 def mem():
@@ -43,15 +44,15 @@ def get_var_axis(range):
         var_axis = range
     return var_axis
 
-def vars_rmse(t_input, m_input, var_names, var_ranges, var_type='thermal'):
+def vars_rmse(t_input, m_input, var_names, var_axes, var_type='thermal'):
     #t_input, m_input = input_setup()
     var_name_1 = get_var_name(var_names[0])
-    var_axis_1 = get_var_axis(var_ranges[0])
+    var_axis_1 = var_axes[0]
     var_name_2 = None
     var_axis_2 = None
     if len(var_names) > 1:
         var_name_2 = get_var_name(var_names[1])
-        var_axis_2 = get_var_axis(var_ranges[1])
+        var_axis_2 = var_axes[1]
     rmses = []
     i = 0
     for var_1 in var_axis_1:
@@ -84,7 +85,9 @@ def get_model_rmse(t_input, m_input):
     proc.join()
     return rmse
 
-def get_results(t_input, m_input, vnames, vranges, vaxes, save_dir, filename=''):
+def get_results(t_input, m_input, dic, save_dir, filename=''):
+    vnames = list(dic.keys())
+    vaxes = list(dic.values())
     if len(vaxes) > 1:
         print(vnames[0], len(vaxes[0]))
         print(vnames[1], len(vaxes[1]))
@@ -93,28 +96,24 @@ def get_results(t_input, m_input, vnames, vranges, vaxes, save_dir, filename='')
         print('Numero de modelos:', len(vaxes[0]))
     save_dir_files = save_dir + 'Archivos/'
     makedir(save_dir_files)
-    rmses = vars_rmse(t_input, m_input, vnames, vranges)
+    rmses = vars_rmse(t_input, m_input, vnames, vaxes)
     print('rmses:', rmses)
     # Save
     np.savetxt(save_dir_files + 'vars_rmses' + filename + '.txt', rmses)
-    np.savetxt(save_dir_files + 'vars_names' + filename + '.txt', vnames, fmt='%s')
-    np.savetxt(save_dir_files + 'vars_ranges' + filename + '.txt', vranges)
-    #np.savetxt(save_dir + 'vars_axes.txt', vaxes)#, dtype='object')
+    with open(save_dir_files + 'variables' + filename + '.txt', 'wb') as f:
+        pickle.dump(dic, f)
     # Plot
     rmse_plot(vnames, vaxes, rmses, filename=save_dir + 'RMSE' + filename)
 
 def load_and_plot_results(save_dir, filename):
     save_dir_files = save_dir + 'Archivos/'
     makedir(save_dir_files)
+    with open(save_dir_files + 'variables' + filename + '.txt', 'rb') as f:
+        dic = pickle.load(f)
     rmses = np.loadtxt(save_dir_files + 'vars_rmses' + filename + '.txt')
-    vranges = np.loadtxt(save_dir_files + 'vars_ranges' + filename + '.txt', ndmin=2)
-    vnames = np.loadtxt(save_dir_files + 'vars_names' + filename + '.txt', dtype='str', ndmin=2)
-    # Add dummy member to avoid avoid getting too many indices for array
-    # when there is only one member present and we use vnames[0]
-    #vaxes = np.loadtxt(save_dir + 'vars_axes.txt', ndmin=2)#, dtype='object')
-    vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
+    vnames = list(dic.keys())
+    vaxes = list(dic.values())
     rmse_plot(vnames, vaxes, rmses, filename=save_dir + 'RMSE' + filename)
-    #print("Use: python vars.py var_name '[start, end, step]'")
 
 if __name__ == '__main__':
     exec_input, direTer, direMec = exec_setup()
@@ -124,22 +123,18 @@ if __name__ == '__main__':
         args = sys.argv[1:]
         couples = len(args) // 2
         vnames = []; vranges = []; vtuples = []
+        dic = {}
         for couple in range(couples):
             vname = args[couple*2]
             vrange = ast.literal_eval(args[couple*2+1])
+            vax = get_var_axis(vrange)
             print(vname, vrange)
-            vtuple = [vname] + vrange
-            vnames.append(vname)
-            vranges.append(vrange)
-        vaxes = [get_var_axis(vranges[i]) for i in range(len(vranges))]
+            dic[vname] = vax
         t_input, m_input = input_setup()
-        if len(vnames) > 2:
-            control_vname = vnames[2]
-            control_vax = vaxes[2]
+        if len(dic) > 2:
+            control_vname = vname
+            control_vax = dic.pop(control_vname)
             print(control_vname, len(control_vax))
-            vnames = vnames[0:2]
-            vranges = vranges[0:2]
-            vaxes = vaxes[0:2]
             np.savetxt(save_dir + 'control_vname.txt', [control_vname], fmt='%s')
             np.savetxt(save_dir + 'control_vax.txt', control_vax)
             print('listo')
@@ -147,9 +142,9 @@ if __name__ == '__main__':
                 t_input[control_vname] = var
                 print(control_vname, '=', var)
                 filename = '_' + control_vname + '_' + str(var)
-                get_results(t_input, m_input, vnames, vranges, vaxes, save_dir, filename)
+                get_results(t_input, m_input, dic, save_dir, filename)
         else:
-            get_results(t_input, m_input, vnames, vranges, vaxes, save_dir)
+            get_results(t_input, m_input, dic, save_dir)
 
         ###
         #third_vname = ''

@@ -701,6 +701,7 @@ def rmse_plot(vnames, vaxes, rmses, filename=None):
         makedir_from_filename(filename)
         filename = filename + '.png'
         plt.savefig(filename)#,dpi='figure', format='pdf')
+        plt.close()
 
 def data_scatter_plot(
         data, data_error, data_types, ishf_models, ishf_labels, filename=None):

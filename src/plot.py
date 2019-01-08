@@ -485,6 +485,7 @@ def data_scatter_map(
         legend = ax.legend(bbox_to_anchor=(0.5, 0.0), loc='upper center',
                            ncol=2, bbox_transform=fig.transFigure)
         extra_artists.append(legend)
+    #plt.show()
     if filename:
         makedir_from_filename(filename)
         filename = filename + '.png'

@@ -15,7 +15,7 @@
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '01'  temcaso  Numero de referencia para guardar el Modelo Termal
+      '03'  temcaso  Numero de referencia para guardar el Modelo Termal
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima

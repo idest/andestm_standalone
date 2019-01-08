@@ -111,26 +111,26 @@ def thermal_exploration(
     results = {}
     def initial_vars():
         #k:3.5, h:2.2e-6
-        t_input['k_cs'] = 3.3
-        t_input['k_ci'] = 3.3
-        t_input['k_ml'] = 3.3
+        t_input['k_cs'] = 3.5
+        t_input['k_ci'] = 3.5
+        t_input['k_ml'] = 3.5
         t_input['H_cs'] = 2.5e-6
         t_input['H_ci'] = 2.5e-6
         t_input['H_ml'] = 2.5e-6
         t_input['delta_icd'] = False
         t_input['t_lat'] = False
         t_input['delta'] = 10
-        t_input['t'] = 30
+        t_input['t'] = 39.13
     ###### Modelo Inicial
     initial_vars()
-    name = dir_name + 'h_2.5e-6__k_3.3__delta_10__t_30'
+    name = dir_name + 'h_2.5e-6__k_3.5__delta_10__t_30'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### t Variable
     initial_vars()
     t_input['t_lat'] = True
-    name = dir_name + 'h_2.5e-6__k_3.3__delta_10__t_var'
+    name = dir_name + 'h_2.5e-6__k_3.5__delta_10__t_var'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
@@ -146,7 +146,7 @@ def thermal_exploration(
     ###### Delta Variable
     initial_vars()
     t_input['delta_icd'] = True
-    name = dir_name + 'h_2.5e-6__k_3.3__delta_icd__t_30'
+    name = dir_name + 'h_2.5e-6__k_3.5__delta_icd__t_30'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)

@@ -29,6 +29,7 @@ shf_data_coords = np.append(shf_data_x[:, np.newaxis],
                             shf_data_y[:, np.newaxis], axis=1)
 shf_data = shf_data_table[:,2]
 shf_data_types = shf_data_table[:,5]
+shf_data_ref = shf_data_table[:,4]
 shf_data_max = shf_data + shf_data_error
 shf_data_min = shf_data - shf_data_error
 

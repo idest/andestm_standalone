@@ -19,7 +19,7 @@ def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data, coast = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, coast, t_input, m_input)
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    model_rmse, ishf = rmse(shf, return_ishf=True, weigh_error=True)
+    model_rmse, ishf = rmse(shf, return_ishf=True)#, weigh_error=True)
     return model, model_rmse, ishf
 
 if __name__ == '__main__':
@@ -30,7 +30,8 @@ if __name__ == '__main__':
     files_dir_ter = direTer + 'Archivos/'
     makedir(files_dir_ter)
     np.savetxt(files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt', ishf)
-    #np.savetxt('sigmas_' + exec_input.temcaso + '.txt', model_rmse['sigmas'])
+    stats = pd.DataFrame.from_dict(model_rmse, orient='index')
+    stats.to_csv(files_dir_ter + 'stats.txt')
 
     #Earthquakes CSN
     if exec_input.eqs != 0:

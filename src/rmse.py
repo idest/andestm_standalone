@@ -9,12 +9,12 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
     # Surface Heat Flow Model Interpolation
     shf_interpolated = interpolate_surface_heat_flow(
         surface_heat_flow, dq.shf_data_x, dq.shf_data_y)
-    print_table(
-        dq.shf_data_x, dq.shf_data_y,
-        shf_interpolated,
-        dq.shf_data, dq.shf_data_error,
-        dq.shf_data_types, dq.shf_data_ref,
-        '/Users/inigo/correlacion')
+    #print_table(
+    #    dq.shf_data_x, dq.shf_data_y,
+    #    shf_interpolated,
+    #    dq.shf_data, dq.shf_data_error,
+    #    dq.shf_data_types, dq.shf_data_ref,
+    #    '/Users/inigo/correlacion')
     #RMSE
     if weigh_error is True:
         rmse, diff = calc_rmse_weighted(
@@ -23,13 +23,13 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
         #   shf_interpolated, dq.shf_data,
         #   dq.shf_data_min, dq.shf_data_max,
         #   dq.shf_data_error)
-        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data, dq.shf_data_error)
+        e_prom, sigmas, moda = sigma_weighted(shf_interpolated, dq.shf_data, dq.shf_data_error)
         dic = {
             'rmse': rmse, 'diff': diff, #'shf_data_weighted': data,
             'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
     else:
         rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
-        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data, dq.shf_data_error)
+        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data)
         dic = {'rmse': rmse, 'diff': diff, 'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
     #Standard deviation
     return_tuple = []
@@ -66,6 +66,38 @@ def calc_rmse_weighted_aggressive(model, data, data_min, data_max, data_error):
     #np.savetxt('diff.txt', diff)
     return rmse, diff, data_salida
 
+def sigma(shf_interpolated, data):
+    diff = shf_interpolated - data
+    sigma = np.std(diff) #np.sqrt(((diff-diff.mean())**2).mean())
+    n_1_sigma = diff.mean() - sigma
+    p_1_sigma = diff.mean() + sigma
+    n_2_sigma = diff.mean() - 2*sigma
+    p_2_sigma = diff.mean() + 2*sigma
+    #e_prom = mean_absolute_error(data, shf_interpolated)
+    e_prom = diff.mean()
+    sigmas = {
+        'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
+        'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
+    sigmas = DotMap(sigmas)
+    moda = np.nanmax(abs(diff))
+    return e_prom, sigmas, moda
+
+def sigma_weighted(shf_interpolated, data, data_error):
+    diff = shf_interpolated - data
+    data_weight = 1 / data_error
+    sigma = np.sqrt(sum((data_weight/sum(data_weight))*(diff-diff.mean())**2))
+    n_1_sigma = diff.mean() - sigma
+    p_1_sigma = diff.mean() + sigma
+    n_2_sigma = diff.mean() - 2*sigma
+    p_2_sigma = diff.mean() + 2*sigma
+    e_prom = sum((data_weight/sum(data_weight))*diff)
+    sigmas = {
+        'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
+        'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
+    sigmas = DotMap(sigmas)
+    moda = np.nanmax(abs(diff))
+    return e_prom, sigmas, moda
+
 def interpolate_surface_heat_flow(surface_heat_flow, x, y):
     surface_heat_flow_masked = surface_heat_flow.copy()
     surface_heat_flow_masked[np.isnan(surface_heat_flow)] = 1.e-1000000000
@@ -75,30 +107,6 @@ def interpolate_surface_heat_flow(surface_heat_flow, x, y):
                                            surface_heat_flow_masked[:,::-1])
     shf_interpolated = shf_interpolator.ev(x, y)
     return shf_interpolated
-
-def sigma(shf_interpolated,data,data_error):
-    diff = shf_interpolated - data
-    data_weight = 1 / data_error
-    sigma1 = np.std(diff)
-    #sigma1_alt2 = np.sqrt(((diff-diff.mean())**2).mean())
-    #print(sigma1_alt2)
-    rmse = np.sqrt(sum((diff**2)))
-    n_1_sigma = diff.mean() - sigma1
-    p_1_sigma = diff.mean() + sigma1
-    sigma2 = 2*(np.std(diff))
-    n_2_sigma = diff.mean() - sigma2
-    p_2_sigma = diff.mean() + sigma2
-    #e_prom = mean_absolute_error(data, shf_interpolated)
-    e_prom = diff.sum()/len(diff)
-    #e_prom_alt = sum(diff*(data_weight/sum(data_weight)))#/len(diff)
-    #print(e_prom)
-    #print(e_prom_alt)
-    sigmas = {
-        'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
-        'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
-    sigmas = DotMap(sigmas)
-    moda = np.nanmax(abs(diff))
-    return e_prom, sigmas, moda
 
 def print_table(x, y, model, data, data_error, data_type, data_ref, filename):
     df = pd.DataFrame(

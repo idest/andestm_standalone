@@ -353,6 +353,11 @@ def thermal_results(save_dir='Thermal', plot=False):
     makedir(save_dir_files)
     def results(t_input, m_input, name):
         data = get_model_data(t_input, m_input, get_thermal_data)
+        dic = {
+            'rmse': data['rmse'], 'diff': data['diff'], #'shf_data_weighted': data,
+            'e_prom': data['e_prom'], 'sigmas': data['sigmas'], 'moda': data['moda']}
+        stats = pd.DataFrame.from_dict(dic, orient='index')
+        stats.to_csv(save_dir_files + 'stats' + name + '.txt')
         #x_grid, y_grid, z_grid = data['cs'].get_3D_grid(masked=False)
         #df = pd.DataFrame(
         #    {'lat': y_grid.flatten(),

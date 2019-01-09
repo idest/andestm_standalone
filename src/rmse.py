@@ -2,55 +2,58 @@ import numpy as np
 from scipy.interpolate import RectBivariateSpline
 #from sklearn.metrics import mean_absolute_error
 from dotmap import DotMap
-import src.datos_q as dq
+#import src.datos_q as dq
+#from src.datos_q import shf_df
 import pandas as pd
 
-def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
+def rmse(
+    surface_heat_flow, shf_df, weigh_error=False, return_ishf=False,
+    save_dir=None):
+    if save_dir is None:
+        save_dir = 'Output/'
     # Surface Heat Flow Model Interpolation
     shf_interpolated = interpolate_surface_heat_flow(
-        surface_heat_flow, dq.shf_data_x, dq.shf_data_y)
-    print_table(
-        dq.shf_data_x, dq.shf_data_y,
-        shf_interpolated,
-        dq.shf_data, dq.shf_data_error,
-        dq.shf_data_types, dq.shf_data_ref,
-        '/Users/inigo/correlacion')
+        surface_heat_flow, shf_df['lon'], shf_df['lat'])
+    shf_df = shf_df.assign(model=shf_interpolated)
+    diff = shf_df['model'] - shf_df['data']
     #RMSE
     if weigh_error is True:
-        rmse, diff = calc_rmse_weighted(
-            shf_interpolated, dq.shf_data, dq.shf_data_error)
-        #rmse, diff, data = calc_rmse_weighted_aggressive(
-        #   shf_interpolated, dq.shf_data,
-        #   dq.shf_data_min, dq.shf_data_max,
-        #   dq.shf_data_error)
-        e_prom, sigmas, moda = sigma_weighted(shf_interpolated, dq.shf_data, dq.shf_data_error)
-        dic = {
-            'rmse': rmse, 'diff': diff, #'shf_data_weighted': data,
-            'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
+        shf_df = shf_df.dropna(subset=['data_error'])
+        rmse = calc_rmse_weighted(
+            shf_df['model'], shf_df['data'], shf_df['data_error'])
+        e_prom, sigmas = sigma_weighted(
+            shf_df['model'], shf_df['data'], shf_df['data_error'])
     else:
-        rmse, diff = calc_rmse(shf_interpolated, dq.shf_data)
-        e_prom, sigmas, moda = sigma(shf_interpolated, dq.shf_data)
-        dic = {'rmse': rmse, 'diff': diff, 'e_prom': e_prom, 'sigmas': sigmas, 'moda': moda}
+        #shf_df = shf_df.drop(columns=['data_error'])
+        rmse = calc_rmse(shf_df['model'], shf_df['data'])
+        e_prom, sigmas = sigma(shf_df['model'], shf_df['data'])
+    estimators = {'rmse': rmse, 'e_prom': e_prom, 'sigmas': sigmas}
+    print_estimators_table(estimators, 'estimadores')
+    dic = {
+        'diff': diff,
+        'rmse': rmse, 'e_prom': e_prom, 'sigmas': sigmas}
     #Standard deviation
     return_tuple = []
     return_tuple.append(DotMap(dic))
     if return_ishf:
-        return_tuple.append(shf_interpolated)
+        return_tuple.append(shf_df['model'])
     return return_tuple
 
 def calc_rmse(model, data):
     diff = model - data
     rmse = np.sqrt((diff**2).mean())
-    return rmse, diff
+    return rmse
 
 def calc_rmse_weighted(model, data, data_error):
     data_weight = 1 / data_error
     diff = model - data
     rmse = np.sqrt(sum((data_weight/sum(data_weight))*(diff**2)))
-    return rmse, diff
+    return rmse
 
-def calc_rmse_weighted_aggressive(model, data, data_min, data_max, data_error):
+def calc_rmse_weighted_aggressive(model, data, data_error):
     diff = model - data
+    data_min = data + data_error
+    data_max = data - data_error
     data_salida = np.zeros(len(diff))
     for i in range(len(diff)):
         if abs(diff[i]) < abs(data_error[i]):
@@ -64,7 +67,7 @@ def calc_rmse_weighted_aggressive(model, data, data_min, data_max, data_error):
     #np.savetxt('ishf.txt', model)
     #np.savetxt('shf_data_error.txt', data_salida)
     #np.savetxt('diff.txt', diff)
-    return rmse, diff, data_salida
+    return rmse, data_salida
 
 def sigma(shf_interpolated, data):
     diff = shf_interpolated - data
@@ -79,8 +82,8 @@ def sigma(shf_interpolated, data):
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
     sigmas = DotMap(sigmas)
-    moda = np.nanmax(abs(diff))
-    return e_prom, sigmas, moda
+    #moda = np.nanmax(abs(diff))
+    return e_prom, sigmas
 
 def sigma_weighted(shf_interpolated, data, data_error):
     diff = shf_interpolated - data
@@ -95,8 +98,8 @@ def sigma_weighted(shf_interpolated, data, data_error):
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
     sigmas = DotMap(sigmas)
-    moda = np.nanmax(abs(diff))
-    return e_prom, sigmas, moda
+    #moda = np.nanmax(abs(diff))
+    return e_prom, sigmas
 
 def interpolate_surface_heat_flow(surface_heat_flow, x, y):
     surface_heat_flow_masked = surface_heat_flow.copy()
@@ -108,15 +111,10 @@ def interpolate_surface_heat_flow(surface_heat_flow, x, y):
     shf_interpolated = shf_interpolator.ev(x, y)
     return shf_interpolated
 
-def print_table(x, y, model, data, data_error, data_type, data_ref, filename):
-    df = pd.DataFrame(
-            {'lon': x,
-             'lat': y,
-             'modelo': model,
-             'dato': data,
-             'error_dato': data_error,
-             'tipo_dato': data_type,
-             'ref_dato': data_ref})
+def print_estimators_table(estimators, filename):
+    if filename == None:
+        filename = 'Output/estimadores'
+    df = pd.DataFrame.from_dict(estimators)
     writer = pd.ExcelWriter(filename + '.xlsx')
-    df.to_excel(writer, 'Correlacion')
+    df.to_excel(writer, 'Estimadores')
     writer.save()

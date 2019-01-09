@@ -501,7 +501,7 @@ def diff_scatter_map(
         diff, data_coords=None, data_types=None, map=None, ax=None,
         rmse=None, legend=True, return_width_ratio=False,
         filename=None,
-        e_prom=None, sigmas=None, moda=None):
+        e_prom=None, sigmas=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -558,12 +558,6 @@ def diff_scatter_map(
     ax.set_title('Model minus Data')
     # Options
     extra_artists=[]
-    if moda is not None:
-        # MODA
-        moda_text = plt.figtext(
-            0.4, 0.03, 'MODA: %0.2f' %(moda),
-            fontweight='bold')
-        extra_artists.append(moda_text)
     if e_prom is not None:
         # MAE
         e_prom_text = plt.figtext(

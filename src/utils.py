@@ -113,3 +113,17 @@ def calc_deviation(array1, array2):
     sd = np.nansum(abs(array1 - array2))/array1.size
     sd = float(sd)
     return sd
+
+import pandas as pd
+
+def print_data_table(shf_df=None, filename=None):
+    if shf_df is None:
+        shf_df = pd.DataFrame.from_csv(
+            'datos_Q/QsObs.txt', sep=' ', skiprows=1, header=None,
+            names=['Longitud', 'Latitud', 'Flujo de Calor', 'Error',
+                   'Referencia', 'Tipo'])
+    if filename == None:
+        filename = 'datos_Q/tabla.xlsx'
+    writer = pd.ExcelWriter(filename + '.xlsx')
+    df.to_excel(writer, 'Datos')
+    writer.save()

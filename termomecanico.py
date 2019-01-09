@@ -9,7 +9,8 @@ from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    heatmap_map, data_scatter_map, diff_scatter_map,
                    multi_map, data_scatter_plot, earthquake_map,
                    plot_eet_equivalent_vs_effective)
-from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
+from src.datos_q import (shf_data, shf_data_coords, shf_data_types,
+                         shf_data_error, shf_df)
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
     eet_tassara_07, eet_pg_07)
@@ -19,7 +20,7 @@ def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data, coast = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, coast, t_input, m_input)
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    model_rmse, ishf = rmse(shf, return_ishf=True)#, weigh_error=True)
+    model_rmse, ishf = rmse(shf, shf_df, return_ishf=True, weigh_error=True)
     print('.')
     return model, model_rmse, ishf
 
@@ -31,8 +32,8 @@ if __name__ == '__main__':
     files_dir_ter = direTer + 'Archivos/'
     makedir(files_dir_ter)
     np.savetxt(files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt', ishf)
-    stats = pd.DataFrame.from_dict(model_rmse, orient='index')
-    stats.to_csv(files_dir_ter + 'stats.txt')
+    #stats = pd.DataFrame.from_dict(model_rmse, orient='index')
+    #stats.to_csv(files_dir_ter + 'stats.txt')
 
     #Earthquakes CSN
     if exec_input.eqs != 0:
@@ -65,7 +66,6 @@ if __name__ == '__main__':
         rmse = model_rmse.rmse
         e_prom = model_rmse.e_prom
         sigmas = model_rmse.sigmas
-        moda = model_rmse.moda
         heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
                     title='Surface Heat Flow', filename=maps_dir + 'shf_map')
         data_scatter_map(
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         diff_scatter_map(
             diff, data_coords=shf_data_coords, data_types=shf_data_types,
             rmse=rmse, filename=maps_dir + 'diff_scatter_map',
-            e_prom=e_prom, sigmas=sigmas, moda=moda)
+            e_prom=e_prom, sigmas=sigmas)
         multi_map(
             shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
             data_types=shf_data_types, rmse=rmse,

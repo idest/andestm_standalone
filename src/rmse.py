@@ -9,12 +9,12 @@ def rmse(surface_heat_flow, weigh_error=False, return_ishf=False):
     # Surface Heat Flow Model Interpolation
     shf_interpolated = interpolate_surface_heat_flow(
         surface_heat_flow, dq.shf_data_x, dq.shf_data_y)
-    #print_table(
-    #    dq.shf_data_x, dq.shf_data_y,
-    #    shf_interpolated,
-    #    dq.shf_data, dq.shf_data_error,
-    #    dq.shf_data_types, dq.shf_data_ref,
-    #    '/Users/inigo/correlacion')
+    print_table(
+        dq.shf_data_x, dq.shf_data_y,
+        shf_interpolated,
+        dq.shf_data, dq.shf_data_error,
+        dq.shf_data_types, dq.shf_data_ref,
+        '/Users/inigo/correlacion')
     #RMSE
     if weigh_error is True:
         rmse, diff = calc_rmse_weighted(

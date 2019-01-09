@@ -20,6 +20,7 @@ def termomecanico(t_input, m_input):
     model = compute(gm_data, areas, trench_age, rhe_data, coast, t_input, m_input)
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
     model_rmse, ishf = rmse(shf, return_ishf=True)#, weigh_error=True)
+    print('.')
     return model, model_rmse, ishf
 
 if __name__ == '__main__':

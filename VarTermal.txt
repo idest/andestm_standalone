@@ -16,14 +16,14 @@
       True  t_lat       t_lat = True usar edad de la fosa segun latitud.
 #                       t_lat = False (t_lat = t)
 #·········  ··········  ··························································
-       3.5  k_cs        Conductividad termica Corteza superior [W/mK] (4.2)
-       3.5  k_ci        Conductividad termica Corteza inferior [W/mK] (4.2)
-       3.5  k_ml        Conductividad termica Manto litosferico [ W/mK] (4.2)
-    2.5e-6  H_cs        Calor radiogenico Corteza superior [W/m3]
-    2.5e-6  H_ci        Calor radiogenico Corteza inferior [W/m3]
-    2.5e-6  H_ml        Calor radiogenico Manto litosferico [W/m3]
+       3.0  k_cs        Conductividad termica Corteza superior [W/mK] (4.2)
+       3.0  k_ci        Conductividad termica Corteza inferior [W/mK] (4.2)
+       3.0  k_ml        Conductividad termica Manto litosferico [ W/mK] (4.2)
+    2.0e-6  H_cs        Calor radiogenico Corteza superior [W/m3]
+    2.0e-6  H_ci        Calor radiogenico Corteza inferior [W/m3]
+    2.0e-6  H_ml        Calor radiogenico Manto litosferico [W/m3]
     1.0e-6  kappa       difusividad termica [m2/s]
-    1400.0  Tp          Temperatura potencial del manto [C]
+    1300.0  Tp          Temperatura potencial del manto [C]
       4e-4  G           Gradiente adiabatico [K/m]
      6.6e4  V           Velocidad de convergencia [m/Myr]
        1.0  b           Parametro adimensional

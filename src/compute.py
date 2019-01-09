@@ -1073,7 +1073,7 @@ class MechanicModel(object):
             'n': n,
             'a': a
         }
-        print(rock_dic)
+        #print(rock_dic)
         return DotMap(rock_dic)
 
     def __set_variables(self, m_input, rhe_data):

@@ -1,45 +1,45 @@
 import numpy as np
 import pandas as pd
 
-shf_data_table = np.loadtxt('datos_Q/QsObs.txt', comments='#')
+shf_data_file = np.loadtxt('datos_Q/QsObs.txt', comments='#')
 
 #print('hola')
-#np.savetxt('shf_dt', shf_data_table)
+#np.savetxt('shf_dt', shf_data_file)
 
 # Limitar datos al area de estudio
-shf_data_table = shf_data_table[shf_data_table[:,0] > -80.]
-shf_data_table = shf_data_table[shf_data_table[:,0] < -60.]
-shf_data_table = shf_data_table[shf_data_table[:,1] > -45.]
-shf_data_table = shf_data_table[shf_data_table[:,1] < -10.]
+shf_data_file = shf_data_file[shf_data_file[:,0] > -80.]
+shf_data_file = shf_data_file[shf_data_file[:,0] < -60.]
+shf_data_file = shf_data_file[shf_data_file[:,1] > -45.]
+shf_data_file = shf_data_file[shf_data_file[:,1] < -10.]
 
 # Usar solo datos con valores de surface heat flow < 130 mW/m2
-shf_data_table = shf_data_table[shf_data_table[:,2] <= 130]
+shf_data_file = shf_data_file[shf_data_file[:,2] <= 130]
 
 # Formatear datos a W/m2
-#shf_data_table[:,2] = shf_data_table[:,2] * 1.e-3
-#shf_data_table[:,3] = shf_data_table[:,3] * 1.e-3
-#np.savetxt('datos_Q/QsObsFormatted.txt', shf_data_table)
+#shf_data_file[:,2] = shf_data_file[:,2] * 1.e-3
+#shf_data_file[:,3] = shf_data_file[:,3] * 1.e-3
+#np.savetxt('datos_Q/QsObsFormatted.txt', shf_data_file)
 
 # All data
-shf_data_x = shf_data_table[:,0]
-shf_data_y = shf_data_table[:,1]
-shf_data = shf_data_table[:,2]
-shf_data_error = abs(shf_data_table[:,3])
-shf_data_ref = shf_data_table[:,4]
-shf_data_types = shf_data_table[:,5]
+shf_data_lons = shf_data_file[:,0]
+shf_data_lats = shf_data_file[:,1]
+shf_data_values = shf_data_file[:,2]
+shf_data_errors = abs(shf_data_file[:,3])
+shf_data_refs = shf_data_file[:,4]
+shf_data_types = shf_data_file[:,5]
 
-shf_data_coords = np.append(shf_data_x[:, np.newaxis],
-                            shf_data_y[:, np.newaxis], axis=1)
-shf_data_max = shf_data + shf_data_error
-shf_data_min = shf_data - shf_data_error
+shf_data_coords = np.append(shf_data_lons[:, np.newaxis],
+                            shf_data_lats[:, np.newaxis], axis=1)
+shf_data_max = shf_data_values + shf_data_errors
+shf_data_min = shf_data_values - shf_data_errors
 
-shf_df = pd.DataFrame({
-    'lon': shf_data_x,
-    'lat': shf_data_y,
-    'data': shf_data,
-    'data_error': shf_data_error,
-    'data_type': shf_data_types,
-    'data_ref': shf_data_ref
+shf_data = pd.DataFrame({
+    'lons': shf_data_lons,
+    'lats': shf_data_lats,
+    'data_values': shf_data_values,
+    'data_errors': shf_data_errors,
+    'data_types': shf_data_types,
+    'data_refs': shf_data_refs
 })
 
 #shf_df_ne = shf_df.drop(columns=['data_error'])

@@ -5,39 +5,41 @@ from dotmap import DotMap
 #import src.datos_q as dq
 #from src.datos_q import shf_df
 import pandas as pd
+from src.setup import exec_setup
+
+exec_input, direTer, direMec = exec_setup()
+weigh_errors = True if exec_input.weigh == 1 else False
 
 def rmse(
-    surface_heat_flow, shf_df, weigh_error=False, return_ishf=False,
-    save_dir=None):
+    surface_heat_flow, shf_data, weigh_errors=weigh_errors,
+    return_dataframe=False, save_dir=None):
     if save_dir is None:
         save_dir = 'Output/'
     # Surface Heat Flow Model Interpolation
     shf_interpolated = interpolate_surface_heat_flow(
-        surface_heat_flow, shf_df['lon'], shf_df['lat'])
-    shf_df = shf_df.assign(model=shf_interpolated)
-    diff = shf_df['model'] - shf_df['data']
+        surface_heat_flow, shf_data['lons'], shf_data['lats'])
+    #Output Dataframe
+    shf_df = shf_data.assign(model_values=shf_interpolated)
+    #diffs = shf_df['model_values'] - shf_df['data_values']
+    shf_df = shf_df.assign(diffs=(shf_df['model_values'] - shf_df['data_values']))
     #RMSE
-    if weigh_error is True:
-        shf_df = shf_df.dropna(subset=['data_error'])
+    if weigh_errors is True:
+        shf_df = shf_df.dropna(subset=['data_errors'])
         rmse = calc_rmse_weighted(
-            shf_df['model'], shf_df['data'], shf_df['data_error'])
+            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
         e_prom, sigmas = sigma_weighted(
-            shf_df['model'], shf_df['data'], shf_df['data_error'])
+            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
     else:
         #shf_df = shf_df.drop(columns=['data_error'])
-        rmse = calc_rmse(shf_df['model'], shf_df['data'])
-        e_prom, sigmas = sigma(shf_df['model'], shf_df['data'])
+        rmse = calc_rmse(shf_df['model_values'], shf_df['data_values'])
+        e_prom, sigmas = sigma(shf_df['model_values'], shf_df['data_values'])
     estimators = {'rmse': rmse, 'e_prom': e_prom, 'sigmas': sigmas}
-    print_estimators_table(estimators, 'estimadores')
-    dic = {
-        'diff': diff,
-        'rmse': rmse, 'e_prom': e_prom, 'sigmas': sigmas}
+    print_estimators_table(estimators, save_dir + 'estimadores')
     #Standard deviation
-    return_tuple = []
-    return_tuple.append(DotMap(dic))
-    if return_ishf:
-        return_tuple.append(shf_df['model'])
-    return return_tuple
+    return_value = estimators
+    if return_dataframe:
+        return_value = [estimators, shf_df]
+    return return_value
 
 def calc_rmse(model, data):
     diff = model - data

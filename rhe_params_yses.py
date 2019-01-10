@@ -14,7 +14,7 @@ if __name__ == '__main__':
     exec_input, direTer, direMec = exec_setup()
     t_input, m_input = input_setup()
     rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
-    model, _, _ = termomecanico(t_input, m_input)
+    model = termomecanico(t_input, m_input)
     x_axis = model.cs.get_x_axis()
     z_axis = model.cs.get_z_axis()
     z_axis_2 = [*z_axis, *z_axis]

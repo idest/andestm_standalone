@@ -226,7 +226,7 @@ def plot_seismogenic_thickness_vs_eet_scatter(
 
 print('Running tasks')
 
-model, _, _ = termomecanico(*input_setup())
+model = termomecanico(*input_setup())
 eet_m = model.mm.get_eet()
 #eet = eet_m
 #eet = np.loadtxt('Output/13_Termal/01_Mecanico/Exploration/Teq_vs_Tef/lc_uc/Archivos/prom.txt')
@@ -333,4 +333,4 @@ for file in os.listdir(save_dir_encoded):
 #     len(eqs_csn_ISA_OSB.index),
 #     len(eqs_csn_ISA_OSB_LT50.index)])
 #plt.show()
-#model, _, _ = termomecanico(*input_setup())
+#model = termomecanico(*input_setup())

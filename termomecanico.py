@@ -9,8 +9,7 @@ from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    heatmap_map, data_scatter_map, diff_scatter_map,
                    multi_map, data_scatter_plot, earthquake_map,
                    plot_eet_equivalent_vs_effective)
-from src.datos_q import (shf_data, shf_data_coords, shf_data_types,
-                         shf_data_error, shf_df)
+from src.datos_q import shf_data
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
     eet_tassara_07, eet_pg_07)
@@ -19,21 +18,13 @@ from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
 def termomecanico(t_input, m_input):
     gm_data, areas, trench_age, rhe_data, coast = data_setup()
     model = compute(gm_data, areas, trench_age, rhe_data, coast, t_input, m_input)
-    shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    model_rmse, ishf = rmse(shf, shf_df, return_ishf=True, weigh_error=True)
     print('.')
-    return model, model_rmse, ishf
+    return model
 
 if __name__ == '__main__':
     t_input, m_input = input_setup()
     exec_input, direTer, direMec = exec_setup()
-    model, model_rmse, ishf = termomecanico(t_input,m_input)
-    # Save
-    files_dir_ter = direTer + 'Archivos/'
-    makedir(files_dir_ter)
-    np.savetxt(files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt', ishf)
-    #stats = pd.DataFrame.from_dict(model_rmse, orient='index')
-    #stats.to_csv(files_dir_ter + 'stats.txt')
+    model = termomecanico(t_input,m_input)
 
     #Earthquakes CSN
     if exec_input.eqs != 0:
@@ -58,30 +49,50 @@ if __name__ == '__main__':
     else:
         eqs = None
 
+    shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
+    estimators, df = rmse(shf, shf_data, return_dataframe=True)
+
+    # Save
+    files_dir_ter = direTer + 'Archivos/'
+    makedir(files_dir_ter)
+    np.savetxt(
+        files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt',
+        df['model_values'])
+    #stats = pd.DataFrame.from_dict(model_rmse, orient='index')
+    #stats.to_csv(files_dir_ter + 'stats.txt')
+
     #Maps
     if exec_input.xt1:
         maps_dir = direTer + 'Mapas/'
-        shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-        diff = model_rmse.diff
-        rmse = model_rmse.rmse
-        e_prom = model_rmse.e_prom
-        sigmas = model_rmse.sigmas
-        heatmap_map(shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
-                    title='Surface Heat Flow', filename=maps_dir + 'shf_map')
+        heatmap_map(
+            shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
+            title='Surface Heat Flow', filename=maps_dir + 'shf_map')
         data_scatter_map(
-            shf_data, data_coords=shf_data_coords, data_types=shf_data_types,
-            rmse=rmse, filename=maps_dir + 'data_scatter_map')
+            df['data_values'],
+            data_coords=[df['lons'], df['lats']],
+            data_types=df['data_types'],
+            rmse=estimators['rmse'],
+            filename=maps_dir + 'data_scatter_map')
         data_scatter_map(
-            ishf, data_coords=shf_data_coords, data_types=shf_data_types,
-            rmse=rmse, filename=maps_dir + 'ishf_scatter_map')
+            df['model_values'],
+            data_coords=[df['lons'], df['lats']],
+            data_types=df['data_types'],
+            rmse=estimators['rmse'],
+            filename=maps_dir + 'ishf_scatter_map')
         diff_scatter_map(
-            diff, data_coords=shf_data_coords, data_types=shf_data_types,
-            rmse=rmse, filename=maps_dir + 'diff_scatter_map',
-            e_prom=e_prom, sigmas=sigmas)
+            df['diffs'],
+            data_coords=[df['lons'], df['lats']],
+            data_types=df['data_types'],
+            rmse=estimators['rmse'], e_prom=estimators['e_prom'],
+            sigmas=estimators['sigmas'],
+            filename=maps_dir + 'diff_scatter_map')
         multi_map(
-            shf=shf, data=shf_data, diff=diff, data_coords=shf_data_coords,
-            data_types=shf_data_types, rmse=rmse,
-            e_prom=e_prom, sigmas=sigmas, filename=maps_dir + 'multi_map')
+            shf=shf, data=df['data_values'], diff=df['diffs'],
+            data_coords=[df['lons'], df['lats']],
+            data_types=df['data_types'],
+            rmse=estimators['rmse'], e_prom=estimators['e_prom'],
+            sigmas=estimators['sigmas'],
+            filename=maps_dir + 'multi_map')
         k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)
         heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
         h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
@@ -144,7 +155,7 @@ if __name__ == '__main__':
             ishf_models = [np.loadtxt(f, ndmin=2) for f in ishf_models_files]
             ishf_models = np.concatenate(ishf_models, axis=1).T
             data_scatter_plot(
-                shf_data, shf_data_error, shf_data_types,
+                df['data_values'], df['data_errors'], df['data_types'],
                 ishf_models, ishf_labels, filename=scatter_dir + 'scatter')
 
     #Latitude profiles

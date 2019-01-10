@@ -417,8 +417,10 @@ def get_map_scatter_function(data_coords, data_types, map):
     if data_coords is None:
         raise ValueError('data_cords variable is missing.')
     else:
-        lon = data_coords[:,0]
-        lat = data_coords[:,1]
+        #lon = data_coords[:,0]
+        #lat = data_coords[:,1]
+        lon = data_coords[0]
+        lat = data_coords[1]
         map_lon, map_lat = map(lon, lat)
     # Markers
     markers = ['o']

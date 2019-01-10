@@ -10,12 +10,13 @@
          0  graf     Graficar geometrias? 1: En png ; 2: En svg; 0 : No
          1  model    1 = heat_flow, 2 = yse, 3 = eet
          0  eqs      Graficar sismos? 0: No, 1: CSN, 2: USGS, 3: CSN & USGS
+         1  weigh    Considerar error de los datos para la evaluación del modelo?
 #------------------------------------------------------------------------------
 # Opciones para el modelo Termal
 #------------------------------------------------------------------------------
 #    Valor  Nombre   Descripcion
 #    -----  -------  -----------
-      '02'  temcaso  Numero de referencia para guardar el Modelo Termal
+      '04'  temcaso  Numero de referencia para guardar el Modelo Termal
 #·········  ·······  ··························································
      -10.0  tmi      Latitud inicial
      -44.8  tmx      Latitud maxima

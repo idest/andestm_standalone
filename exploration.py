@@ -19,7 +19,9 @@ from src.plot import (heatmap_map, base_map, boolean_map, diff_map,
     plot_eet_equivalent_vs_effective, multi_map)
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
-from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
+#from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
+from src.rmse import rmse
+from src.datos_q import shf_data
 
 # print memory usage
 def mem():
@@ -336,16 +338,11 @@ def eet_equivalent_vs_effective_results(
         return {'diffs': diffs, 'eet': data['eet'], 'uc': uc_array, 'lc': lc_array}
     return results
 
-def get_thermal_data(model, model_rmse, ishf):
+def get_thermal_data(model):
     return {'cs': model.cs,
             'geotherm': model.tm.get_geotherm(),
             'surface_heat_flow': model.tm.get_surface_heat_flow(
-                format='positive milliwatts'),
-            'rmse': model_rmse.rmse,
-            'diff': model_rmse.diff,
-            'e_prom': model_rmse.e_prom,
-            'sigmas': model_rmse.sigmas,
-            'moda': model_rmse.moda}
+                format='positive milliwatts')}
 
 def thermal_results(save_dir='Thermal', plot=False):
     save_dir_maps = save_dir + 'Mapas/'
@@ -353,11 +350,13 @@ def thermal_results(save_dir='Thermal', plot=False):
     makedir(save_dir_files)
     def results(t_input, m_input, name):
         data = get_model_data(t_input, m_input, get_thermal_data)
-        dic = {
-            'rmse': data['rmse'], 'diff': data['diff'], #'shf_data_weighted': data,
-            'e_prom': data['e_prom'], 'sigmas': data['sigmas'], 'moda': data['moda']}
-        stats = pd.DataFrame.from_dict(dic, orient='index')
-        stats.to_csv(save_dir_files + 'stats' + name + '.txt')
+        estimators, df = rmse(
+            data['surface_heat_flow'], shf_data, return_dataframe=True)
+        ##dic = {
+        ##    'rmse': estimators['rmse'], 'diff': data['diff'],
+        ##    'e_prom': data['e_prom'], 'sigmas': data['sigmas']}
+        ##stats = pd.DataFrame.from_dict(dic, orient='index')
+        ##stats.to_csv(save_dir_files + 'stats' + name + '.txt')
         #x_grid, y_grid, z_grid = data['cs'].get_3D_grid(masked=False)
         #df = pd.DataFrame(
         #    {'lat': y_grid.flatten(),
@@ -372,15 +371,16 @@ def thermal_results(save_dir='Thermal', plot=False):
             #    filename = save_dir_maps + name, cbar_limits=[30,110])
             multi_map(
                 shf=data['surface_heat_flow'],
-                data=shf_data, diff=data['diff'], data_coords=shf_data_coords,
-                data_types=shf_data_types, rmse=data['rmse'],
-                e_prom=data['e_prom'], sigmas=data['sigmas'],
+                data=df['data_values'], diff=df['diffs'],
+                data_coords=[df['lons'], df['lats']],
+                data_types=df['data_types'], rmse=estimators['rmse'],
+                e_prom=estimators['e_prom'], sigmas=estimators['sigmas'],
                 filename= save_dir_maps + name)
         return {'geotherm': data['geotherm'],
                 'surface_heat_flow': data['surface_heat_flow']}
     return results
 
-def get_eet_wrong_data(model, model_rmse, ishf):
+def get_eet_wrong_data(model):
     return {'eet': model.mm.get_eet(),
             'eet_wrong': model.mm.get_eet_wrong(),
             'share_icd': model.mm.eet_calc_data['share_icd'],
@@ -411,7 +411,7 @@ def eet_wrong_results(save_dir='EET_wrong', plot=False):
                 'eet_diff': eet_diff}
     return results
 
-def get_eet_data(model, model_rmse, ishf):
+def get_eet_data(model):
     return {'eet': model.mm.get_eet(),
     #'eet_from_trench': model.mm.get_eet_from_trench(),
     'share_icd': model.mm.eet_calc_data['share_icd'],
@@ -440,7 +440,7 @@ def eet_results(eet_effective_dict=None, save_dir='EET', plot=False):
         return data['eet']
     return results
 
-def get_ist_data(model, model_rmse, ishf):
+def get_ist_data(model):
     return {'ist': model.mm.get_integrated_strength()}
 
 def ist_results(save_dir='IST', plot=False):
@@ -521,8 +521,8 @@ def eet_deviation_from_prom(eets, names, save_dir):
 def get_model_data(t_input, m_input, data_function):
     out_q = mp.Queue()
     def mp_termomecanico(t_input, m_input, data_function, queue):
-        model, model_rmse, ishf = termomecanico(t_input, m_input)
-        data = data_function(model, model_rmse, ishf)
+        model = termomecanico(t_input, m_input)
+        data = data_function(model)
         queue.put(data)
         return
     proc = mp.Process(
@@ -1128,7 +1128,7 @@ if __name__ == '__main__':
     #    'Temp1': normal_gt.flatten(),
     #    'Temp2': hot_gt.flatten(),
     #    'Temp3': cold_gt.flatten()})
-    #model, _, _ = termomecanico(*input_setup())
+    #model = termomecanico(*input_setup())
     #moho_hot = hot_gt.extract_surface(model.gm.get_moho()) 
     #moho_cold = cold_gt.extract_surface(model.gm.get_moho()) 
     #moho_diff = moho_hot - moho_cold

@@ -11,14 +11,14 @@
 #                       k_z = True  valor de K dep de Z
      False  H_z         H_z = False prom. de H.
 #                       H_z = True  valor de H dep de Z
-     False  delta_icd   delta_icd = True delta depende de icd.
+      True  delta_icd   delta_icd = True delta depende de icd.
 #                       delta_icd = False => delta_icd = delta
       True  t_lat       t_lat = True usar edad de la fosa segun latitud.
 #                       t_lat = False (t_lat = t)
 #·········  ··········  ··························································
        3.0  k_cs        Conductividad termica Corteza superior [W/mK] (4.2)
-       3.0  k_ci        Conductividad termica Corteza inferior [W/mK] (4.2)
-       3.0  k_ml        Conductividad termica Manto litosferico [ W/mK] (4.2)
+       2.5  k_ci        Conductividad termica Corteza inferior [W/mK] (4.2)
+       3.5  k_ml        Conductividad termica Manto litosferico [ W/mK] (4.2)
     2.0e-6  H_cs        Calor radiogenico Corteza superior [W/m3]
     2.0e-6  H_ci        Calor radiogenico Corteza inferior [W/m3]
     2.0e-6  H_ml        Calor radiogenico Manto litosferico [W/m3]

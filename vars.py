@@ -8,7 +8,7 @@ from termomecanico import termomecanico
 from src.plot import rmse_plot
 from src.utils import makedir
 from src.rmse import rmse
-from src.datos_q import shf_df
+from src.datos_q import shf_data
 from pathlib import Path
 
 # print memory usage
@@ -79,14 +79,15 @@ def get_model_rmse(t_input, m_input):
         #should be model, model_rmse, ishf ??
         model = termomecanico(t_input, m_input)
         shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-        estimators = rmse(shf, shf_df)
+        estimators = rmse(shf, shf_data)
         queue.put(estimators['rmse'])
+        #queue.put('hola')
         return
     proc = mp.Process(target=mp_termomecanico, args=(t_input, m_input, out_q))
     proc.start()
-    rmse = out_q.get()
+    result = out_q.get()
     proc.join()
-    return rmse
+    return result
 
 def get_results(t_input, m_input, vnames, vranges, vaxes, save_dir, filename=''):
     if len(vaxes) > 1:

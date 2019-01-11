@@ -3,7 +3,7 @@ import pandas as pd
 from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
-from src.rmse import rmse
+from src.stats import evaluate_model
 from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    elastic_thickness_latitude_profile,
                    heatmap_map, data_scatter_map, diff_scatter_map,
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         eqs = None
 
     shf = model.tm.get_surface_heat_flow(format='positive milliwatts')
-    estimators, df = rmse(shf, shf_data, return_dataframe=True)
+    estimators, df = evaluate_model(shf, shf_data, return_dataframe=True)
 
     # Save
     files_dir_ter = direTer + 'Archivos/'
@@ -83,14 +83,14 @@ if __name__ == '__main__':
             df['diffs'],
             data_coords=[df['lons'], df['lats']],
             data_types=df['data_types'],
-            rmse=estimators['rmse'], e_prom=estimators['e_prom'],
+            rmse=estimators['rmse'], mse=estimators['mse'],
             sigmas=estimators['sigmas'],
             filename=maps_dir + 'diff_scatter_map')
         multi_map(
             shf=shf, data=df['data_values'], diff=df['diffs'],
             data_coords=[df['lons'], df['lats']],
             data_types=df['data_types'],
-            rmse=estimators['rmse'], e_prom=estimators['e_prom'],
+            rmse=estimators['rmse'], mse=estimators['mse'],
             sigmas=estimators['sigmas'],
             filename=maps_dir + 'multi_map')
         k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)

@@ -10,7 +10,7 @@ from src.setup import exec_setup
 exec_input, direTer, direMec = exec_setup()
 weigh_errors = True if exec_input.weigh == 1 else False
 
-def rmse(
+def evaluate_model(
     surface_heat_flow, shf_data, weigh_errors=weigh_errors,
     return_dataframe=False, save_dir=None):
     if save_dir is None:
@@ -27,13 +27,13 @@ def rmse(
         shf_df = shf_df.dropna(subset=['data_errors'])
         rmse = calc_rmse_weighted(
             shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
-        e_prom, sigmas = sigma_weighted(
+        mse, sigmas = sigma_weighted(
             shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
     else:
         #shf_df = shf_df.drop(columns=['data_error'])
         rmse = calc_rmse(shf_df['model_values'], shf_df['data_values'])
-        e_prom, sigmas = sigma(shf_df['model_values'], shf_df['data_values'])
-    estimators = {'rmse': rmse, 'e_prom': e_prom, 'sigmas': sigmas}
+        mse, sigmas = sigma(shf_df['model_values'], shf_df['data_values'])
+    estimators = {'rmse': rmse, 'mse': mse, 'sigmas': sigmas}
     print_estimators_table(estimators, save_dir + 'estimadores')
     #Standard deviation
     return_value = estimators
@@ -78,14 +78,14 @@ def sigma(shf_interpolated, data):
     p_1_sigma = diff.mean() + sigma
     n_2_sigma = diff.mean() - 2*sigma
     p_2_sigma = diff.mean() + 2*sigma
-    #e_prom = mean_absolute_error(data, shf_interpolated)
-    e_prom = diff.mean()
+    #mae = mean_absolute_error(data, shf_interpolated)
+    mse = diff.mean()
     sigmas = {
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
     sigmas = DotMap(sigmas)
     #moda = np.nanmax(abs(diff))
-    return e_prom, sigmas
+    return mse, sigmas
 
 def sigma_weighted(shf_interpolated, data, data_error):
     diff = shf_interpolated - data
@@ -95,13 +95,13 @@ def sigma_weighted(shf_interpolated, data, data_error):
     p_1_sigma = diff.mean() + sigma
     n_2_sigma = diff.mean() - 2*sigma
     p_2_sigma = diff.mean() + 2*sigma
-    e_prom = sum((data_weight/sum(data_weight))*diff)
+    mse = sum((data_weight/sum(data_weight))*diff)
     sigmas = {
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
     sigmas = DotMap(sigmas)
     #moda = np.nanmax(abs(diff))
-    return e_prom, sigmas
+    return mse, sigmas
 
 def interpolate_surface_heat_flow(surface_heat_flow, x, y):
     surface_heat_flow_masked = surface_heat_flow.copy()

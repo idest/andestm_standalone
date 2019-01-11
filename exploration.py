@@ -20,7 +20,7 @@ from src.plot import (heatmap_map, base_map, boolean_map, diff_map,
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
 #from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
-from src.rmse import rmse
+from src.stats import evaluate_model
 from src.datos_q import shf_data
 
 # print memory usage
@@ -102,6 +102,19 @@ def applied_stress_exploration(
         results[name] = results_function(t_input, m_input, name)
     return results
 
+def initial_thermal_vars(t_input):
+    #k:3.5, h:2.2e-6
+    t_input['k_cs'] = 3.0
+    t_input['k_ci'] = 3.0
+    t_input['k_ml'] = 3.0
+    t_input['H_cs'] = 1.8e-6
+    t_input['H_ci'] = 1.8e-6
+    t_input['H_ml'] = 1.8e-6
+    t_input['delta_icd'] = False
+    t_input['t_lat'] = False
+    t_input['delta'] = 10
+    t_input['t'] = 39.13
+
 def thermal_exploration(
         results_function, t_input=None, m_input=None, dir_name=None):
     if t_input is None and m_input is None:
@@ -111,55 +124,63 @@ def thermal_exploration(
     else:
         dir_name = ''
     results = {}
-    def initial_vars():
-        #k:3.5, h:2.2e-6
-        t_input['k_cs'] = 3.0
-        t_input['k_ci'] = 3.0
-        t_input['k_ml'] = 3.0
-        t_input['H_cs'] = 2.0e-6
-        t_input['H_ci'] = 2.0e-6
-        t_input['H_ml'] = 2.0e-6
-        t_input['delta_icd'] = False
-        t_input['t_lat'] = False
-        t_input['delta'] = 10
-        t_input['t'] = 39.13
     ###### Modelo Inicial
-    initial_vars()
-    name = dir_name + 'h_2.0e-6__k_3.0__delta_10__t_30'
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        '__delta_' + '{:.1f}'.format(t_input['delta']) +
+        '__t_' + '{:.2f}'.format(t_input['t']))
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### t Variable
-    initial_vars()
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        '__delta_' + '{:.1f}'.format(t_input['delta']) +
+        '__t_var')
     t_input['t_lat'] = True
-    name = dir_name + 'h_2.0e-6__k_3.0__delta_10__t_var'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### K Variable
-    initial_vars()
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        '__k_var' +
+        '__delta_' + '{:.1f}'.format(t_input['delta']) +
+        '__t_' + '{:.2f}'.format(t_input['t']))
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
     t_input['k_ml'] = 3.5
-    name = dir_name + 'h_2.0e-6__k_var__delta_10__t_30'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### Delta Variable
-    initial_vars()
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        '__delta_icd' +
+        '__t_' + '{:.2f}'.format(t_input['t']))
     t_input['delta_icd'] = True
-    name = dir_name + 'h_2.0e-6__k_3.0__delta_icd__t_30'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
     ###### Modelo mas complejo
-    initial_vars()
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        '__k_var' +
+        '__delta_icd' +
+        '__t_var')
     t_input['t_lat'] = True
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
     t_input['k_ml'] = 3.5
     t_input['delta_icd'] = True
-    name = dir_name + 'h_2.0e-6__k_var__delta_icd__t_var'
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
@@ -174,18 +195,7 @@ def thermal_H_exploration(
     else:
         dir_name = ''
     results = {}
-    def initial_vars():
-        t_input['k_cs'] = 3.5
-        t_input['k_ci'] = 3.5
-        t_input['k_ml'] = 3.5
-        t_input['H_cs'] = 2.2e-6
-        t_input['H_ci'] = 2.2e-6
-        t_input['H_ml'] = 2.2e-6
-        t_input['delta_icd'] = False
-        t_input['t_lat'] = False
-        t_input['delta'] = 10
-        t_input['t'] = 30
-    initial_vars()
+    initial_thermal_vars(t_input)
     for h in np.linspace(0, 5.e-6, 6):
         t_input['H_cs'] = h 
         t_input['H_ci'] = h 
@@ -203,18 +213,7 @@ def thermal_K_exploration(
     else:
         dir_name = ''
     results = {}
-    def initial_vars():
-        t_input['k_cs'] = 3.5
-        t_input['k_ci'] = 3.5
-        t_input['k_ml'] = 3.5
-        t_input['H_cs'] = 2.2e-6
-        t_input['H_ci'] = 2.2e-6
-        t_input['H_ml'] = 2.2e-6
-        t_input['delta_icd'] = False
-        t_input['t_lat'] = False
-        t_input['delta'] = 10
-        t_input['t'] = 30
-    initial_vars()
+    initial_thermal_vars(t_input)
     for k in np.linspace(1,5,5):
         t_input['k_cs'] = k
         t_input['k_ci'] = k
@@ -232,18 +231,7 @@ def thermal_delta_exploration(
     else:
         dir_name = ''
     results = {}
-    def initial_vars():
-        t_input['k_cs'] = 3.5
-        t_input['k_ci'] = 3.5
-        t_input['k_ml'] = 3.5
-        t_input['H_cs'] = 2.2e-6
-        t_input['H_ci'] = 2.2e-6
-        t_input['H_ml'] = 2.2e-6
-        t_input['delta_icd'] = False
-        t_input['t_lat'] = False
-        t_input['delta'] = 10
-        t_input['t'] = 30
-    initial_vars()
+    initial_thermal_vars(t_input)
     for delta in np.linspace(5,15,6):
         t_input['delta'] = delta 
         name = dir_name + 'delta_{:.0f}'.format(delta)
@@ -259,18 +247,7 @@ def thermal_hot_and_cold_exploration(
     else:
         dir_name = ''
     results = {}
-    def initial_vars():
-        t_input['k_cs'] = 3.5
-        t_input['k_ci'] = 3.5
-        t_input['k_ml'] = 3.5
-        t_input['H_cs'] = 2.2e-6
-        t_input['H_ci'] = 2.2e-6
-        t_input['H_ml'] = 2.2e-6
-        t_input['delta_icd'] = False
-        t_input['t_lat'] = True
-        t_input['delta'] = 10
-        #t_input['t'] = 30
-    initial_vars()
+    initial_thermal_vars(t_input)
     name = dir_name + 'normal'
     results[name] = results_function(t_input, m_input, name)
     name = dir_name + 'hot'
@@ -350,7 +327,7 @@ def thermal_results(save_dir='Thermal', plot=False):
     makedir(save_dir_files)
     def results(t_input, m_input, name):
         data = get_model_data(t_input, m_input, get_thermal_data)
-        estimators, df = rmse(
+        estimators, df = evaluate_model(
             data['surface_heat_flow'], shf_data, return_dataframe=True)
         ##dic = {
         ##    'rmse': estimators['rmse'], 'diff': data['diff'],
@@ -374,7 +351,7 @@ def thermal_results(save_dir='Thermal', plot=False):
                 data=df['data_values'], diff=df['diffs'],
                 data_coords=[df['lons'], df['lats']],
                 data_types=df['data_types'], rmse=estimators['rmse'],
-                e_prom=estimators['e_prom'], sigmas=estimators['sigmas'],
+                mse=estimators['mse'], sigmas=estimators['sigmas'],
                 filename= save_dir_maps + name)
         return {'geotherm': data['geotherm'],
                 'surface_heat_flow': data['surface_heat_flow']}
@@ -635,9 +612,9 @@ def get_rheology_mosaic(
 if __name__ == '__main__':
     exec_input, direTer, direMec = exec_setup()
     t_input, m_input = input_setup()
-    save_dir = direMec + 'Exploration/'
+    save_dir = direMec + 'Exploracion/'
     makedir(save_dir)
-    save_dir_thermal = direTer + 'Exploration/'
+    save_dir_thermal = direTer + 'Exploracion/'
     makedir(save_dir_thermal)
     #### Reologias
     lc_params = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
@@ -667,7 +644,7 @@ if __name__ == '__main__':
     #### Thermal Casos ######################################################
     thermal_exploration(
             thermal_results(
-                save_dir=save_dir_thermal + 'Thermal_casos/', plot=True))
+                save_dir=save_dir_thermal + 'Termal_casos/', plot=True))
 
     #### EET Rheo ###########################################################
     #eets = rheo_exploration(
@@ -693,7 +670,7 @@ if __name__ == '__main__':
     #        functools.partial(rheo_exploration,
     #            functools.partial(thermal_exploration,
     #                eet_results(
-    #                    save_dir=save_dir + 'Thermal_casos/EET/', plot=True)),
+    #                    save_dir=save_dir + 'Termal_casos/EET/', plot=True)),
     #                uc_params=[1,10]),
     #        lc_params=lc_params)
     #eets_i = [
@@ -713,8 +690,8 @@ if __name__ == '__main__':
     #eet_delta_icd_prom = sum(eets_delta_icd)/len(eets_delta_icd)
     #sd_k_var = calc_deviation(eet_i_prom, eet_k_var_prom)
     #sd_delta_icd = calc_deviation(eet_i_prom, eet_delta_icd_prom)
-    #save_dir_maps = save_dir + 'Thermal_casos/EET/Mapas/'
-    #save_dir_files = save_dir + 'Thermal_casos/EET/Archivos/'
+    #save_dir_maps = save_dir + 'Termal_casos/EET/Mapas/'
+    #save_dir_files = save_dir + 'Termal_casos/EET/Archivos/'
     #diff_map(
     #    eet_i_prom, eet_k_var_prom, eet_i_prom - eet_k_var_prom, sd=sd_k_var,
     #    colormap=jet_white_r, colormap_diff=get_elevation_diff_cmap(100),

@@ -503,7 +503,7 @@ def diff_scatter_map(
         diff, data_coords=None, data_types=None, map=None, ax=None,
         rmse=None, legend=True, return_width_ratio=False,
         filename=None,
-        e_prom=None, sigmas=None):
+        mse=None, sigmas=None):
     # Axes and map setup
     if ax is None:
         fig, ax = plt.subplots()
@@ -560,12 +560,12 @@ def diff_scatter_map(
     ax.set_title('Model minus Data')
     # Options
     extra_artists=[]
-    if e_prom is not None:
+    if mse is not None:
         # MAE
-        e_prom_text = plt.figtext(
-            0.4, 0, 'ME: %0.2f' %(e_prom),
+        mse_text = plt.figtext(
+            0.4, 0, 'MSE: %0.2f' %(mse),
             fontweight='bold')
-        extra_artists.append(e_prom_text)
+        extra_artists.append(mse_text)
     if rmse is not None:
         # RMSE
         rmse_text = plt.figtext(
@@ -590,7 +590,7 @@ def diff_scatter_map(
 def multi_map(
         shf=None, data=None, diff=None, data_coords=None, data_types=None,
         rmse=None, topo=True, filename=None,
-        e_prom=None, sigmas=None):
+        mse=None, sigmas=None):
     # Gridspec
     fig = plt.figure(figsize=(9,6))
     gs = gridspec.GridSpec(1,2)
@@ -625,10 +625,10 @@ def multi_map(
     # Extra Artists
     extra_artists=[]
     #MEA
-    e_prom_text = plt.figtext(
-        0.03, -0.02, 'ME: %0.2f' %(e_prom),
+    mse_text = plt.figtext(
+        0.03, -0.02, 'ME: %0.2f' %(mse),
         fontweight='bold')
-    extra_artists.append(e_prom_text)
+    extra_artists.append(mse_text)
     # RMSE
     rmse_text = plt.figtext(
         0.03, 0, 'RMSE: %0.2f' %(rmse),
@@ -649,7 +649,9 @@ def multi_map(
             #dpi='figure', format='pdf')
     plt.close()
 
-def rmse_plot(vnames, vaxes, rmses, filename=None):
+
+def estimator_plot(
+        vnames, vaxes, estimator, signed=False, label='', filename=None):
     # x axis
     x_name = vnames[0]
     x_axis = vaxes[0]
@@ -662,8 +664,8 @@ def rmse_plot(vnames, vaxes, rmses, filename=None):
         plt.ylabel(str(y_name))
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         # 2D matrix
-        vmin = np.min(rmses)
-        vmax = np.max(rmses)
+        vmin = np.floor(np.min(estimator))
+        vmax = np.ceil(np.max(estimator))
         v = np.linspace(vmin, vmax, 100)
         #plt.contourf(
         #    x_axis, y_axis, rmses.T, v, norm=colors.PowerNorm(gamma=1./2.))
@@ -671,8 +673,17 @@ def rmse_plot(vnames, vaxes, rmses, filename=None):
         #    x_axis, y_axis, rmses.T, norm=colors.PowerNorm(gamma=1./2.))
         x_step = x_axis[1] - x_axis[0]
         y_step = y_axis[1] - y_axis[0]
-        plt.imshow(rmses.T, origin='lower', aspect='auto',
-            norm=colors.PowerNorm(gamma=1./2.),
+        if signed is True:
+            norm = None
+            vmax = np.nanmax([abs(vmax), abs(vmin)])
+            vmin = -vmax
+            cmap = get_diff_cmap(vmax * 2 + 1)
+        else:
+            norm = colors.PowerNorm(gamma=1./2.)
+            cmap = 'viridis'
+        plt.imshow(
+            estimator.T, origin='lower', aspect='auto',
+            norm=norm, cmap=cmap, vmin=vmin, vmax=vmax,
             extent=[
                 x_axis[0] - x_step/2, x_axis[-1] + x_step/2,
                 y_axis[0] - y_step/2, y_axis[-1] + y_step/2])
@@ -685,12 +696,11 @@ def rmse_plot(vnames, vaxes, rmses, filename=None):
         name = filename + '_2D'
     else:
         index = np.arange(len(x_axis))
-        plt.plot(index, rmses, '-r', linewidth=1.)
-        plt.bar(index, rmses, alpha=.4)
+        plt.plot(x_axis, rmses, '-r', linewidth=1.)
+        plt.bar(x_axis, rmses, alpha=.4, width=(x_axis[1]-x_axis[0])*0.8)
         diff = max(rmses) - min(rmses)
         plt.ylim(min(rmses)-0.2*diff, max(rmses)+0.2*diff)
-        plt.xticks(index, x_axis)
-        plt.ylabel('RMSE')
+        plt.ylabel(label)
         plt.grid(True)
         name = filename 
     plt.tight_layout()

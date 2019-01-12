@@ -675,11 +675,16 @@ def estimator_plot(
         y_step = y_axis[1] - y_axis[0]
         if signed is True:
             norm = None
-            vmax = np.nanmax([abs(vmax), abs(vmin)])
-            vmin = -vmax
+            #vmax = np.nanmax([abs(vmax), abs(vmin)])
+            #vmin = -vmax
+            vmax = 60
+            vmin = -60
             cmap = get_diff_cmap(vmax * 2 + 1)
         else:
-            norm = colors.PowerNorm(gamma=1./2.)
+            #norm = colors.PowerNorm(gamma=1./2.)
+            norm = None
+            vmin = 20
+            vmax = 60
             cmap = 'viridis'
         plt.imshow(
             estimator.T, origin='lower', aspect='auto',

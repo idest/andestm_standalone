@@ -73,13 +73,13 @@ def calc_rmse_weighted_aggressive(model, data, data_error):
 
 def sigma(shf_interpolated, data):
     diff = shf_interpolated - data
+    #mae = mean_absolute_error(data, shf_interpolated)
+    mse = diff.mean()
     sigma = np.std(diff) #np.sqrt(((diff-diff.mean())**2).mean())
     n_1_sigma = diff.mean() - sigma
     p_1_sigma = diff.mean() + sigma
     n_2_sigma = diff.mean() - 2*sigma
     p_2_sigma = diff.mean() + 2*sigma
-    #mae = mean_absolute_error(data, shf_interpolated)
-    mse = diff.mean()
     sigmas = {
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}
@@ -90,12 +90,12 @@ def sigma(shf_interpolated, data):
 def sigma_weighted(shf_interpolated, data, data_error):
     diff = shf_interpolated - data
     data_weight = 1 / data_error
-    sigma = np.sqrt(sum((data_weight/sum(data_weight))*(diff-diff.mean())**2))
-    n_1_sigma = diff.mean() - sigma
-    p_1_sigma = diff.mean() + sigma
-    n_2_sigma = diff.mean() - 2*sigma
-    p_2_sigma = diff.mean() + 2*sigma
     mse = sum((data_weight/sum(data_weight))*diff)
+    sigma = np.sqrt(sum((data_weight/sum(data_weight))*(diff-mse)**2))
+    n_1_sigma = mse - sigma
+    p_1_sigma = mse + sigma
+    n_2_sigma = mse - 2*sigma
+    p_2_sigma = mse + 2*sigma
     sigmas = {
         'p_1_sigma': p_1_sigma, 'n_1_sigma': n_1_sigma,
         'p_2_sigma': p_2_sigma, 'n_2_sigma': n_2_sigma}

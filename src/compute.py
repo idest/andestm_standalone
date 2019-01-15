@@ -2,6 +2,7 @@ import math
 import numpy as np
 from dotmap import DotMap
 from box import Box
+import pandas as pd
 import inspect
 #TODO: change all references to DotMap with Box
 np.seterr(divide='ignore', invalid='ignore')
@@ -233,12 +234,12 @@ class CoordinateSystem(object):
     def get_3D_shape(self):
         return len(self.x_axis), len(self.y_axis), len(self.z_axis)
 
-    def get_2D_grid(self):
-        grid_2D = []
-        for n in range(len(self.grid_2D)):
-            grid_2D.append(SpatialArray2D(self.grid_2D[n],
-                                          self).mask_irrelevant())
-        return grid_2D
+    #def get_2D_grid(self):
+    #    grid_2D = []
+    #    for n in range(len(self.grid_2D)):
+    #        grid_2D.append(SpatialArray2D(self.grid_2D[n],
+    #                                      self).mask_irrelevant())
+    #    return grid_2D
 
     #def get_3D_grid(self):
     #    grid_3D = []
@@ -246,6 +247,15 @@ class CoordinateSystem(object):
     #        grid_3D.append(SpatialArray3D(self.grid_3D[n],
     #                                      self).mask_irrelevant())
     #    return grid_3D
+
+    def get_2D_grid(self, masked=True):
+        grid_2D = []
+        for n in range(len(self.grid_2D)):
+            n_grid = SpatialArray2D(self.grid_2D[n], self)
+            if masked is True:
+                n_grid = n_grid.mask_irrelevant()
+            grid_2D.append(n_grid)
+        return grid_2D
 
     def get_3D_grid(self, masked=True):
         grid_3D = []
@@ -427,6 +437,17 @@ class SpatialArray2D(SpatialArray):
                                                          replacement_array,
                                                          areas)
         return combined_array
+
+    def export(self, filename, fieldname='prop', dropna=False):
+        x_grid, y_grid = self.cs.get_2D_grid(masked=False)
+        df = pd.DataFrame(
+            {'lon': x_grid.flatten(),
+             'lat': y_grid.flatten(),
+             fieldname: self.flatten()})
+        if dropna is True:
+            df = df.dropna()
+        df.to_csv(filename, sep=' ', na_rep='nan', index=False, float_format='%.2f')
+        return
 
 
 class SpatialArray3D(SpatialArray):

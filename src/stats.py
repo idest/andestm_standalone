@@ -90,8 +90,10 @@ def sigma(shf_interpolated, data):
 def sigma_weighted(shf_interpolated, data, data_error):
     diff = shf_interpolated - data
     data_weight = 1 / data_error
-    mse = sum((data_weight/sum(data_weight))*diff)
-    sigma = np.sqrt(sum((data_weight/sum(data_weight))*(diff-mse)**2))
+    mse = np.average(diff, weights = data_weight)
+    V1 = sum(data_weight)
+    V2 = sum(data_weight**2)
+    sigma = np.sqrt(sum(data_weight*((diff-mse)**2))/(V1-(V2/V1)))
     n_1_sigma = mse - sigma
     p_1_sigma = mse + sigma
     n_2_sigma = mse - 2*sigma

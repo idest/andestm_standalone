@@ -1135,7 +1135,7 @@ class MechanicModel(object):
         bys_c = self.__calc_brittle_yield_strength(bs_c, depth_from_topo)
         return bys_t, bys_c
 
-    def __get_ductile_yield_strength(self):
+    def get_ductile_yield_strength(self):
         e = self.vars.e
         r = self.vars.r
         temp = self.thermal_model.get_geotherm()
@@ -1176,7 +1176,7 @@ class MechanicModel(object):
 
     def __set_yield_strength_envelope(self):
         bys_t, bys_c = self.__get_brittle_yield_strength()  # type: np.ndarray
-        dys = self.__get_ductile_yield_strength()  # type: np.ndarray
+        dys = self.get_ductile_yield_strength()  # type: np.ndarray
         with np.errstate(invalid='ignore'):
             yse_t = np.where(bys_t < dys, bys_t, dys)
             yse_c = np.where(bys_c > -dys, bys_c, -dys)
@@ -1374,7 +1374,7 @@ class MechanicModel(object):
         #ths_plus_op, ths = SpatialArray.divide_array_by_areas(
         #    layers_thickness, op_points)
         #ths_plus_op[:,:,2] = np.nansum(
-        #    np.dstack((ths_plus_op[:,:,2], op_points_thickness)), 2) 
+        #    np.dstack((ths_plus_op[:,:,2], op_points_thickness)), 2)
         #layers_thickness = SpatialArray.combine_arrays_by_areas(
         #    ths_plus_op, ths, op_points)
         ## Calculate eet according to formula

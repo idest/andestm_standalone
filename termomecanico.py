@@ -4,11 +4,11 @@ from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
 from src.stats import evaluate_model
-from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
-                   elastic_thickness_latitude_profile,
-                   heatmap_map, data_scatter_map, diff_scatter_map,
-                   multi_map, data_scatter_plot, earthquake_map,
-                   plot_eet_equivalent_vs_effective)
+from src.plot import (thermal_latitude_profile, mechanic_latitude_profile)
+                   # elastic_thickness_latitude_profile,
+                   # heatmap_map, data_scatter_map, diff_scatter_map,
+                   # multi_map, data_scatter_plot, earthquake_map,
+                   # plot_eet_equivalent_vs_effective)
 from src.datos_q import shf_data
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
@@ -29,14 +29,14 @@ if __name__ == '__main__':
     #Earthquakes CSN
     if exec_input.eqs != 0:
         if exec_input.eqs == 1 or exec_input.eqs == 3:
-            eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30_+8.8.xlsx",
+            eqs = pd.read_excel("data/earthquakes/CSN_2000_2018_C_SB30_BINS.xlsx",
                     sheet_name="Sheet1")
             eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
             #eqs = eqs[(eqs['ISA'] == True)]
             eqs['color'] = 'black'
             eqs_csn = eqs
         if exec_input.eqs == 2 or exec_input.eqs == 3:
-            eqs = pd.read_excel("data/earthquakes/USGS_1900_2018_C_SB30.xlsx",
+            eqs = pd.read_excel("data/earthquakes/USGS_1900_2018_C_SB30_BINS.xlsx",
                     sheet_name="Sheet1")
             eqs['color'] = 'black'
             eqs = eqs[(eqs['ISA'] == True) & (eqs['OSB'] == True)]
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         if exec_input.eqs == 3:
             eqs_csn['color'] = 'black'
             eqs_usgs['color'] = 'blue'
-            eqs = pd.concat([eqs_usgs, eqs_csn], ignore_index=True)
+            eqs = pd.concat([eqs_usgs, eqs_csn], ignore_index=True, sort=True)
     else:
         eqs = None
 

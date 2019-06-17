@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-shf_data_file = np.loadtxt('datos_Q/QsObs_alldata.txt', comments='#')
+shf_data_file = np.loadtxt('datos_Q/QsObs_definitivo.txt', comments='#')
 
 #print('hola')
 #np.savetxt('shf_dt', shf_data_file)

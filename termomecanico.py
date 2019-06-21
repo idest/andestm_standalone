@@ -4,11 +4,11 @@ from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
 from src.stats import evaluate_model
-from src.plot import (thermal_latitude_profile, mechanic_latitude_profile)
-                   # elastic_thickness_latitude_profile,
-                   # heatmap_map, data_scatter_map, diff_scatter_map,
-                   # multi_map, data_scatter_plot, earthquake_map,
-                   # plot_eet_equivalent_vs_effective)
+from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
+                      elastic_thickness_latitude_profile,
+                      heatmap_map, data_scatter_map, diff_scatter_map,
+                      multi_map, data_scatter_plot, earthquake_map,
+                      plot_eet_equivalent_vs_effective)
 from src.datos_q import shf_data
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
@@ -64,62 +64,62 @@ if __name__ == '__main__':
     #Maps
     if exec_input.xt1:
         maps_dir = direTer + 'Mapas/'
-        heatmap_map(
-            shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
-            title='Surface Heat Flow', filename=maps_dir + 'shf_map')
-        data_scatter_map(
-            df['data_values'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'],
-            filename=maps_dir + 'data_scatter_map')
-        data_scatter_map(
-            df['model_values'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'],
-            filename=maps_dir + 'ishf_scatter_map')
-        diff_scatter_map(
-            df['diffs'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'], mse=estimators['mse'],
-            sigmas=estimators['sigmas'],
-            filename=maps_dir + 'diff_scatter_map')
-        multi_map(
-            shf=shf, data=df['data_values'], diff=df['diffs'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'], mse=estimators['mse'],
-            sigmas=estimators['sigmas'],
-            filename=maps_dir + 'multi_map')
+        # heatmap_map(
+        #     shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
+        #     title='Surface Heat Flow', filename=maps_dir + 'shf_map')
+        # data_scatter_map(
+        #     df['data_values'],
+        #     data_coords=[df['lons'], df['lats']],
+        #     data_types=df['data_types'],
+        #     rmse=estimators['rmse'],
+        #     filename=maps_dir + 'data_scatter_map')
+        # data_scatter_map(
+        #     df['model_values'],
+        #     data_coords=[df['lons'], df['lats']],
+        #     data_types=df['data_types'],
+        #     rmse=estimators['rmse'],
+        #     filename=maps_dir + 'ishf_scatter_map')
+        # diff_scatter_map(
+        #     df['diffs'],
+        #     data_coords=[df['lons'], df['lats']],
+        #     data_types=df['data_types'],
+        #     rmse=estimators['rmse'], mse=estimators['mse'],
+        #     sigmas=estimators['sigmas'],
+        #     filename=maps_dir + 'diff_scatter_map')
+        # multi_map(
+        #     shf=shf, data=df['data_values'], diff=df['diffs'],
+        #     data_coords=[df['lons'], df['lats']],
+        #     data_types=df['data_types'],
+        #     rmse=estimators['rmse'], mse=estimators['mse'],
+        #     sigmas=estimators['sigmas'],
+        #     filename=maps_dir + 'multi_map')
         k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)
-        heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
+        #heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
         h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
-        heatmap_map(h_prom, filename=maps_dir + 'h_prom_map')
+        #heatmap_map(h_prom, filename=maps_dir + 'h_prom_map')
         labslab = model.gm.get_slab_lab().mask_irrelevant()
         moho = model.gm.get_moho().mask_irrelevant()
         icd = model.gm.get_icd().mask_irrelevant()
         topo = model.gm.get_topo()
-        heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='viridis')
-        heatmap_map(moho, filename=maps_dir + 'moho', colormap='viridis')
-        heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
-        heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
+        #heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='viridis')
+        #heatmap_map(moho, filename=maps_dir + 'moho', colormap='viridis')
+        #heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
+        #heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
 
-    if exec_input.xm1:
-        maps_dir_mec = direMec + 'Mapas/'
-        heatmap_map(
-            model.mm.get_eet(), colormap=jet_white_r, cbar_label='EET [km]',
-            cbar_limits=[0,100], title='Effective Elastic Thickness',
-            filename=maps_dir_mec + 'eet', earthquakes=None, draw_land=False,
-            labelpad=-45)
-        integrated_strength_gpa = model.mm.get_integrated_strength()/-1000.
-        heatmap_map(
-            integrated_strength_gpa, colormap=jet_white_r,
-            cbar_label='Integrated Strength [Gpa]', title='Integrated Strength',
-            filename=maps_dir_mec + 'i_strength', labelpad=-45,
-            cbar_limits=[0,200], earthquakes=None, draw_land=False)
-        earthquake_map(eqs, title='Sismos', filename=maps_dir_mec + 'eqs')
+    # if exec_input.xm1:
+    #     maps_dir_mec = direMec + 'Mapas/'
+    #     heatmap_map(
+    #         model.mm.get_eet(), colormap=jet_white_r, cbar_label='EET [km]',
+    #         cbar_limits=[0,100], title='Effective Elastic Thickness',
+    #         filename=maps_dir_mec + 'eet', earthquakes=None, draw_land=False,
+    #         labelpad=-45)
+    #     integrated_strength_gpa = model.mm.get_integrated_strength()/-1000.
+    #     heatmap_map(
+    #         integrated_strength_gpa, colormap=jet_white_r,
+    #         cbar_label='Integrated Strength [Gpa]', title='Integrated Strength',
+    #         filename=maps_dir_mec + 'i_strength', labelpad=-45,
+    #         cbar_limits=[0,200], earthquakes=None, draw_land=False)
+    #     earthquake_map(eqs, title='Sismos', filename=maps_dir_mec + 'eqs')
         #eet_effective_dict = {
         #    'Te_Tassara': {
         #         'file': 'data/Te_invertido/Interpolados/Te_Tassara.txt',

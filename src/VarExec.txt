@@ -1,0 +1,51 @@
+#Modelo Termal para el margen Andino
+#Basado en los datos Tassara et al.
+#Lat 18 S hasta 45 S
+#Enero 2015
+#------------------------------------------------------------------------------
+# Parametros Generales
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+         0  graf     Graficar geometrias? 1: En png ; 2: En svg; 0 : No
+         1  model    1 = heat_flow, 2 = yse, 3 = eet
+         0  eqs      Graficar sismos? 0: No, 1: CSN, 2: USGS, 3: CSN & USGS
+         0  weigh    Considerar error de los datos para la evaluación del modelo?
+#------------------------------------------------------------------------------
+# Opciones para el modelo Termal
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+      '03'  temcaso  Numero de referencia para guardar el Modelo Termal
+#·········  ·······  ··························································
+     -32.0  tmi      Latitud inicial
+     -36.0  tmx      Latitud maxima
+       0.2  tdelta   Perfiles cada 0.2 grados, debe ser multiplo de 0.2
+#·········  ·······  ··························································
+         0  xt1      Graficar mapas?
+#·········  ·······  ··························································
+         0  xt2      Graficar perfiles? 1: En png, 2: En svg a2, 0: No
+#·········  ·······  ··························································
+         0  xt3      Graficar surface heat flow data scatter?
+#------------------------------------------------------------------------------
+# Opciones para el modelo Mecanico
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  -------  -----------
+      '01'  meccaso  Numero de referencia para guardar el Modelo Mecanico
+#                    (Construido sobre la base del modelo termal "temcaso")
+#·········  ·······  ··························································
+     -32.0  mmi      Latitud inicial
+     -36.0  mmx      Latitud maxima
+       0.2  mdelta   Perfiles cada 0.2 grados, debe ser multiplo de 0.2
+#·········  ·······  ··························································
+         0  xm1      Graficar mapas?
+#·········  ·······  ··························································
+         1  xm2      Graficar perfiles? 1: En png, 2: En svg, 0: No
+#·········  ·······  ··························································
+         0  xm7      Graficar Yield Strenght Envelope? Si am5 = 1, No am5 = 0
+#                    (tdelta y mdelta deben ser iguales a 0.2)
+     -36.0  minlat   Latitud inicial
+     -39.0  maxlat   Latitud final
+     -65.0  minlon   Longitud inicial
+     -70.0  maxlon   Longitud final

@@ -1,0 +1,22 @@
+#Modelo Mecanico para el margen Andino
+#Basado en los datos Tassara et al.
+#Lat 18 S hasta 45 S
+#Enero 2015
+#------------------------------------------------------------------------------
+# Parametros para generar el Modelo Mecanico
+#------------------------------------------------------------------------------
+#    Valor  Nombre   Descripcion
+#    -----  ------   -----------
+      True  slm      Considerar manto litosférico serpentinizado en antearco
+      0.45  spct     Porcentaje de serpentinitización en antearco
+#    -----  ------   -----------
+     20.e3  Bs_t     Constante de tension de Byerlee (MPa)
+    -55.e3  Bs_c     Constante de compresion de Byerlee (MPa)
+     8e-15  e        Strain rate (s-1)
+      8.31  R        Constante universal de gases (J mol-1 K-1)
+        12 Cs       Modelo reologico de la corteza superior
+        21  Ci       Modelo reologico de la corteza inferior
+        30  Ml       Modelo reologico del manto litosférico
+        23  Serp     Modelo reologico de la serpentinita en el antearco
+       220  s_max    Maximo Stress Disponible
+# 6, 12, 30, 23

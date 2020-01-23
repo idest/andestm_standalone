@@ -37,7 +37,7 @@ def get_var_name(name):
 
 def get_var_axis(range):
     if len(range) == 3:
-        step = range[2] 
+        step = range[2]
         first_v = range[0]
         last_v = range[1]
         var_axis = np.linspace(first_v, last_v, num=(abs(last_v-first_v))/step+1,
@@ -104,8 +104,8 @@ def get_results(t_input, m_input, dic, save_dir, filename=''):
     save_dir_files = save_dir + 'Archivos/'
     makedir(save_dir_files)
     estimators = vars_estimators(t_input, m_input, vnames, vaxes)
-    print('rmses:', estimators['rmses'])
-    print('mses:', estimators['mses'])
+    # print('rmses:', estimators['rmses'])
+    # print('mses:', estimators['mses'])
     # Save
     np.savetxt(
         save_dir_files + 'vars_rmses' + filename + '.txt', estimators['rmses'])
@@ -131,9 +131,9 @@ def load_and_plot_results(save_dir, filename):
     vnames = list(dic.keys())
     vaxes = list(dic.values())
     estimator_plot(
-        vnames, vaxes, estimators['rmses'], filename=save_dir+'RMSE'+filename)
+        vnames, vaxes, rmses, filename=save_dir+'RMSE'+filename)
     estimator_plot(
-        vnames, vaxes, estimators['mses'], signed=True,
+        vnames, vaxes, mses, signed=True,
         filename=save_dir+'MSE'+filename)
 
 if __name__ == '__main__':
@@ -151,21 +151,21 @@ if __name__ == '__main__':
             vax = get_var_axis(vrange)
             print(vname, vrange)
             dic[vname] = vax
-        t_input, m_input = input_setup()
-        if len(dic) > 2:
-            control_vname = vname
-            control_vax = dic.pop(control_vname)
-            print(control_vname, len(control_vax))
-            np.savetxt(save_dir + 'control_vname.txt', [control_vname], fmt='%s')
-            np.savetxt(save_dir + 'control_vax.txt', control_vax)
-            print('listo')
-            for var in control_vax:
-                t_input[control_vname] = var
-                print(control_vname, '=', var)
-                filename = '_' + control_vname + '_' + str(var)
-                get_results(t_input, m_input, dic, save_dir, filename)
-        else:
-            get_results(t_input, m_input, dic, save_dir)
+            t_input, m_input = input_setup()
+            if len(dic) > 2:
+                control_vname = vname
+                control_vax = dic.pop(control_vname)
+                print(control_vname, len(control_vax))
+                np.savetxt(save_dir + 'control_vname.txt', [control_vname], fmt='%s')
+                np.savetxt(save_dir + 'control_vax.txt', control_vax)
+                print('listo')
+                for var in control_vax:
+                    t_input[control_vname] = var
+                    print(control_vname, '=', var)
+                    filename = '_' + control_vname + '_' + str(var)
+                    get_results(t_input, m_input, dic, save_dir, filename)
+            else:
+                get_results(t_input, m_input, dic, save_dir)
 
     else:
         # Load and Plot

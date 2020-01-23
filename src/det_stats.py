@@ -14,20 +14,32 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 def map_diff(diff, lon, lat):
     # mdiff = ma.masked_invalid(diff)
     xloc = np.arange(-76.0, -65+3.0, 3.0)
-    yloc = np.arange(-45, -32+2.0, 2.0)
+    yloc = np.arange(-44, -33+2.0, 2.0)
     fig = plt.figure(figsize=(8,8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     coastline = cfeature.NaturalEarthFeature('physical', 'coastline', '10m')
     border = cfeature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m')
-    faults = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/FALLAS.shp').geometries(),
-                                     ccrs.PlateCarree())
-    lofz = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/lofz.shp').geometries(),
-                                   ccrs.PlateCarree())
+    rfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/reverse/reverse.shp').geometries(),
+                                      ccrs.PlateCarree())
+    sfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/sinestral/sinestral.shp').geometries(),
+                                      ccrs.PlateCarree())
+    nfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/normal/normal.shp').geometries(),
+                                      ccrs.PlateCarree())
+    dfaults =  cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/dextral/dextral.shp').geometries(),
+                                      ccrs.PlateCarree())
+    ufaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/undefined/undefined.shp').geometries(),
+                                      ccrs.PlateCarree())
+    tz = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/trust_zone/trust_zone.shp').geometries(),
+                                 ccrs.PlateCarree())
     plt.title('Residual')
     ax.add_feature(border, facecolor='None', edgecolor='gray', alpha=0.7)
     ax.add_feature(coastline, facecolor='None', edgecolor='k')
-    ax.add_feature(faults, facecolor='None', edgecolor='k', linewidth=0.5)
-    ax.add_feature(lofz, facecolor='None', edgecolor='b', linewidth=0.5)
+    reverse = ax.add_feature(rfaults, facecolor='None', edgecolor='k', linewidth=1.0)
+    normal = ax.add_feature(nfaults, facecolor='None', edgecolor='m', linewidth=1.0)
+    dextral = ax.add_feature(dfaults, facecolor='None', edgecolor='k', linewidth=1.0)
+    sinestral = ax.add_feature(sfaults, facecolor='None', edgecolor='g', linewidth=1.0)
+    undefined = ax.add_feature(ufaults, facecolor='None', linestyle='--', edgecolor='k', linewidth=1.0)
+    ax.add_feature(tz, linestyle='--', facecolor='None', edgecolor='k', linewidth=1.0, alpha=0.5)
     ax.background_patch.set_facecolor('silver')
     # mapdiff = ax.contourf(lon, lat, mdiff, transform=ccrs.PlateCarree(), cmap='rainbow', vmin=-35, vmax=5)
     # mapdiff = ax.imshow(diff, origin='upper', transform=ccrs.PlateCarree(),
@@ -49,30 +61,30 @@ def map_diff(diff, lon, lat):
     gl.yformatter = LATITUDE_FORMATTER
     gl.xlocator = mticker.FixedLocator(xloc)
     gl.ylocator = mticker.FixedLocator(yloc)
-    ax.set_extent([-75, -68, -45, -32])
+    ax.set_extent([-75, -68, -44, -33])
     return fig
 
 
-# Mapping diff
+# Mapping int
 def map_int(idet, lon, lat):
     xloc = np.arange(-76.0, -65+3.0, 3.0)
-    yloc = np.arange(-45, -32+2.0, 2.0)
+    yloc = np.arange(-44, -33+2.0, 2.0)
     fig = plt.figure(figsize=(8,8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     coastline = cfeature.NaturalEarthFeature('physical', 'coastline', '10m')
     border = cfeature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m')
-    faults = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/FALLAS.shp').geometries(),
-                                     ccrs.PlateCarree())
-    lofz = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/lofz.shp').geometries(),
-                                   ccrs.PlateCarree())
+    afaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/active_structure/active_faults.shp').geometries(),
+                                      ccrs.PlateCarree())
+    ufaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/unactive_faults/unactive_faults.shp').geometries(),
+                                      ccrs.PlateCarree())
     plt.title('Interpolation')
     ax.add_feature(border, facecolor='None', edgecolor='gray', alpha=0.7)
     ax.add_feature(coastline, facecolor='None', edgecolor='k')
-    ax.add_feature(faults, facecolor='None', edgecolor='k', linewidth=0.5)
-    ax.add_feature(lofz, facecolor='None', edgecolor='b', linewidth=0.5)
+    ax.add_feature(afaults, facecolor='None', edgecolor='g', linewidth=1.0)
+    ax.add_feature(ufaults, facecolor='None', edgecolor='k', linewidth=1.0)
     ax.background_patch.set_facecolor('silver')
     int = ax.scatter(lon, lat, c=idet, transform=ccrs.PlateCarree(),
-                         s=0.5, marker='o', cmap='rainbow', vmax=-5, vmin=-35)
+                         s=0.5, marker='s', cmap='RdYlBu_r', vmax=0., vmin=-35.)
     cbar = plt.colorbar(int)
     cbar.set_label('Depth [Km]', rotation=90)
     gl = ax.gridlines(draw_labels=True, linewidth=0.2, color='gray', alpha=0.8)
@@ -82,7 +94,7 @@ def map_int(idet, lon, lat):
     gl.yformatter = LATITUDE_FORMATTER
     gl.xlocator = mticker.FixedLocator(xloc)
     gl.ylocator = mticker.FixedLocator(yloc)
-    ax.set_extent([-75, -68, -45, -32])
+    ax.set_extent([-75, -68, -44, -33])
     return fig
 
 

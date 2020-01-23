@@ -12,11 +12,11 @@
 #    -----  ------   -----------
      20.e3  Bs_t     Constante de tension de Byerlee (MPa)
     -55.e3  Bs_c     Constante de compresion de Byerlee (MPa)
-     1e-15  e        Strain rate (s-1)
+     8e-15  e        Strain rate (s-1)
       8.31  R        Constante universal de gases (J mol-1 K-1)
-         6  Cs       Modelo reologico de la corteza superior
+         6 Cs        Modelo reologico de la corteza superior
         15  Ci       Modelo reologico de la corteza inferior
         30  Ml       Modelo reologico del manto litosférico
         23  Serp     Modelo reologico de la serpentinita en el antearco
-       100  s_max    Maximo Stress Disponible
+       200  s_max    Maximo Stress Disponible
 # 6, 12, 30, 23

@@ -26,37 +26,63 @@ def sdetachment():
 
 
 # Creating map
-def mapsmdet(lon, lat, depth):
+def mapsmdet(lon, lat, slon, slat, depth, icd, topo, labslab, moho, map):
     # lon, lat, depth = np.meshgrid(lon, lat, depth, sparse = True)
     xloc = np.arange(-76.0, -65+3.0, 3.0)
-    yloc = np.arange(-45, -32+2.0, 2.0)
+    yloc = np.arange(-44, -33+2.0, 2.0)
+    mlon, mlat = np.meshgrid(lon, lat)
     fig = plt.figure(figsize=(8,8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     coastline = cfeature.NaturalEarthFeature('physical', 'coastline', '10m')
     border = cfeature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m')
-    faults = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/FALLAS.shp').geometries(),
-                                     ccrs.PlateCarree())
-    lofz = cfeature.ShapelyFeature(shpreader.Reader('data/shp/FALLAS/lofz.shp').geometries(),
-                                   ccrs.PlateCarree())
+    rfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/reverse/reverse.shp').geometries(),
+                                      ccrs.PlateCarree())
+    sfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/sinestral/sinestral.shp').geometries(),
+                                      ccrs.PlateCarree())
+    nfaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/normal/normal.shp').geometries(),
+                                      ccrs.PlateCarree())
+    dfaults =  cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/dextral/dextral.shp').geometries(),
+                                      ccrs.PlateCarree())
+    ufaults = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/undefined/undefined.shp').geometries(),
+                                      ccrs.PlateCarree())
+    tz = cfeature.ShapelyFeature(shpreader.Reader('/home/julvelillo/Documentos/andestm_standalone/src/data/shp/trust_zone/trust_zone.shp').geometries(),
+                                      ccrs.PlateCarree())
     plt.title('SM Detachment')
     ax.add_feature(border, facecolor='None', edgecolor='gray', alpha=0.7)
     ax.add_feature(coastline, facecolor='None', edgecolor='k')
-    f = ax.add_feature(faults, facecolor='None', edgecolor='k', linewidth=0.5)
-    l = ax.add_feature(lofz, facecolor='None', edgecolor='b', linewidth=0.5)
-    # det = ax.contourf(lon, lat, depth, transform=ccrs.PlateCarree(), cmap='rainbow', vmin=-35, vmax=5)
-    # det = ax.imshow(depth, origin='right', transform=ccrs.PlateCarree(),
-    #                 extent=(np.amin(lon), np.amax(lon), np.amin(lat), np.amax(lat)),
-    #                 cmap='rainbow', interpolation='bicubic')
-    det = ax.scatter(lon, lat, c=depth, transform=ccrs.PlateCarree(), s=0.5, cmap='rainbow',
-                     vmin=-35.0, vmax=-5.0)
+    if map == 'faults':
+        reverse = ax.add_feature(rfaults, facecolor='None', edgecolor='k', linewidth=1.0)
+        normal = ax.add_feature(nfaults, facecolor='None', edgecolor='m', linewidth=1.0)
+        dextral = ax.add_feature(dfaults, facecolor='None', edgecolor='r', linewidth=1.0)
+        sinestral = ax.add_feature(sfaults, facecolor='None', edgecolor='g', linewidth=1.0)
+        undefined = ax.add_feature(ufaults, facecolor='None', linestyle='--', edgecolor='k', linewidth=1.0)
+        ax.add_feature(tz, linestyle='--', facecolor='None', edgecolor='k', linewidth=1.0, alpha=0.5)
+    elif map == 'moho':
+        cs = ax.contour(mlon, mlat, moho.T, levels=15, colors='black', transform=ccrs.PlateCarree(),
+                        linewidths=1.0, linestyles='solid')
+        ax.clabel(cs, cs.levels, inline_spacing=1, fontsize=8, manual=True, fmt='%1.1f',
+                  use_clabeltext=True)
+    elif map == 'icd':
+        cs = ax.contour(mlon, mlat, icd.T, levels=6, colors='black', transform=ccrs.PlateCarree(),
+                        linewidths=1.0, linestyles='solid')
+        ax.clabel(cs, cs.levels, inline_spacing=1, fontsize=8, manual=True, fmt='%1.1f',
+                  use_clabeltext=True)
+    elif map == 'labslab':
+        cs = ax.contour(mlon, mlat, labslab.T, levels=15, colors='black', transform=ccrs.PlateCarree(),
+                        linewidths=1.0, linestyles='solid')
+        ax.clabel(cs, cs.levels, inline_spacing=1, fontsize=8, manual=True, fmt='%1.1f',
+                  use_clabeltext=True)
+    det = ax.scatter(slon, slat, c=depth, transform=ccrs.PlateCarree(), s=0.5, marker='s', cmap='RdYlBu_r',
+                     vmin=-35.0, vmax=0.)
     cbar = plt.colorbar(det)
     cbar.set_label('Depth [Km]', rotation=90)
     gl = ax.gridlines(draw_labels=True, linewidth=0.2, color='gray', alpha=0.8)
+    ax.background_patch.set_facecolor('silver')
     gl.xlabels_top=False
     gl.ylabels_right=False
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     gl.xlocator = mticker.FixedLocator(xloc)
     gl.ylocator = mticker.FixedLocator(yloc)
-    ax.set_extent([-75, -68, -45, -32])
+    ax.set_extent([-75, -68, -44, -33])
     return fig

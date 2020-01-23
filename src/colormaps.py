@@ -28,7 +28,7 @@ def categorical_cmap(nc, nsc, cmap="tab10", continuous=False,
             arhsv[:,1] = np.linspace(chsv[1],0.25,nsc[i])
             arhsv[:,2] = np.linspace(chsv[2],1,nsc[i])
         rgb = mcolors.hsv_to_rgb(arhsv)
-        #cols[i*nsc[i]:(i+1)*nsc[i],:] = rgb       
+        #cols[i*nsc[i]:(i+1)*nsc[i],:] = rgb
         cols = np.vstack((cols,rgb))
     cmap = mcolors.ListedColormap(cols)
     return cmap
@@ -51,8 +51,8 @@ def make_colormap(seq):
 
 def reverse_colourmap(cmap, name = 'my_cmap_r'):
     """
-    In: 
-    cmap, name 
+    In:
+    cmap, name
     Out:
     my_cmap_r
 
@@ -68,21 +68,21 @@ def reverse_colourmap(cmap, name = 'my_cmap_r'):
                    /
                   /
     row i:   x  y1  y0 -> 1-t[n] t[2] t[1]
-    """        
+    """
     reverse = []
-    k = []   
+    k = []
 
-    for key in cmap._segmentdata:    
+    for key in cmap._segmentdata:
         k.append(key)
         channel = cmap._segmentdata[key]
         data = []
 
-        for t in channel:                    
-            data.append((1-t[0],t[2],t[1]))            
-        reverse.append(sorted(data))    
+        for t in channel:
+            data.append((1-t[0],t[2],t[1]))
+        reverse.append(sorted(data))
 
     LinearL = dict(zip(k,reverse))
-    my_cmap_r = mcolors.LinearSegmentedColormap(name, LinearL) 
+    my_cmap_r = mcolors.LinearSegmentedColormap(name, LinearL)
     return my_cmap_r
 
 def get_diff_cmap(bins):
@@ -92,6 +92,13 @@ def get_diff_cmap(bins):
     diff_cmap = mcolors.LinearSegmentedColormap.from_list(
         cmap_name, colors, N=n_bins)
     return diff_cmap
+
+def mm_cmap():
+    cmap = mcolors.ListedColormap(['navy', 'darkblue', 'blue', 'skyblue', 'lightblue', 'white',
+                                      'mistyrose', 'lightcoral', 'red', 'darkred', 'maroon'])
+    norm = mcolors.BoundaryNorm([-70, -65, -60, -55, -50, -45, -40, -35, -30, -25,
+                                 -20, -15, -10, -5, 5, 10, 15, 20, 25, 30, 35, 40,
+                                  45, 50, 55, 60, 65, 70], cmap)
 
 def get_elevation_diff_cmap(bins):
     #colors = [(0, 0.433, 0), (1, 1, 1), (0.314, 0, 0.472)]# Green->White->Purple

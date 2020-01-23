@@ -14,9 +14,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import compress
 from src.setup import input_setup, exec_setup, read_rheo
 from termomecanico import termomecanico
+from map_paper import multimap
 from src.utils import makedir, makedir_from_filename, calc_deviation
 from src.plot import (heatmap_map, base_map, boolean_map, diff_map,
-    plot_eet_equivalent_vs_effective, multi_map)
+    plot_eet_equivalent_vs_effective)#, multi_map)
 from src.colormaps import jet_white_r, eet_tassara_07, eet_pg_07, get_elevation_diff_cmap, categorical_cmap
 from src.compute import SpatialArray2D
 #from src.datos_q import shf_data, shf_data_coords, shf_data_types, shf_data_error
@@ -197,9 +198,9 @@ def thermal_H_exploration(
     results = {}
     initial_thermal_vars(t_input)
     for h in np.linspace(0, 5.e-6, 6):
-        t_input['H_cs'] = h 
-        t_input['H_ci'] = h 
-        t_input['H_ml'] = h 
+        t_input['H_cs'] = h
+        t_input['H_ci'] = h
+        t_input['H_ml'] = h
         name = dir_name + 'h_{:.2E}'.format(h)
         results[name] = results_function(t_input, m_input, name)
     return results
@@ -233,7 +234,7 @@ def thermal_delta_exploration(
     results = {}
     initial_thermal_vars(t_input)
     for delta in np.linspace(5,15,6):
-        t_input['delta'] = delta 
+        t_input['delta'] = delta
         name = dir_name + 'delta_{:.0f}'.format(delta)
         results[name] = results_function(t_input, m_input, name)
     return results
@@ -342,17 +343,21 @@ def thermal_results(save_dir='Thermal', plot=False):
         #    'Temp': data['geotherm'].flatten()})
         #df.to_csv(save_dir_files + name + '.csv', sep=',', na_rep='nan', index=False)
         if plot is True:
+            cs = data['cs']
+            lon, lat = cs.get_x_axis(), cs.get_y_axis()
+            shf = data['surface_heat_flow']
+            multimap(lon, lat, shf, df)
             #heatmap_map(
             #    data['surface_heat_flow'], colormap='afmhot',
             #    cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
             #    filename = save_dir_maps + name, cbar_limits=[30,110])
-            multi_map(
-                shf=data['surface_heat_flow'],
-                data=df['data_values'], diff=df['diffs'],
-                data_coords=[df['lons'], df['lats']],
-                data_types=df['data_types'], rmse=estimators['rmse'],
-                mse=estimators['mse'], sigmas=estimators['sigmas'],
-                filename= save_dir_maps + name)
+            # multi_map(
+            #     shf=data['surface_heat_flow'],
+            #     data=df['data_values'], diff=df['diffs'],
+            #     data_coords=[df['lons'], df['lats']],
+            #     data_types=df['data_types'], rmse=estimators['rmse'],
+            #     mse=estimators['mse'], sigmas=estimators['sigmas'],
+            #     filename= save_dir_maps + name)
         return {'geotherm': data['geotherm'],
                 'surface_heat_flow': data['surface_heat_flow']}
     return results
@@ -507,7 +512,7 @@ def get_model_data(t_input, m_input, data_function):
     proc.start()
     data = out_q.get()
     proc.join()
-    return data 
+    return data
 
 def get_rheology_mosaic(
         eet_effective_dict, eets, eets_diffs,
@@ -644,7 +649,7 @@ if __name__ == '__main__':
     #### Thermal Casos ######################################################
     thermal_exploration(
             thermal_results(
-                save_dir=save_dir_thermal + 'Termal_casos/', plot=True))
+                save_dir=save_dir_thermal + 'Termal_casos/', plot=False))
 
     #### EET Rheo ###########################################################
     #eets = rheo_exploration(
@@ -737,7 +742,7 @@ if __name__ == '__main__':
     #    eets.append(eets_i)
     #    eet_prom = sum(eets_i)/len(eets_i)
     #    eet_proms.append(eet_prom)
-    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size)
     #sd = calc_deviation(eet_proms[-1], eet_proms[0])
     #save_dir_maps = save_dir + 'Thermal_H/EET/Mapas/'
     #save_dir_files = save_dir + 'Thermal_H/EET/Archivos/'
@@ -758,7 +763,7 @@ if __name__ == '__main__':
     #makedir_from_filename(save_dir_files + 'prom_h_alto')
     #np.savetxt(save_dir_files + 'prom_h_0', eet_proms[0])
     #np.savetxt(save_dir_files + 'prom_h_alto', eet_proms[-1])
-    #ax = fig.add_subplot(gs[3,:]) 
+    #ax = fig.add_subplot(gs[3,:])
     #index = np.linspace(0, 5.e-6, 6)
     #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
     #ax.bar(index, medias_eet_prom, alpha=.4, width=1.e-6, edgecolor='k')
@@ -793,7 +798,7 @@ if __name__ == '__main__':
     #    eets.append(eets_i)
     #    eet_prom = sum(eets_i)/len(eets_i)
     #    eet_proms.append(eet_prom)
-    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size)
     #sd = calc_deviation(eet_proms[-1], eet_proms[0])
     #save_dir_maps = save_dir + 'Thermal_K/EET/Mapas/'
     #save_dir_files = save_dir + 'Thermal_K/EET/Archivos/'
@@ -814,7 +819,7 @@ if __name__ == '__main__':
     #makedir_from_filename(save_dir_files + 'prom_k_alto')
     #np.savetxt(save_dir_files + 'prom_k_bajo', eet_proms[0])
     #np.savetxt(save_dir_files + 'prom_k_alto', eet_proms[-1])
-    #ax = fig.add_subplot(gs[3,:]) 
+    #ax = fig.add_subplot(gs[3,:])
     #index = np.linspace(1, 5, 5)
     #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
     #ax.bar(index, medias_eet_prom, alpha=.4, width=1, edgecolor='k')
@@ -849,7 +854,7 @@ if __name__ == '__main__':
     #    eets.append(eets_i)
     #    eet_prom = sum(eets_i)/len(eets_i)
     #    eet_proms.append(eet_prom)
-    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size)
     #sd = calc_deviation(eet_proms[-1], eet_proms[0])
     #save_dir_maps = save_dir + 'Thermal_delta/EET/Mapas/'
     #save_dir_files = save_dir + 'Thermal_delta/EET/Archivos/'
@@ -870,7 +875,7 @@ if __name__ == '__main__':
     #makedir_from_filename(save_dir_files + 'prom_delta_alto')
     #np.savetxt(save_dir_files + 'prom_delta_bajo', eet_proms[0])
     #np.savetxt(save_dir_files + 'prom_delta_alto', eet_proms[-1])
-    #ax = fig.add_subplot(gs[3,:]) 
+    #ax = fig.add_subplot(gs[3,:])
     #index = np.linspace(5, 15, 6)
     #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
     #ax.bar(index, medias_eet_prom, alpha=.4, width=2, edgecolor='k')
@@ -906,7 +911,7 @@ if __name__ == '__main__':
     #    eets.append(eets_i)
     #    eet_prom = sum(eets_i)/len(eets_i)
     #    eet_proms.append(eet_prom)
-    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size) 
+    #    medias_eet_prom.append(np.nansum(eet_prom)/eet_prom.size)
     #sd = calc_deviation(eet_proms[-1], eet_proms[0])
     #save_dir_maps = save_dir + 'Applied_stress/EET/Mapas/'
     #save_dir_files = save_dir + 'Applied_stress/EET/Archivos/'
@@ -927,7 +932,7 @@ if __name__ == '__main__':
     #makedir_from_filename(save_dir_files + 'prom_applied_stress_alto')
     #np.savetxt(save_dir_files + 'prom_applied_stress_bajo', eet_proms[0])
     #np.savetxt(save_dir_files + 'prom_applied_stress_alto', eet_proms[-1])
-    #ax = fig.add_subplot(gs[3,:]) 
+    #ax = fig.add_subplot(gs[3,:])
     #index = np.linspace(100, 200, 5)
     #ax.plot(index, medias_eet_prom, '-r', linewidth=1.)
     #ax.bar(index, medias_eet_prom, alpha=.4, width=25, edgecolor='k')
@@ -1106,8 +1111,8 @@ if __name__ == '__main__':
     #    'Temp2': hot_gt.flatten(),
     #    'Temp3': cold_gt.flatten()})
     #model = termomecanico(*input_setup())
-    #moho_hot = hot_gt.extract_surface(model.gm.get_moho()) 
-    #moho_cold = cold_gt.extract_surface(model.gm.get_moho()) 
+    #moho_hot = hot_gt.extract_surface(model.gm.get_moho())
+    #moho_cold = cold_gt.extract_surface(model.gm.get_moho())
     #moho_diff = moho_hot - moho_cold
     #diff_map(moho_cold, moho_hot, moho_diff, sd=None,
     #    colormap='coolwarm',

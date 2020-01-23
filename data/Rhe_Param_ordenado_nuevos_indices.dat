@@ -29,3 +29,6 @@
 28     Olivine_D        510000    3       7.00e-14      Tesa07
 29     AA_Dunite_D      535000    3.6     7.94e-18      C&T87
 30     Ol-dunite        520000    3       7.00e-14      B&D95
+31     Granite		186000	  3.3	  3.16e-26	Tesa07
+32     Diabase		276000	  3.05    6.31e-20	Tesa07
+33     Mafic_Granulite  445000	  4.2	  8.83e-22	Tesa07

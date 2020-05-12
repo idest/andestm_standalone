@@ -576,7 +576,7 @@ class ThermalModel(object):
         mu = sli_sigma / (1. - np.exp(d))
         # print(abs(depth-topo)*1.e3 * d/ abs())
         slab_sigma = mu * (1. - np.exp(abs(depth-topo)*1.e3 * d
-                                       / (abs(sli_depth-sli_topo)*1.e3)))
+                           / (abs(sli_depth-sli_topo)*1.e3)))
         return slab_sigma
 
     @staticmethod
@@ -1005,4 +1005,12 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, t_input, m_input):
     gm = GeometricModel(gm_d, cs)
     tm = ThermalModel(tm_d, gm, cs)
     mm = MechanicModel(mm_d, gm, tm, cs)
-    return d, cs, gm, tm, mm
+    model = {
+        'd': d,
+        'cs': cs,
+        'gm': gm,
+        'tm': tm,
+        'mm': mm
+    }
+    model = DotMap(model)
+    return model

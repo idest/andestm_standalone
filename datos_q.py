@@ -15,7 +15,7 @@ exec_input = setup.readVars('VarExec.txt')
 tmc = exec_input.temcaso
 mmc = exec_input.meccaso
 direTer, direTerMec = setup.makeDirs(exec_input.temcaso, exec_input.meccaso)
-datos_q = np.loadtxt('datos_Q/QsObs.txt', comments='#')
+datos_q = np.loadtxt('data/QsObs.txt', comments='#')
 
 datos_q = datos_q[datos_q[:,0] > -80.]
 datos_q = datos_q[datos_q[:,0] < -60.]

@@ -5,7 +5,7 @@
 import numpy as np
 import os
 import shutil
-from utils import DotDict
+from box import Box
 
 #Leer archivo de instrucciones
 def readVars(name):
@@ -26,9 +26,6 @@ def readVars(name):
             words = line.split()
             Vval = words[0]
             Vname = words[1]
-            #dic[str.strip(Vname)] = Vnum
-            #Vstr = str(Vname.strip())
-            #dic[Vstr] = Vval
             exec('{} = {}'.format('dic[Vname]', Vval))
         # Leer siguiente linea
         line = f.readline()
@@ -37,7 +34,7 @@ def readVars(name):
 
     # Retorna la matriz con todas las variables
 
-    return DotDict(dic)
+    return Box(dic)
 
 def makeDirs(temcaso, meccaso):
 
@@ -47,7 +44,7 @@ def makeDirs(temcaso, meccaso):
     if not os.path.exists('Output'):
         os.makedirs('Output')
 
-    direTer = 'Output/%s_Termal' %(temcaso)
+    direTer = 'Output/%s_Termal/' %(temcaso)
     if not os.path.exists(direTer):
         os.makedirs(direTer)
 
@@ -57,16 +54,16 @@ def makeDirs(temcaso, meccaso):
     # Generar nuevo output para el modelo Mecanico, basado un termal existente
     # El numero del caso termal (temcaso) debe ser un modelo termal ya generado
 
-    direTerMec = 'Output/%s_Termal/%s_Mecanico' %(temcaso,meccaso)
+    direMec = 'Output/%s_Termal/%s_Mecanico/' %(temcaso,meccaso)
 
-    if not os.path.exists(direTerMec):
-        os.makedirs(direTerMec)
+    if not os.path.exists(direMec):
+        os.makedirs(direMec)
 
-    shutil.copy( 'VarMecanico.txt', direTerMec )
+    shutil.copy( 'VarMecanico.txt', direMec )
 
     # Retorna los directorios creados
 
-    return direTer, direTerMec
+    return direTer, direMec
 
 def read_rheo(name):
 
@@ -84,7 +81,7 @@ def read_rheo(name):
 
             id_rh, name, h, n, a, ref = line.split()
 
-            dic[id_rh] = DotDict({'name': name, 'H': float(h), 'n': float(n), 'A': float(a), 'ref': ref})
+            dic[id_rh] = Box({'name': name, 'H': float(h), 'n': float(n), 'A': float(a), 'ref': ref})
 
         # Leer siguiente linea
         line = f.readline()
@@ -93,6 +90,27 @@ def read_rheo(name):
 
     # Retorna la matriz con todas las variables
 
-    return DotDict(dic)
+    return Box(dic)
 
+def data_setup():
+    
+    gm_data = np.loadtxt('data/Modelo.dat')
+    areas = np.loadtxt('data/areas.dat')
+    trench_age = np.loadtxt('data/PuntosFosaEdad.dat')
+    rhe_data = read_rheo('data/Rhe_Param_ordenado_nuevos_indices.dat')
+    
+    return gm_data, areas, trench_age, rhe_data
 
+def input_setup():
+    
+    t_input = readVars('VarTermal.txt')
+    m_input = readVars('VarMecanico.txt')
+    
+    return t_input, m_input
+
+def exec_setup():
+    
+    exec_input = readVars('VarExec.txt')
+    direTer, direMec = makeDirs(exec_input.temcaso, exec_input.meccaso)
+    
+    return exec_input, direTer, direMec

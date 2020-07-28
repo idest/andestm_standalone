@@ -3,16 +3,17 @@ import pandas as pd
 from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
-from src.stats import evaluate_model
+from src.stats_julve import evaluate_model
 from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
                    elastic_thickness_latitude_profile,
                    heatmap_map, data_scatter_map, diff_scatter_map,
                    multi_map, data_scatter_plot, earthquake_map,
                    plot_eet_equivalent_vs_effective)
-from src.datos_q import shf_data
+from src.datos_q_pandas import shf_data
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,
     eet_tassara_07, eet_pg_07)
+import matplotlib.pyplot as plt
 
 
 def termomecanico(t_input, m_input):
@@ -58,53 +59,82 @@ if __name__ == '__main__':
     np.savetxt(
         files_dir_ter + 'ishf_' + exec_input.temcaso + '.txt',
         df['model_values'])
+    #shf2 = pd.DataFrame(shf)
+    #shf2.to_csv(files_dir_ter + 'shf_' + exec_input.temcaso + '.csv')
+    #model.tm.get_geotherm().export(files_dir_ter + 'geoterma_' + exec_input.temcaso + '.csv', pname='temp')
+    model.tm.get_geotherm().export(files_dir_ter + 'geoterma_sin_nans_' + exec_input.temcaso + '.csv', pname='temp', dropna=True)
     #stats = pd.DataFrame.from_dict(model_rmse, orient='index')
     #stats.to_csv(files_dir_ter + 'stats.txt')
+
+    tlh, cell_areas = model.tm.get_total_lost_heat()
+    points_num = np.count_nonzero(~np.isnan(cell_areas))
+    print('Total lost heat:', tlh)
+    print('Total area:', np.nansum(cell_areas))
+    print('Average cell area:', np.nansum(cell_areas)/points_num)
+    print('Average surface heat flow:', model.tm.get_average_surface_heat_flow())
+    print('Average surface heat flow:', model.tm.get_average_surface_heat_flow2())
+    heatmap_map(cell_areas, colormap='viridis')
+    plt.show()
 
     #Maps
     if exec_input.xt1:
         maps_dir = direTer + 'Mapas/'
+        crust_base = np.maximum(model.gm.get_moho(), model.gm.get_slab_lab()+model.cs.z_step)
+        moho_temp = model.tm.get_geotherm().extract_surface(crust_base)
+        heatmap_map(moho_temp,
+            colormap='coolwarm',
+            cbar_limits=[0, 1300],
+            cbar_label='Temperatura [ºC]',
+            title='Moho temperature',
+            labelpad=-48,
+            filename=maps_dir + 'temp_moho')
+        cbar_max = np.nanmax(shf)
         heatmap_map(
-            shf, colormap='afmhot', cbar_label='Heat Flow [W/m²]',
+            shf, colormap='afmhot', cbar_limits=[0,cbar_max], cbar_label='Heat Flow [W/m²]',
+            cbar_ticks = np.arange(0,100,10),
             title='Surface Heat Flow', filename=maps_dir + 'shf_map')
-        data_scatter_map(
-            df['data_values'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'],
-            filename=maps_dir + 'data_scatter_map')
-        data_scatter_map(
-            df['model_values'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'],
-            filename=maps_dir + 'ishf_scatter_map')
-        diff_scatter_map(
-            df['diffs'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'], mse=estimators['mse'],
-            sigmas=estimators['sigmas'],
-            filename=maps_dir + 'diff_scatter_map')
-        multi_map(
-            shf=shf, data=df['data_values'], diff=df['diffs'],
-            data_coords=[df['lons'], df['lats']],
-            data_types=df['data_types'],
-            rmse=estimators['rmse'], mse=estimators['mse'],
-            sigmas=estimators['sigmas'],
-            filename=maps_dir + 'multi_map')
-        k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)
-        heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
-        h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
-        heatmap_map(h_prom, filename=maps_dir + 'h_prom_map')
-        labslab = model.gm.get_slab_lab().mask_irrelevant()
-        moho = model.gm.get_moho().mask_irrelevant()
-        icd = model.gm.get_icd().mask_irrelevant()
-        topo = model.gm.get_topo()
-        heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='viridis')
-        heatmap_map(moho, filename=maps_dir + 'moho', colormap='viridis')
-        heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
-        heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
+        #data_scatter_map(
+        #    df['data_values'],
+        #    data_coords=[df['lons'], df['lats']],
+        #    data_types=df['data_types'],
+        #    rmse=estimators['rmse'],
+        #    filename=maps_dir + 'data_scatter_map')
+        #data_scatter_map(
+        #    df['model_values'],
+        #    data_coords=[df['lons'], df['lats']],
+        #    data_types=df['data_types'],
+        #    rmse=estimators['rmse'],
+        #    filename=maps_dir + 'ishf_scatter_map')
+        #diff_scatter_map(
+        #    df['diffs'],
+        #    data_coords=[df['lons'], df['lats']],
+        #    data_types=df['data_types'],
+        #    rmse=estimators['rmse'], mse=estimators['mse'],
+        #    sigmas=estimators['sigmas'],
+        #    filename=maps_dir + 'diff_scatter_map')
+        #multi_map(
+        #    shf=shf, data=df['data_values'], diff=df['diffs'],
+        #    data_coords=[df['lons'], df['lats']],
+        #    data_types=df['data_types'],
+        #    rmse=estimators['rmse'], mse=estimators['mse'],
+        #    sigmas=estimators['sigmas'],
+        #    filename=maps_dir + 'multi_map')
+        #k_prom = model.tm.vars.k_prom.extract_surface(model.gm.get_topo()-1)
+        #heatmap_map(k_prom, filename=maps_dir + 'k_prom_map')
+        #h_prom = model.tm.vars.h_prom.extract_surface(model.gm.get_topo()-1)
+        #heatmap_map(h_prom, filename=maps_dir + 'h_prom_map')
+        #labslab = model.gm.get_slab_lab()#.mask_irrelevant()
+        #moho = model.gm.get_moho()#.mask_irrelevant()
+        #icd = model.gm.get_icd()#.mask_irrelevant()
+        #topo = model.gm.get_topo()
+        #heatmap_map(labslab, filename=maps_dir + 'labslab', colormap='viridis')
+        #heatmap_map(moho, filename=maps_dir + 'moho', colormap='viridis')
+        #heatmap_map(icd, filename=maps_dir + 'icd', colormap='viridis')
+        #heatmap_map(topo, filename=maps_dir + 'topo', colormap='viridis')
+        #topo_moho = model.gm.get_topo() - model.gm.get_moho()
+        #moho_slablab = model.gm.get_moho() - model.gm.get_slab_lab()
+        #heatmap_map(topo_moho, filename=maps_dir + 'topo_moho', colormap='seismic', cbar_limits=[-1,1])
+        #heatmap_map(moho_slablab, filename=maps_dir + 'moho_slablab', colormap='seismic', cbar_limits=[-1,1])
 
     if exec_input.xm1:
         maps_dir_mec = direMec + 'Mapas/'

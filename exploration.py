@@ -124,58 +124,76 @@ def thermal_exploration(
     else:
         dir_name = ''
     results = {}
-    ###### Modelo Inicial
+    ###### Modelo Inicial (Modelo 1)
     initial_thermal_vars(t_input)
     name = dir_name + (
-        'h_' + '{:.1f}'.format(t_input['H_cs']) +
-        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
-        '__delta_' + '{:.1f}'.format(t_input['delta']) +
-        '__t_' + '{:.2f}'.format(t_input['t']))
+        'model_1')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        #'__delta_' + '{:.1f}'.format(t_input['delta']) +
+        #'__t_' + '{:.2f}'.format(t_input['t']))
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
-    ###### t Variable
+    ###### t Variable (Modelo 2)
     initial_thermal_vars(t_input)
     name = dir_name + (
-        'h_' + '{:.1f}'.format(t_input['H_cs']) +
-        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
-        '__delta_' + '{:.1f}'.format(t_input['delta']) +
-        '__t_var')
+        'model_2')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        #'__delta_' + '{:.1f}'.format(t_input['delta']) +
+        #'__t_var')
     t_input['t_lat'] = True
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
-    ###### K Variable
+    ###### K Variable (Modelo 4)
     initial_thermal_vars(t_input)
     name = dir_name + (
-        'h_' + '{:.1f}'.format(t_input['H_cs']) +
-        '__k_var' +
-        '__delta_' + '{:.1f}'.format(t_input['delta']) +
-        '__t_' + '{:.2f}'.format(t_input['t']))
+        'model_4')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_var' +
+        #'__delta_' + '{:.1f}'.format(t_input['delta']) +
+        #'__t_' + '{:.2f}'.format(t_input['t']))
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
     t_input['k_ml'] = 3.5
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
-    ###### Delta Variable
+    ###### Delta Variable (Modelo 3)
     initial_thermal_vars(t_input)
     name = dir_name + (
-        'h_' + '{:.1f}'.format(t_input['H_cs']) +
-        '__k_' + '{:.1f}'.format(t_input['k_cs']) +
-        '__delta_icd' +
-        '__t_' + '{:.2f}'.format(t_input['t']))
+        'model_3')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        #'__delta_icd' +
+        #'__t_' + '{:.2f}'.format(t_input['t']))
     t_input['delta_icd'] = True
     #print(name)
     #print(t_input)
     results[name] = results_function(t_input, m_input, name)
-    ###### Modelo mas complejo
+    ###### Delta y t variable (Modelo 5)
     initial_thermal_vars(t_input)
     name = dir_name + (
-        'h_' + '{:.1f}'.format(t_input['H_cs']) +
-        '__k_var' +
-        '__delta_icd' +
-        '__t_var')
+        'model_5')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_' + '{:.1f}'.format(t_input['k_cs']) +
+        #'__delta_icd' +
+        #'__t_var')
+    t_input['t_lat'] = True
+    t_input['delta_icd'] =True
+    #print(name)
+    #print(t_input)
+    results[name] = results_function(t_input, m_input, name)
+    ###### Modelo mas complejo (Modelo 6)
+    initial_thermal_vars(t_input)
+    name = dir_name + (
+        'model_6')
+        ##'h_' + '{:.1f}'.format(t_input['H_cs']) +
+        #'__k_var' +
+        #'__delta_icd' +
+        #'__t_var')
     t_input['t_lat'] = True
     t_input['k_cs'] = 3.0
     t_input['k_ci'] = 2.5
@@ -317,6 +335,7 @@ def eet_equivalent_vs_effective_results(
 
 def get_thermal_data(model):
     return {'cs': model.cs,
+            'gm': model.gm, #temporary?: needed for moho_temperature_results
             'geotherm': model.tm.get_geotherm(),
             'surface_heat_flow': model.tm.get_surface_heat_flow(
                 format='positive milliwatts')}
@@ -355,6 +374,36 @@ def thermal_results(save_dir='Thermal', plot=False):
                 filename= save_dir_maps + name)
         return {'geotherm': data['geotherm'],
                 'surface_heat_flow': data['surface_heat_flow']}
+    return results
+
+def crust_base_temperature_results(save_dir='Thermal', plot=False):
+    save_dir_maps = save_dir + 'Mapas/'
+    save_dir_files = save_dir + 'Archivos/'
+    makedir(save_dir_files)
+    def results(t_input, m_input, name):
+        data = get_model_data(t_input, m_input, get_thermal_data)
+        crust_base = np.maximum(data['gm'].get_moho(), data['gm'].get_slab_lab()+data['cs'].z_step)
+        moho_temp = data['geotherm'].extract_surface(crust_base)
+        #x_grid, y_grid, z_grid = data['cs'].get_3D_grid(masked=False)
+        #df = pd.DataFrame(
+        #    {'lat': y_grid.flatten(),
+        #    'lon': x_grid.flatten(),
+        #    'depth': z_grid.flatten(),
+        #    'Temp': data['geotherm'].flatten()})
+        #df.to_csv(save_dir_files + name + '.csv', sep=',', na_rep='nan', index=False)
+        if plot is True:
+            heatmap_map(moho_temp,
+                colormap='coolwarm',
+                cbar_limits=[0, 1300],
+                cbar_label='Temperatura [ºC]',
+                title='Temperatura Moho',
+                labelpad=-48,
+                filename=save_dir_maps + 'temp_moho_' + name)
+            #heatmap_map(
+            #    data['surface_heat_flow'], colormap='afmhot',
+            #    cbar_label='Heat Flow [W/m²]', title='Surface Heat Flow',
+            #    filename = save_dir_maps + name, cbar_limits=[30,110])
+        return moho_temp
     return results
 
 def get_eet_wrong_data(model):
@@ -642,9 +691,9 @@ if __name__ == '__main__':
              'colormap': eet_pg_07}}
 
     #### Thermal Casos ######################################################
-    thermal_exploration(
-            thermal_results(
-                save_dir=save_dir_thermal + 'Termal_casos/', plot=True))
+    #thermal_exploration(
+    #        thermal_results(
+    #            save_dir=save_dir_thermal + 'Termal_casos/', plot=True))
 
     #### EET Rheo ###########################################################
     #eets = rheo_exploration(
@@ -1120,3 +1169,38 @@ if __name__ == '__main__':
     #    labelpad=-48, labelpad_diff=-56),
     #    filename=save_dir_thermal + 'Thermal/dif_moho.png')
     #df.to_csv(save_dir_thermal + 'Thermal/Table.txt', sep=' ', na_rep='nan', index=False)
+
+    # Moho temperature Thermal Casos
+    results = thermal_exploration(
+            crust_base_temperature_results(
+                save_dir=save_dir_thermal + 'Base_crust_temperature/', plot=True))
+    models = [results['model_2'] - results['model_1'],
+              results['model_3'] - results['model_1'],
+              results['model_4'] - results['model_1'],
+              results['model_5'] - results['model_1'],
+              results['model_6'] - results['model_1']]
+    max_diff = max([max([abs(np.nanmax(arr)), abs(np.nanmin(arr))]) for arr in models])
+    diff_step = 10
+    divs = np.arange(-max_diff, max_diff+diff_step, diff_step)
+    plt.hist(models[4], bins=divs, ec='k')
+    plt.savefig(save_dir_thermal + 'hist.png')
+    stds = [np.nanstd(arr) for arr in models]
+    means = [np.nanmean(arr) for arr in models]
+    print(stds)
+    print(means)
+    cbar_limit = 3*max(stds)
+    bounds = np.array([-75,-50,-25,-10,-5,-1,1,5,10,25,50,75])
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=11)
+    cmap=categorical_cmap(11, 1, cmap='Spectral_r', continuous=True)
+    cmap.colors[5] = np.array([1.0,1.0,1.0])
+    for idx, model in enumerate(models):
+        heatmap_map(model,
+            #colormap='BrBG_r',
+            #colormap=categorical_cmap(13, 1, cmap='Spectral_r', continuous=True),
+            colormap=cmap,
+            cbar_limits=[cbar_limit, -cbar_limit],
+            cbar_label='Temperature [ºC]',
+            #norm=mcolors.SymLogNorm(vmin=-cbar_limit, vmax=cbar_limit, linthresh=1, linscale=0.2),
+            norm=norm,
+            title='Temperature Diff.',
+            labelpad=-48, filename=save_dir_thermal + 'Base_crust_temperature/model_' + str(idx+2))

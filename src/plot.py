@@ -340,7 +340,11 @@ def heatmap_map(
         makedir_from_filename(filename)
         filename = filename + '.png'
         plt.savefig(
-            filename, bbox_inches='tight', transparent=True)
+            filename, bbox_inches='tight', transparent=True,
+            #format="eps", dpi=1200)
+            #format='svg')
+            dpi=1200)
+            #dpi=1200, format='pdf')
             #dpi='figure', format='pdf')
         plt.close()
     if return_width_ratio:
@@ -515,11 +519,17 @@ def diff_scatter_map(
     diff_limit = np.nanmax([abs(diff_max), abs(diff_min)])
     diff_limit = round_to_1(diff_limit, 'ceil')
     #diff_step = 10**get_magnitude(diff_limit)
-    diff_step = 5 
+    diff_step = 5
     divisions = np.arange(-diff_limit, diff_limit+diff_step, diff_step)
     ticks = np.arange(-diff_limit, diff_limit+diff_step, 2*diff_step)
     bins = len(divisions) - 1
     diff_cmap = get_diff_cmap(bins)
+    # Cambiar colores centrales a blanco
+    ccolors = plt.get_cmap(diff_cmap)(np.arange(bins, dtype='int'))
+    ccolors[math.floor((bins-1)/2)] = [1., 1., 1., 1.]
+    ccolors[math.ceil((bins-1)/2)] = [1., 1., 1., 1.]
+    diff_cmap = colors.ListedColormap(ccolors)
+    #
     norm = MidPointNorm(midpoint=0, vmin=-diff_limit, vmax=diff_limit)
     map_scatter = get_map_scatter_function(data_coords, data_types, map)
     m_scatter, scatter = map_scatter(
@@ -538,7 +548,7 @@ def diff_scatter_map(
     plt.sca(ax)
     N, bins, patches = hist_ax.hist(
         diff, bins=divisions,
-        orientation='horizontal')
+        orientation='horizontal', ec='k', linewidth=0.5)
     hist_ax.set_yticks(ticks)
     hist_ax.set_ylim([-diff_limit, diff_limit])
     hist_ax.yaxis.tick_right()
@@ -655,13 +665,13 @@ def estimator_plot(
     # x axis
     x_name = vnames[0]
     x_axis = vaxes[0]
-    plt.xlabel(str(x_name))
+    plt.xlabel(''.join(x_name))
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     if len(vnames) > 1:
         # y axis
         y_name = vnames[1]
         y_axis = vaxes[1]
-        plt.ylabel(str(y_name))
+        plt.ylabel(''.join(y_name))
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         # 2D matrix
         vmin = np.floor(np.min(estimator))
@@ -701,17 +711,18 @@ def estimator_plot(
         name = filename + '_2D'
     else:
         index = np.arange(len(x_axis))
-        plt.plot(x_axis, rmses, '-r', linewidth=1.)
-        plt.bar(x_axis, rmses, alpha=.4, width=(x_axis[1]-x_axis[0])*0.8)
-        diff = max(rmses) - min(rmses)
-        plt.ylim(min(rmses)-0.2*diff, max(rmses)+0.2*diff)
+        plt.plot(x_axis, estimator, '-r', linewidth=1.)
+        plt.plot(x_axis, estimator, 'or', linewidth=1.)
+        #plt.bar(x_axis, estimator, alpha=.4, width=(x_axis[1]-x_axis[0])*0.8)
+        diff = max(estimator) - min(estimator)
+        plt.ylim(min(estimator)-0.2*diff, max(estimator)+0.2*diff)
         plt.ylabel(label)
         plt.grid(True)
-        name = filename 
+        name = filename
     plt.tight_layout()
     if filename:
         makedir_from_filename(filename)
-        filename = filename + '.png'
+        filename = filename + '.ps'
         plt.savefig(filename)#,dpi='figure', format='pdf')
         plt.close()
 

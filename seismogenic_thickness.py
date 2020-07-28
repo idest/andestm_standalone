@@ -1,3 +1,4 @@
+import sys
 import os
 import numpy as np
 import pandas as pd
@@ -50,9 +51,12 @@ def get_lon_lat_bins(eqs, lat_bins, lon_bins, lat_labels, lon_labels):
 #eqs_usgs = pd.read_excel('data/earthquakes/USGS_1900_2018_C_SB30.xlsx')
 #eqs_usgs = get_lon_lat_bins(eqs_usgs, lat_bins, lon_bins, lat_labels, lon_labels)
 #writer = pd.ExcelWriter('data/earthquakes/USGS_1900_2018_C_SB30_BINS.xlsx')
-#eqs_csn.to_excel(writer, 'Sheet1')
+#eqs_usgs.to_excel(writer, 'Sheet1')
 #writer.save()
 ###############################################################################
+
+#print('exiting...')
+#sys.exit()
 
 
 print('Reading and processing seismogenic thickness')

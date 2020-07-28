@@ -1,19 +1,29 @@
 import numpy as np
 import pandas as pd
 
-shf_data_file = np.loadtxt('datos_Q/QsObs.txt', comments='#')
+shf_data_file = pd.read_csv('datos_Q/datos_q_def.csv', sep='\t', header=0)
+
 
 #print('hola')
 #np.savetxt('shf_dt', shf_data_file)
 
 # Limitar datos al area de estudio
-shf_data_file = shf_data_file[shf_data_file[:,0] > -80.]
-shf_data_file = shf_data_file[shf_data_file[:,0] < -60.]
-shf_data_file = shf_data_file[shf_data_file[:,1] > -45.]
-shf_data_file = shf_data_file[shf_data_file[:,1] < -10.]
+# shf_data_file = shf_data_file[shf_data_file[:,0] > -80.]
+# shf_data_file = shf_data_file[shf_data_file[:,0] < -60.]
+# shf_data_file = shf_data_file[shf_data_file[:,1] > -45.]
+# shf_data_file = shf_data_file[shf_data_file[:,1] < -10.]
+
+
+# Limitar datos de estudio pandas
+shf_data_file = shf_data_file[shf_data_file.iloc[:,0] > -80]
+shf_data_file = shf_data_file[shf_data_file.iloc[:,0] < -60]
+shf_data_file = shf_data_file[shf_data_file.iloc[:,1] > -45]
+shf_data_file = shf_data_file[shf_data_file.iloc[:,1] < -10]
+
 
 # Usar solo datos con valores de surface heat flow < 130 mW/m2
-shf_data_file = shf_data_file[shf_data_file[:,2] <= 130]
+# shf_data_file = shf_data_file[shf_data_file[:,2] <= 130]
+shf_data_file = shf_data_file[shf_data_file.iloc[:,2] <= 130]
 
 # Formatear datos a W/m2
 #shf_data_file[:,2] = shf_data_file[:,2] * 1.e-3
@@ -21,12 +31,19 @@ shf_data_file = shf_data_file[shf_data_file[:,2] <= 130]
 #np.savetxt('datos_Q/QsObsFormatted.txt', shf_data_file)
 
 # All data
-shf_data_lons = shf_data_file[:,0]
-shf_data_lats = shf_data_file[:,1]
-shf_data_values = shf_data_file[:,2]
-shf_data_errors = abs(shf_data_file[:,3])
-shf_data_refs = shf_data_file[:,4]
-shf_data_types = shf_data_file[:,5]
+# shf_data_lons = shf_data_file[:,0]
+# shf_data_lats = shf_data_file[:,1]
+# shf_data_values = shf_data_file[:,2]
+# shf_data_errors = abs(shf_data_file[:,3])
+# shf_data_refs = shf_data_file[:,4]
+# shf_data_types = shf_data_file[:,5]
+shf_data_lons = shf_data_file.iloc[:,0]
+shf_data_lats = shf_data_file.iloc[:,1]
+shf_data_values = shf_data_file.iloc[:,2]
+shf_data_errors = abs(shf_data_file.iloc[:,3])
+shf_data_refs = shf_data_file.iloc[:,4]
+shf_data_types = shf_data_file.iloc[:,5]
+
 
 shf_data_coords = np.append(shf_data_lons[:, np.newaxis],
                             shf_data_lats[:, np.newaxis], axis=1)

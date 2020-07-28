@@ -1,10 +1,9 @@
 import math
 import numpy as np
-from dotmap import DotMap
 from box import Box
 import pandas as pd
 import inspect
-#TODO: change all references to DotMap with Box
+from area import area
 np.seterr(divide='ignore', invalid='ignore')
 
 class Data(object):
@@ -52,7 +51,7 @@ class Data(object):
             'max_z': max_z,
             'min_z': min_z
         }
-        return DotMap(coordinate_data)
+        return Box(coordinate_data)
 
     def __set_geometric_data(self, initial_data):
         z_slab_lab = initial_data[:, 2]
@@ -65,7 +64,7 @@ class Data(object):
             'z_icd': z_icd,
             'z_topo': z_topo
         }
-        return DotMap(geometric_data)
+        return Box(geometric_data)
 
     def get_cs_data(self):
         cs_data = {
@@ -74,28 +73,28 @@ class Data(object):
             'geometric_data': self.get_gm_data().geometric_data,
             'coast': self.coast
         }
-        return DotMap(cs_data)
+        return Box(cs_data)
 
     def get_gm_data(self):
         gm_data = {
             'geometric_data': self.geometric_data,
             'slab_lab_areas': self.slab_lab_areas
         }
-        return DotMap(gm_data)
+        return Box(gm_data)
 
     def get_tm_data(self):
         tm_data = {
             't_input': self.t_input,
             'trench_age': self.trench_age
         }
-        return DotMap(tm_data)
+        return Box(tm_data)
 
     def get_mm_data(self):
         mm_data = {
             'm_input': self.m_input,
             'rheologic_data': self.rheologic_data
         }
-        return DotMap(mm_data)
+        return Box(mm_data)
 
 class CoordinateSystem(object):
 
@@ -438,16 +437,23 @@ class SpatialArray2D(SpatialArray):
                                                          areas)
         return combined_array
 
-    def export(self, filename, fieldname='prop', dropna=False):
+    def export(self, filename, xname='lon', yname='lat', zname='prop', dropna=False):
         x_grid, y_grid = self.cs.get_2D_grid(masked=False)
         df = pd.DataFrame(
-            {'lon': x_grid.flatten(),
-             'lat': y_grid.flatten(),
-             fieldname: self.flatten()})
+            {xname: x_grid.flatten(),
+             yname: y_grid.flatten(),
+             zname: self.flatten()})
         if dropna is True:
             df = df.dropna()
         df.to_csv(filename, sep=' ', na_rep='nan', index=False, float_format='%.2f')
         return
+
+    def equals(self, array2D):
+        try:
+            np.testing.assert_equal(self,array2D)
+        except AssertionError:
+            return False
+        return True
 
 
 class SpatialArray3D(SpatialArray):
@@ -510,7 +516,8 @@ class SpatialArray3D(SpatialArray):
         return array_3D
 
     def cross_section(self, latitude=None, longitude=None,
-                      lat1=None, lon1=None, lat2=None, lon2=None):
+                      lat1=None, lon1=None, lat2=None, lon2=None,
+                      filename=None, z_name='prop', dropna=False):
         if self.ndim != 3:
             dims = self.ndim
             error = ("Array with 3 dimensions expected,",
@@ -520,12 +527,30 @@ class SpatialArray3D(SpatialArray):
             #index = list(self.cs.get_y_axis()).index(latitude)
             index = np.where(np.isclose(self.cs.get_y_axis(), latitude))[0][0]
             cross_section = self[:, index, :]
+            if filename is not None:
+                x_grid = self.cs.get_3D_grid(masked=False)[0].copy()[:, index, :]
+                y_grid = self.cs.get_3D_grid(masked=False)[2].copy()[:, index, :]
+                x_name = 'lon'
+                y_name = 'depth'
         elif longitude:
             #index = list(self.cs.get_x_axis()).index(longitude)
             index = np.where(np.isclose(self.cs.get_x_axis(), longitude))[0][0]
-            cross_section = self[:, index, :]
+            cross_section = self[index, :, :]
+            if filename is not None:
+                x_grid = self.cs.get_3D_grid(masked=False)[1].copy()[index, :, :]
+                y_grid = self.cs.get_3D_grid(masked=False)[2].copy()[index, :, :]
+                x_name = 'lat'
+                y_name = 'depth'
         elif lat1 and lon1 and lat2 and lon2:
             cross_section = self
+        if (filename is not None) and (longitude is not None or latitude is not None):
+            df = pd.DataFrame(
+                {x_name: x_grid.flatten(),
+                 y_name: y_grid.flatten(),
+                 z_name: cross_section.flatten()})
+            if dropna is True:
+                df = df.dropna()
+            df.to_csv(filename, sep=' ', na_rep='nan', index=False, float_format='%.2f')
         return SpatialArray2D(cross_section, self.cs)
 
     def point_depth_profile(self, latitude=None, longitude=None):
@@ -553,6 +578,17 @@ class SpatialArray3D(SpatialArray):
     def get_array(self):
         return self
 
+    def export(self, filename, xname='lon', yname='lat', zname='depth', pname='prop', dropna=False):
+        x_grid, y_grid, z_grid = self.cs.get_3D_grid(masked=False)
+        df = pd.DataFrame(
+            {xname: x_grid.flatten(),
+             yname: y_grid.flatten(),
+             zname: z_grid.flatten(),
+             pname: self.flatten()})
+        if dropna is True:
+            df = df.dropna()
+        df.to_csv(filename, sep=',', na_rep='nan', index=False, float_format='%.2f')
+        return
 
 class GeometricModel(object):
 
@@ -778,7 +814,7 @@ class ThermalModel(object):
     def __init__(self, tm_data, geometric_model, coordinate_system):
         self.geo_model = geometric_model
         self.cs = coordinate_system
-        self.vars = DotMap(self.__set_variables(tm_data.t_input,
+        self.vars = Box(self.__set_variables(tm_data.t_input,
                                                  tm_data.trench_age))
         self.slab_lab_temp = self.__set_slab_lab_temp()
         self.surface_heat_flow = self.__set_surface_heat_flow()
@@ -830,7 +866,7 @@ class ThermalModel(object):
         return trench_age
 
     def __set_variables(self, t_input, trench_age):
-        t_input = DotMap(t_input)
+        t_input = Box(t_input)
         t_input_2 = t_input.copy()
         t_input_2['k_z'] = False
         t_input_2['H_z'] = False
@@ -991,6 +1027,28 @@ class ThermalModel(object):
     def get_coordinate_system(self):
         return self.cs
 
+    def get_total_lost_heat(self):
+        lons, lats = self.cs.get_2D_grid(masked=True)
+        lons, lats = np.ravel(lons), np.ravel(lats)
+        step = self.cs.xy_step/2
+        cell_area = [area({'type':'Polygon', 'coordinates':[[
+            [lon-step,lat-step],
+            [lon-step,lat+step],
+            [lon+step,lat+step],
+            [lon+step,lat-step],
+            [lon-step,lat-step]
+        ]]}) for lon, lat in zip(lons,lats)]
+        cell_areas = SpatialArray2D(cell_area, self.cs).reshape(self.cs.get_2D_shape())
+        lost_heat_flow = cell_areas*self.get_surface_heat_flow(format='positive milliwatts')
+        return np.nansum(lost_heat_flow), cell_areas
+
+    def get_average_surface_heat_flow(self):
+        points_num = np.count_nonzero(~np.isnan(self.surface_heat_flow))
+        return np.nansum(self.get_surface_heat_flow(format='positive milliwatts'))/points_num
+
+    def get_average_surface_heat_flow2(self):
+        return np.nanmean(self.get_surface_heat_flow(format='positive milliwatts'))
+
 class MechanicModel(object):
 
     @staticmethod
@@ -1048,7 +1106,7 @@ class MechanicModel(object):
         self.geo_model = geo_model
         self.cs = coordinate_system
         self.thermal_model = thermal_model
-        self.vars = DotMap(self.__set_variables(mm_data.m_input,
+        self.vars = Box(self.__set_variables(mm_data.m_input,
                                                  mm_data.rheologic_data))
         self.depth_from_topo = self.__get_depth_from_topo()
         self.bys_t, self.bys_c = self.__get_brittle_yield_strength()
@@ -1064,7 +1122,7 @@ class MechanicModel(object):
             'a': rock.A,
             'h': rock.H,
         }
-        return DotMap(rock_dic)
+        return Box(rock_dic)
 
     def __get_rheologic_vars(self, id_rh, rhe_data):
         rock = rhe_data[str(id_rh)]
@@ -1073,7 +1131,7 @@ class MechanicModel(object):
             'n': rock.n,
             'a': rock.A
         }
-        return DotMap(rock_dic)
+        return Box(rock_dic)
 
     def __get_polyphase_rheologic_vars(self, f1, id_rh_1, id_rh_2, rhe_data):
         # Based on Tullis et al., 1991
@@ -1095,10 +1153,10 @@ class MechanicModel(object):
             'a': a
         }
         #print(rock_dic)
-        return DotMap(rock_dic)
+        return Box(rock_dic)
 
     def __set_variables(self, m_input, rhe_data):
-        m_input = DotMap(m_input)
+        m_input = Box(m_input)
         m_vars = {
             'slm': m_input['slm'],
             'bs_t': m_input['Bs_t'],
@@ -1445,5 +1503,5 @@ def compute(gm_data, slab_lab_areas, trench_age, rhe_data, coast,
         'tm': tm,
         'mm': mm
     }
-    model = DotMap(model)
+    model = Box(model)
     return model

@@ -24,11 +24,15 @@ def evaluate_model(
     shf_df = shf_df.assign(diffs=(shf_df['model_values'] - shf_df['data_values']))
     #RMSE
     if weigh_errors is True:
-        shf_df = shf_df.dropna(subset=['data_errors'])
+        meanerr = shf_df['data_errors'].mean()
+        shf_df['data_errors'].fillna(meanerr, inplace=True)
+        # shf_df = shf_df.dropna(subset=['data_errors'])
         rmse = calc_rmse_weighted(
-            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
+            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'],
+                    meanerr)
         mse, sigmas = sigma_weighted(
-            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'])
+            shf_df['model_values'], shf_df['data_values'], shf_df['data_errors'],
+                    meanerr)
     else:
         #shf_df = shf_df.drop(columns=['data_error'])
         rmse = calc_rmse(shf_df['model_values'], shf_df['data_values'])
@@ -46,10 +50,11 @@ def calc_rmse(model, data):
     rmse = np.sqrt((diff**2).mean())
     return rmse
 
-def calc_rmse_weighted(model, data, data_error):
-    data_weight = 1 / data_error
+def calc_rmse_weighted(model, data, data_error, meanerr):
+    data_weight =  meanerr / data_error
+    n_weight = data_weight/np.sum(data_weight)
     diff = model - data
-    rmse = np.sqrt(sum((data_weight/sum(data_weight))*(diff**2)))
+    rmse = np.sqrt(sum(n_weight*(diff**2)))
     return rmse
 
 def calc_rmse_weighted_aggressive(model, data, data_error):
@@ -87,10 +92,11 @@ def sigma(shf_interpolated, data):
     #moda = np.nanmax(abs(diff))
     return mse, sigmas
 
-def sigma_weighted(shf_interpolated, data, data_error):
+def sigma_weighted(shf_interpolated, data, data_error, meanerr):
     diff = shf_interpolated - data
-    data_weight = 1 / data_error
-    mse = np.average(diff, weights = data_weight)
+    data_weight = meanerr / data_error
+    n_weight = data_weight / np.sum(data_weight)
+    mse = np.average(diff, weights = n_weight)
     V1 = sum(data_weight)
     V2 = sum(data_weight**2)
     sigma = np.sqrt(sum(data_weight*((diff-mse)**2))/(V1-(V2/V1)))

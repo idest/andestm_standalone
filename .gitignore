@@ -3,6 +3,7 @@
 Output/*
 *.swp
 .idea/
+.vscode/
 data/Modelo*
 data/Te_invertido/Tassara/
 data/Te_invertido/Perez-Gussinye/

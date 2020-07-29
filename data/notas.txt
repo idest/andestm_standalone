@@ -1,1 +1,0 @@
-El archivo areas.dat fue hecho para calzar justo con las areas del modelo termomecanico antiguo, y por lo tanto no es identico al archivo generado por la secuencia compute.gm.get_slab_lab_int_index -> compute.gm.get_slab_lab_int_areas (preliminar_areas.dat)

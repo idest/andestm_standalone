@@ -789,6 +789,49 @@ class ThermalModel(object):
         return geotherm
 
     @staticmethod
+    def __calc_geotherm_M1_crust(h, delta, k, z, z_moho, z_sl, temp_sl):
+        z = -z*1.e3
+        z_moho = -z_moho*1.e3
+        z_sl = -z_sl*1.e3
+        geotherm = (h*delta**2)/k-(h*delta**2*np.exp(-z/delta))/k-(h*delta*z*np.exp(-z_moho/delta))/k+(h*z_moho*delta*z*np.exp(-z_moho/delta))/(z_sl*k)-h*delta**2*z/(z_sl*k)+h*delta**2*z*np.exp(-z_moho/delta)/(z_sl*k)+(temp_sl*z)/z_sl
+        return geotherm
+
+    @staticmethod
+    def __calc_geotherm_M1_mantle(h, delta, k, z, z_moho, z_sl, temp_sl):
+        z = -z*1.e3
+        z_moho = -z_moho*1.e3
+        z_sl = -z_sl*1.e3
+        geotherm = -(h*z_moho*delta*np.exp(-z_moho/delta))/k+(h*delta**2)/k-(h*delta**2*np.exp(-z_moho/delta))/k+(h*z_moho*delta*z*np.exp(-z_moho/delta))/(z_sl*k)-(h*delta**2*z)/(z_sl*k)+(h*delta**2*z*np.exp(-z_moho/delta))/(z_sl*k)+(temp_sl*z)/z_sl
+        return geotherm
+
+    @staticmethod
+    def __calc_geotherm_M2_upper_crust(h_uc, h_lc, k, z, z_icd, z_moho, z_sl, temp_sl):
+        z = -z*1.e3
+        z_icd = -z_icd*1.e3
+        z_moho = -z_moho*1.e3
+        z_sl = -z_sl*1.e3
+        geotherm = -(h_lc*z_icd*z)/k+(h_lc*z_moho*z)/k+(h_lc*z_icd**2*z)/(2*z_sl*k)-(h_lc*z_moho**2*z)/(2*z_sl*k)+(h_uc*z_icd*z)/k-(h_uc*z**2)/(2*k)-(h_uc*z_icd**2*z)/(2*z_sl*k)+(temp_sl*z)/z_sl
+
+    @staticmethod
+    def __calc_geotherm_M2_lower_crust(h_uc, h_lc, k, z, z_icd, z_moho, z_sl, temp_sl):
+        z = -z*1.e3
+        z_icd = -z_icd*1.e3
+        z_moho = -z_moho*1.e3
+        z_sl = -z_sl*1.e3
+        geotherm = -(h_lc*z_icd**2)/(2*k)+(h_lc*z_moho*z)/(k)-(h_lc*z**2)/(2*k)+(h_lc*z_icd**2*z)/(2*z_sl*k)-(h_lc*z_moho**2*z)/(2*z_sl*k)+(h_uc*z_icd**2)/(2*k)-(h_uc*z_icd**2*z)/(2*z_sl*k)+(temp_sl*z)/z_sl
+        return geotherm
+
+    @staticmethod
+    def __calc_geotherm_M2_mantle(h_uc, h_lc, k, z, z_icd, z_moho, z_sl, temp_sl):
+        z = -z*1.e3
+        z_icd = -z_icd*1.e3
+        z_moho = -z_moho*1.e3
+        z_sl = -z_sl*1.e3
+        geotherm = -(h_lc*z_icd**2)/(2*k)+(h_lc*z_moho**2)/(2*k)+(h_lc*z_icd**2*z)/(2*z_sl*k)-(h_lc*z_moho**2*z)/(2*z_sl*k)+(h_uc*z_icd**2)/(2*k)-(h_uc*z_icd**2*z)/(2*z_sl*k)+(temp_sl*z)/z_sl
+        return geotherm
+
+
+    @staticmethod
     def __calc_surface_heat_flow(h, delta, k, z_topo, z_sl, temp_sl):
         z_topo = z_topo*1.e3
         z_sl = z_sl*1.e3

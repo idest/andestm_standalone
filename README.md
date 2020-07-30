@@ -4,11 +4,11 @@
 0. Instalar python 3
 
 1. Descargar archivos
-        cd ~
-        git clone https://github.com/idest/andestm_standalone
-        cd andestm_standalone
-        git fetch --all
-        git checkout heat_eq
+  ```cd ~
+     git clone https://github.com/idest/andestm_standalone
+     cd andestm_standalone
+     git fetch --all
+     git checkout heat_eq```
 
 2. Instalar jupyter lab
         pip3 install jupyter lab

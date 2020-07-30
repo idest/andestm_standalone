@@ -4,20 +4,22 @@
 0. Instalar python 3
 
 1. Descargar archivos
-  ```cd ~
-     git clone https://github.com/idest/andestm_standalone
-     cd andestm_standalone
-     git fetch --all
-     git checkout heat_eq```
+  ```
+  cd ~
+  git clone https://github.com/idest/andestm_standalone
+  cd andestm_standalone
+  git fetch --all
+  git checkout heat_eq
+  ```
 
 2. Instalar jupyter lab
-        pip3 install jupyter lab
+        `pip3 install jupyter lab`
 
 3. Instalar los modulos numpy, sympy, matplotlib
-        pip3 install numpy sympy matplotlib
+        `pip3 install numpy sympy matplotlib`
 
 4. Ejecutar el programa
-        jupyter lab
+        `jupyter lab`
 
 5. En el navegador abrir la página localhost:8888/lab (se debería abrir automáticamente con el paso 4)
 

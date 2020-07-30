@@ -4,6 +4,7 @@ Output/*
 *.swp
 .idea/
 .vscode/
+.ipynb_checkpoints/
 data/Modelo*
 data/Te_invertido/Tassara/
 data/Te_invertido/Perez-Gussinye/

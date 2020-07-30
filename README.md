@@ -13,13 +13,19 @@
   ```
 
 2. Instalar jupyter lab
-        `pip3 install jupyter lab`
+  ```
+  pip3 install jupyter lab
+  ```
 
 3. Instalar los modulos numpy, sympy, matplotlib
-        `pip3 install numpy sympy matplotlib`
+  ```
+  pip3 install numpy sympy matplotlib
+  ```
 
 4. Ejecutar el programa
-        `jupyter lab`
+  ```
+  jupyter lab
+  ```
 
 5. En el navegador abrir la página localhost:8888/lab (se debería abrir automáticamente con el paso 4)
 

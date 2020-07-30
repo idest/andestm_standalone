@@ -863,16 +863,16 @@ class ThermalModel(object):
         self.surface_heat_flow = self.__set_surface_heat_flow()
         self.geotherm = self.__set_geotherm()
 
-    def __set_k_or_h(self, t_input, prop):
+    def __set_k_or_h(self, t_input, prop, layered=False):
         boundaries = self.geo_model.get_boundaries()
         prop_v = None
         prop_fz = None
         if prop == 'k':
             prop_v = [t_input.k_cs, t_input.k_ci, t_input.k_ml]
-            prop_fz = t_input.k_z
+            prop_fz = layered
         elif prop == 'h':
             prop_v = [t_input.H_cs, t_input.H_ci, t_input.H_ml]
-            prop_fz = t_input.H_z
+            prop_fz = layered
         if prop_fz is True:
             r = self.geo_model.set_layer_property(prop_v[0], prop_v[1],
                                                   prop_v[2])
@@ -910,21 +910,20 @@ class ThermalModel(object):
 
     def __set_variables(self, t_input, trench_age):
         t_input = Box(t_input)
-        t_input_2 = t_input.copy()
-        t_input_2['k_z'] = False
-        t_input_2['H_z'] = False
         # TODO: find a way to save memory by not storing 3D arrays as k and h
         t_vars = {
+            'k_unique': t_input['k'],
             'k_cs': t_input['k_cs'],
             'k_ci': t_input['k_ci'],
             'k_ml': t_input['k_ml'],
-            'k': self.__set_k_or_h(t_input, 'k'),
-            'k_prom': self.__set_k_or_h(t_input_2, 'k'),
+            'k_layered': self.__set_k_or_h(t_input, 'k', layered=True),
+            'k_prom': self.__set_k_or_h(t_input, 'k', layered=False),
+            'h_0': t_input['H_0'],
             'h_cs': t_input['H_cs'],
             'h_ci': t_input['H_ci'],
             'h_ml': t_input['H_ml'],
-            'h': self.__set_k_or_h(t_input, 'h'),
-            'h_prom': self.__set_k_or_h(t_input_2, 'h'),
+            'h_layered': self.__set_k_or_h(t_input, 'h', layered=True),
+            'h_prom': self.__set_k_or_h(t_input, 'h', layered=False),
             'delta': self.__set_delta(t_input)*1.e3,
             'tp': t_input['Tp'],
             'g': t_input['G'],
@@ -954,7 +953,7 @@ class ThermalModel(object):
         b = self.vars.b
         sli_s = self.__calc_s(sli_depth, sli_topo, kappa, v, dip, b)
         z_sl = self.geo_model.get_slab_lab()
-        slab_k = self.vars.k.extract_surface(z_sl+self.cs.z_step)
+        slab_k = self.vars.k_prom.extract_surface(z_sl+self.cs.z_step)
         sli_idx = self.geo_model.get_slab_lab_int_index()
         j_idx = self.cs.get_2D_indexes()[1][0]
         sli_k = slab_k[sli_idx, j_idx]
@@ -983,7 +982,7 @@ class ThermalModel(object):
     def __get_slab_temp(self):
         z_sl = self.geo_model.get_slab_lab()
         z_topo = self.geo_model.get_topo()
-        slab_k = self.vars.k.extract_surface(z_sl + self.cs.z_step)
+        slab_k = self.vars.k_prom.extract_surface(z_sl + self.cs.z_step)
         tp = self.vars.tp
         kappa = self.vars.kappa
         v = self.vars.v
@@ -1026,18 +1025,18 @@ class ThermalModel(object):
         delta = self.vars.delta
         z_topo = self.geo_model.get_topo()
         z_sl = self.geo_model.get_slab_lab()
-        #slab_lab_k = self.vars.k.extract_surface(z_sl+self.cs.z_step)
-        #slab_lab_h = self.vars.h.extract_surface(z_sl+self.cs.z_step)
-        topo_k = self.vars.k.extract_surface(z_topo-1)
-        topo_h = self.vars.h.extract_surface(z_topo-1)
+        #slab_lab_k = self.vars.k_prom.extract_surface(z_sl+self.cs.z_step)
+        #slab_lab_h = self.vars.h_prom.extract_surface(z_sl+self.cs.z_step)
+        topo_k = self.vars.k_prom.extract_surface(z_topo-1)
+        topo_h = self.vars.h_prom.extract_surface(z_topo-1)
         temp_sl = self.slab_lab_temp
         heat_flow = self.__calc_surface_heat_flow(topo_h, delta, topo_k,
                                                   z_topo, z_sl, temp_sl)
         return heat_flow
 
     def __set_geotherm(self):
-        k = self.vars.k
-        h = self.vars.h
+        k = self.vars.k_prom
+        h = self.vars.h_prom
         if isinstance(self.vars.delta, float):
             delta = self.vars.delta
         else:
@@ -1048,6 +1047,27 @@ class ThermalModel(object):
         temp_sl = self.slab_lab_temp[:, :, np.newaxis]
         geotherm = self.__calc_geotherm(h, delta, k, z, z_topo, z_sl, temp_sl)
         return geotherm
+
+    def __set_geotherm_M1(self):
+        k = self.vars.k_unique
+        h = self.vars.h_0
+        if isinstance(self.vars.delta, float):
+            delta = self.vars.delta
+        else:
+            delta = self.vars.delta[:, :, np.newaxis]
+        z = self.cs.get_3D_grid()[2]
+        z_moho = self.geo_model.get_moho()[:, :, np.newaxis]
+        z_sl = self.geo_model.get_slab_lab()[:, :, np.newaxis]
+        temp_sl = self.slab_lab_temp[:, :, np.newaxis]
+        geotherm_crust = self.__calc_geotherm_M1_crust(h, delta, k, z, z_moho, z_sl, temp_sl)
+        geotherm_mantle = self.__calc_geotherm_M1_mantle(h, delta, k, z, z_moho, z_sl, temp_sl)
+        geo_model_3D = self.geo_model.get_3D_geometric_model()
+        g = np.ones(geo_model_3D.shape) * np.nan
+        g[geo_model_3D == 1 and geo_mode_3D == 2] = geotherm_crust[geo_model_3D == 1 and geo_mode_3D == 2]
+        g[geo_model_3D == 3] = geotherm_mantle[geo_model_3D == 3]
+
+        return g
+        
 
     def get_surface_heat_flow(self, format='negative watts'):
         surface_heat_flow = SpatialArray2D(self.surface_heat_flow, self.cs)

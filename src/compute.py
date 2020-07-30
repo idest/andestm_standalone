@@ -811,6 +811,7 @@ class ThermalModel(object):
         z_moho = -z_moho*1.e3
         z_sl = -z_sl*1.e3
         geotherm = -(h_lc*z_icd*z)/k+(h_lc*z_moho*z)/k+(h_lc*z_icd**2*z)/(2*z_sl*k)-(h_lc*z_moho**2*z)/(2*z_sl*k)+(h_uc*z_icd*z)/k-(h_uc*z**2)/(2*k)-(h_uc*z_icd**2*z)/(2*z_sl*k)+(temp_sl*z)/z_sl
+        return geotherm
 
     @staticmethod
     def __calc_geotherm_M2_lower_crust(h_uc, h_lc, k, z, z_icd, z_moho, z_sl, temp_sl):
@@ -862,6 +863,8 @@ class ThermalModel(object):
         self.slab_lab_temp = self.__set_slab_lab_temp()
         self.surface_heat_flow = self.__set_surface_heat_flow()
         self.geotherm = self.__set_geotherm()
+        self.geotherm_M1 = self.__set_geotherm_M1()
+        self.geotherm_M2 = self.__set_geotherm_M2()
 
     def __set_k_or_h(self, t_input, prop, layered=False):
         boundaries = self.geo_model.get_boundaries()
@@ -1059,15 +1062,45 @@ class ThermalModel(object):
         z_moho = self.geo_model.get_moho()[:, :, np.newaxis]
         z_sl = self.geo_model.get_slab_lab()[:, :, np.newaxis]
         temp_sl = self.slab_lab_temp[:, :, np.newaxis]
-        geotherm_crust = self.__calc_geotherm_M1_crust(h, delta, k, z, z_moho, z_sl, temp_sl)
-        geotherm_mantle = self.__calc_geotherm_M1_mantle(h, delta, k, z, z_moho, z_sl, temp_sl)
+        geotherm_crust = self.__calc_geotherm_M1_crust(
+                h, delta, k, z, z_moho, z_sl, temp_sl)
+        geotherm_mantle = self.__calc_geotherm_M1_mantle(
+                h, delta, k, z, z_moho, z_sl, temp_sl)
         geo_model_3D = self.geo_model.get_3D_geometric_model()
-        g = np.ones(geo_model_3D.shape) * np.nan
-        g[geo_model_3D == 1 and geo_mode_3D == 2] = geotherm_crust[geo_model_3D == 1 and geo_mode_3D == 2]
-        g[geo_model_3D == 3] = geotherm_mantle[geo_model_3D == 3]
+        geotherm_crust[geo_model_3D == 3] = 0
+        geotherm_mantle[geo_model_3D == 1] = 0
+        geotherm_mantle[geo_model_3D == 2] = 0
+        geotherm = geotherm_crust + geotherm_mantle
+        return geotherm
 
-        return g
-        
+    def __set_geotherm_M2(self):
+        k = self.vars.k_unique
+        h_cs = self.vars.h_cs
+        h_ci = self.vars.h_ci
+        if isinstance(self.vars.delta, float):
+            delta = self.vars.delta
+        else:
+            delta = self.vars.delta[:, :, np.newaxis]
+        z = self.cs.get_3D_grid()[2]
+        z_icd = self.geo_model.get_moho()[:, :, np.newaxis]
+        z_moho = self.geo_model.get_moho()[:, :, np.newaxis]
+        z_sl = self.geo_model.get_slab_lab()[:, :, np.newaxis]
+        temp_sl = self.slab_lab_temp[:, :, np.newaxis]
+        geotherm_upper_crust = self.__calc_geotherm_M2_upper_crust(
+                h_cs, h_ci, k, z, z_icd, z_moho, z_sl, temp_sl)
+        geotherm_lower_crust = self.__calc_geotherm_M2_lower_crust(
+                h_cs, h_ci, k, z, z_icd, z_moho, z_sl, temp_sl)
+        geotherm_mantle = self.__calc_geotherm_M2_mantle(
+                h_cs, h_ci, k, z, z_icd, z_moho, z_sl, temp_sl)
+        geo_model_3D = self.geo_model.get_3D_geometric_model()
+        geotherm_upper_crust[geo_model_3D == 2] = 0
+        geotherm_upper_crust[geo_model_3D == 3] = 0
+        geotherm_lower_crust[geo_model_3D == 1] = 0
+        geotherm_lower_crust[geo_model_3D == 3] = 0
+        geotherm_mantle[geo_model_3D == 1] = 0
+        geotherm_mantle[geo_model_3D == 2] = 0
+        geotherm = geotherm_upper_crust + geotherm_lower_crust + geotherm_mantle
+        return geotherm
 
     def get_surface_heat_flow(self, format='negative watts'):
         surface_heat_flow = SpatialArray2D(self.surface_heat_flow, self.cs)
@@ -1083,6 +1116,12 @@ class ThermalModel(object):
 
     def get_geotherm(self):
         return SpatialArray3D(self.geotherm, self.cs)
+
+    def get_geotherm_M1(self):
+        return SpatialArray3D(self.geotherm_M1, self.cs)
+
+    def get_geotherm_M2(self):
+        return SpatialArray3D(self.geotherm_M2, self.cs)
 
     def get_geometric_model(self):
         return self.geo_model

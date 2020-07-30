@@ -4,11 +4,11 @@ from glob import glob
 from src.setup import data_setup, input_setup, exec_setup
 from src.compute import compute, SpatialArray2D
 from src.stats_julve import evaluate_model
-from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
-                   elastic_thickness_latitude_profile,
-                   heatmap_map, data_scatter_map, diff_scatter_map,
-                   multi_map, data_scatter_plot, earthquake_map,
-                   plot_eet_equivalent_vs_effective)
+#from src.plot import (thermal_latitude_profile, mechanic_latitude_profile,
+#                   elastic_thickness_latitude_profile,
+#                   heatmap_map, data_scatter_map, diff_scatter_map,
+#                   multi_map, data_scatter_plot, earthquake_map,
+#                   plot_eet_equivalent_vs_effective)
 from src.datos_q_pandas import shf_data
 from src.utils import makedir
 from src.colormaps import (jet_white_r, jet_white, get_elevation_diff_cmap,

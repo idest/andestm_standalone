@@ -14,7 +14,7 @@
 
 2. Instalar jupyter lab
   ```
-  pip3 install jupyter lab
+  pip3 install jupyterlab
   ```
 
 3. Instalar los modulos numpy, sympy, matplotlib

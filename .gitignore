@@ -3,6 +3,8 @@
 Output/*
 *.swp
 *.pdf
+*.tex
+*_files/
 .idea/
 .vscode/
 .ipynb_checkpoints/

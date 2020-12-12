@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-shf_data_file = pd.read_csv('datos_Q/datos_q_def.csv', sep='\t', header=0)
-
+#shf_data_file = pd.read_csv('datos_Q/datos_q_def.csv', sep='\t', header=0)
+shf_data_file = pd.read_csv('datos_Q/datos_q_-1.csv', sep='\t', header=0)
 
 #print('hola')
 #np.savetxt('shf_dt', shf_data_file)
@@ -40,7 +40,8 @@ shf_data_file = shf_data_file[shf_data_file.iloc[:,2] <= 130]
 shf_data_lons = shf_data_file.iloc[:,0]
 shf_data_lats = shf_data_file.iloc[:,1]
 shf_data_values = shf_data_file.iloc[:,2]
-shf_data_errors = abs(shf_data_file.iloc[:,3])
+#shf_data_errors = abs(shf_data_file.iloc[:,3])
+shf_data_errors = abs(shf_data_file.iloc[:,3])/100*shf_data_values
 shf_data_refs = shf_data_file.iloc[:,4]
 shf_data_types = shf_data_file.iloc[:,5]
 

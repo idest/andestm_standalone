@@ -151,21 +151,46 @@ def elastic_thickness_latitude_profile(mm, lat, show=False, filename=None,
         fig.savefig(filename, transparent=True)#, dpi='figure', format='pdf')
     plt.close()
 
-def base_map(topo=True, draw_land=True):
-    map = Basemap(
-        llcrnrlon= -80, llcrnrlat= -45,
-        urcrnrlon= -60.0, urcrnrlat= -10.0,
-        epsg= 4326, resolution = 'l', suppress_ticks=False)
-    #map.arcgisimage(service='ESRI_Imagery_World_2D',xpixels=2000,verbose=True)
-    #map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)
-    #map.drawmeridians(np.arange(-180,180,5), labels=[0,0,0,1], fontsize=7)
+#def base_map(topo=True, draw_land=True):
+#    map = Basemap(
+#        llcrnrlon= -80, llcrnrlat= -45,
+#        urcrnrlon= -60.0, urcrnrlat= -10.0,
+#        epsg= 4326, resolution = 'l', suppress_ticks=False)
+#    #map.arcgisimage(service='ESRI_Imagery_World_2D',xpixels=2000,verbose=True)
+#    #map.drawparallels(np.arange(-90,90,5), labels=[1,0,0,0], fontsize=7)
+#    #map.drawmeridians(np.arange(-180,180,5), labels=[0,0,0,1], fontsize=7)
+#    if topo is True:
+#        map.etopo()
+#    map.drawcoastlines(linewidth=0.5)
+#    if draw_land is True:
+#        pass
+#        #map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
+#    return map
+
+def base_map(topo=False):
+    xloc = np.arange(-80, -60, 4.0)
+    yloc = np.arange(-45, -10, 5.0)
+    fig = plt.figure(figsize=(8,8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    coastline = cfeature.NaturalEarthFeature('physical', 'coastline', '10m')
+    border = cfeature.NaturalEarthFeature(
+            'cultural',
+            'admin_0_boundary_lines_land',
+            '10m'
+            )
+    ax.add_feature(border, facecolor='None', edgecolor='gray', alpha=0.7)
+    ax.add_feature(coastline, facecolor='None', edgecolor='k')
     if topo is True:
-        map.etopo()
-    map.drawcoastlines(linewidth=0.5)
-    if draw_land is True:
-        pass
-        #map.drawlsmask(land_color='0.8', ocean_color='0.8', resolution='l')
-    return map
+        ax.stock_img()
+    gl = ax.gridlines(draw_labels=True, linewidth=0.2, color='gray', alpha=0.8)
+    gl.xlabels_top = False
+    gl.ylabels_right = False
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlocator = mticker.FixedLocator(xloc)
+    gl.ylocator = mticker.FixedLocator(yloc)
+    ax.set_extent([-80, -60, -45, -10])
+    return ax
 
 def boolean_map(
         array_2D, array_2D_2=None, color='green', map=None, ax=None,
